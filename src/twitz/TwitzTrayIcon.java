@@ -6,38 +6,22 @@
 package twitz;
 
 import twitz.util.SettingsManager;
-import java.awt.Canvas;
-import java.awt.Desktop;
 import java.awt.Frame;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.MenuItem;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.InputStream;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import org.jdesktop.application.Application;
-import org.jdesktop.application.SingleFrameApplication;
 
 /**
  *
  * @author mistik1
  */
-public class TwitzTrayIcon implements ActionListener, MouseListener{
+public class TwitzTrayIcon {
 
 	public static final String UPDATE = "Update";
 	public static final String TWEET = "Tweet";
@@ -47,15 +31,15 @@ public class TwitzTrayIcon implements ActionListener, MouseListener{
 	private SettingsManager config = SettingsManager.getInstance();
 	private static TwitzApp mainApp;// = new TwitzApp();
 	org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzTrayIcon.class);
-	private TwitzViewMini mini = new TwitzViewMini(this);
+	//private TwitzViewMini mini = new TwitzViewMini();
 	private TwitzView mainView; // = new TwitzView(mainApp);
-	private PreferencesDialog prefs;
+	//private PreferencesDialog prefs;
 	private Window window;
 	Logger logger = Logger.getLogger(TwitzTrayIcon.class.getName());
 
 
 	public TwitzTrayIcon(TwitzApp app, TwitzView view) {
-		popup = new TwitzPopup(this);
+		popup = new TwitzPopup(app);
 		mainApp = app;
 //		config = c;
 		mainView = view;
@@ -70,31 +54,31 @@ public class TwitzTrayIcon implements ActionListener, MouseListener{
 			trayIcon = new TrayIcon(image,"Twitz", popup);
 			trayIcon.setImageAutoSize(true);
             trayIcon.setActionCommand(UPDATE);
-            trayIcon.addActionListener(this);
+            trayIcon.addActionListener(mainApp);
             trayIcon.addMouseListener(mainApp);
             SystemTray.getSystemTray().add(trayIcon);
 
 			MenuItem item = new MenuItem("Error");
-			item.addActionListener(this);
+			item.addActionListener(mainApp);
 			item.setActionCommand(TWEET_MINI);
 			item.setLabel(TWEET_MINI);
 			popup.add(item);
 
 			item = new MenuItem("About twitz");
-			item.addActionListener(this);
+			item.addActionListener(mainApp);
 			item.setActionCommand("About");
 			item.setLabel("About twitz");
 			popup.add(item);
 
 			item = new MenuItem("Preferences");
-			item.addActionListener(this);
+			item.addActionListener(mainApp);
 			item.setActionCommand("PrefsDlg");
 			item.setLabel("Preferences");
 			popup.add(item);
 
 			item = new MenuItem("Exit");
 			item.setActionCommand("Exit");
-			item.addActionListener(this);
+			item.addActionListener(mainApp);
 			popup.add(item);
 		}
 		catch(Exception e){
@@ -176,45 +160,6 @@ public class TwitzTrayIcon implements ActionListener, MouseListener{
 
         return (icon);
     }
-
-	public void actionPerformed(ActionEvent e) {
-		String cmd = e.getActionCommand();
-		if(cmd.endsWith(TWEET_MINI)) {
-			mini.setVisible(true);
-		}
-		else if(cmd.equals("Exit")) {
-			mainApp.exit(e);
-		}
-		else if(cmd.equals("About")) {
-			mainView.showAboutBox();
-		}
-		else if(cmd.equals("PrefsDlg")) {
-			prefs = new PreferencesDialog(null, true/*, config*/);
-			prefs.setVisible(true);
-		}
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mouseClicked(MouseEvent e) {
-		toggleWindowView("toggle");
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mousePressed(MouseEvent e) {
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mouseReleased(MouseEvent e) {
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mouseEntered(MouseEvent e) {
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mouseExited(MouseEvent e) {
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
 
 //	@SuppressWarnings("static-access")
 //	public static void main(String[] args) {

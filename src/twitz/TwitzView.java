@@ -4,9 +4,7 @@
 
 package twitz;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import twitter4j.TwitterException;
 import twitz.events.TwitzEvent;
 import twitz.util.SettingsManager;
 import org.jdesktop.application.Action;
@@ -21,7 +19,6 @@ import javax.swing.Timer;
 import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.ListModel;
 import twitz.events.TwitzListener;
 import twitz.twitter.TwitterManager;
 
@@ -109,6 +106,43 @@ public class TwitzView extends FrameView implements TwitzListener{
         //TwitzApp.getApplication().show(aboutBox);
 		aboutBox.setVisible(true);
     }
+
+	@Action
+	public void showPrefsBox() {
+		if(prefs == null) {
+			JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
+			prefs = new PreferencesDialog(mainFrame, true);
+		}
+		prefs.setVisible(true);
+	}
+
+	@Action
+	public void showMiniTweet() {
+		if(mini == null) {
+			mini = new TwitzViewMini();
+		}
+		mini.setVisible(true);
+	}
+
+	public void eventOccurred(TwitzEvent t)
+	{
+		int type = t.getEventType();
+		switch(type) {
+			case TwitzEvent.TWITZ_UPDATE:
+				twitter4j.Status s = (twitter4j.Status) t.getSource();
+				twitter4j.User u = s.getUser();
+				String me = u.getScreenName();
+
+				DefaultListModel model = (DefaultListModel) tweetsList.getModel();
+				model.addElement(me+": "+s.getText());
+				break;
+			case TwitzEvent.TWITZ_LOGIN:
+				break;
+			case TwitzEvent.TWITZ_ADD_FRIEND:
+				break;
+		}
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -304,6 +338,7 @@ public class TwitzView extends FrameView implements TwitzListener{
         setStatusBar(statusPanel);
     }// </editor-fold>//GEN-END:initComponents
 
+	// <editor-fold defaultstate="collapsed" desc="Generated Variables">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList blockedList;
     private javax.swing.JButton btnTweet;
@@ -325,6 +360,7 @@ public class TwitzView extends FrameView implements TwitzListener{
     private javax.swing.JList tweetsList;
     private javax.swing.JTextField txtTweet;
     // End of variables declaration//GEN-END:variables
+	//</editor-fold>
 
 	private SettingsManager config = SettingsManager.getInstance();
 	//private TwitzTrayIcon tray;
@@ -336,24 +372,8 @@ public class TwitzView extends FrameView implements TwitzListener{
     private int busyIconIndex = 0;
 
     private JDialog aboutBox;
+	private PreferencesDialog prefs;
+	private TwitzViewMini mini;
 
-	public void eventOccurred(TwitzEvent t)
-	{
-		int type = t.getEventType();
-		switch(type) {
-			case TwitzEvent.TWITZ_UPDATE:
-				twitter4j.Status s = (twitter4j.Status) t.getSource();
-				twitter4j.User u = s.getUser();
-				String me = u.getScreenName();
-
-				DefaultListModel model = (DefaultListModel) tweetsList.getModel();
-				model.addElement(me+": "+s.getText());
-				break;
-			case TwitzEvent.TWITZ_LOGIN:
-				break;
-			case TwitzEvent.TWITZ_ADD_FRIEND:
-				break;
-		}
-		throw new UnsupportedOperationException("Not supported yet.");
-	}
+	Logger logger = Logger.getLogger(TwitzView.class.getName());
 }

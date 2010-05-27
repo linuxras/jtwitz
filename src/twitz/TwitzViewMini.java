@@ -29,8 +29,8 @@ import org.jdesktop.application.Action;
 public class TwitzViewMini extends javax.swing.JFrame {
 
     /** Creates new form TwitzViewMini */
-    public TwitzViewMini(TwitzTrayIcon t) {
-		tray = t;
+    public TwitzViewMini() {
+		//tray = t;
 		tm = twitz.twitter.TwitterManager.getInstance();
 		errorDialog.setMaximumSize(new Dimension(300, 100));
         initComponents();
@@ -170,6 +170,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
 		}
 		setVisible(false);
 	}
+	
     /**
     * @param args the command line arguments
     */
@@ -188,7 +189,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
 	private SettingsManager config = SettingsManager.getInstance();
-	private TwitzTrayIcon tray = null;
+	//private TwitzTrayIcon tray = null;
 	private twitz.twitter.TwitterManager tm;
 	Logger logger = Logger.getLogger(TwitzViewMini.class.getName());
 	private JOptionPane errorDialog = new JOptionPane();

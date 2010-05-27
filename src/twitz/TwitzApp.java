@@ -21,6 +21,10 @@ import org.jdesktop.application.SingleFrameApplication;
  */
 public class TwitzApp extends SingleFrameApplication implements ActionListener, MouseListener {
 
+	public static final String UPDATE = "Update";
+	public static final String TWEET = "Tweet";
+	public static final String TWEET_MINI = "TweetMini";
+
 	private java.awt.Window window = null;
 	SettingsManager config = SettingsManager.getInstance();
 	Logger logger = Logger.getLogger(TwitzApp.class.getName());
@@ -116,11 +120,6 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
         launch(TwitzApp.class, args);
     }
 
-	public void actionPerformed(ActionEvent e)
-	{
-		throw new UnsupportedOperationException("Not supported yet.");
-	}
-
 	public void toggleWindowView(String action) {
 		java.awt.Window win = getMainWindow();
 		//Window win = window;
@@ -186,6 +185,25 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				getMainFrame().setState(java.awt.Frame.NORMAL);
 			}
 		}
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		if(cmd.endsWith(TWEET_MINI)) {
+			view.showMiniTweet();
+		}
+		else if(cmd.equals("Exit")) {
+			exit(e);
+		}
+		else if(cmd.equals("About")) {
+			view.showAboutBox();
+		}
+		else if(cmd.equals("PrefsDlg")) {
+			//prefs = new PreferencesDialog(null, true/*, config*/);
+			//prefs.setVisible(true);
+			view.showPrefsBox();
+		}
+		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public void mouseClicked(MouseEvent e)
