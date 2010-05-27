@@ -26,6 +26,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	Logger logger = Logger.getLogger(TwitzApp.class.getName());
 	TwitzTrayIcon tray = null;
 	private TwitzView view;
+	private boolean hidden = false;
 
     /**
      * At startup create and show the main frame of the application.
@@ -51,6 +52,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				logger.log(Level.INFO, "Window Iconified");
 				//tray.toggleWindowView("down");
 				hide(view);
+				hidden = true;
 			}
 
 			public void windowOpened(WindowEvent e)
@@ -59,6 +61,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				{
 					//e.getWindow().setVisible(false);
 					hide(view);
+					hidden = true;
 //					if(window != null)
 //						window.setVisible(false);
 //					else
@@ -133,32 +136,29 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			}
 			else if(action.equalsIgnoreCase("up"))
 			{
-				if(!win.isShowing())
-				{
-					this.hide(view);
-					//win.setVisible(true);
-				}
+				show(view);
 			}
 			else if(action.equalsIgnoreCase("down"))
 			{
-				//win.setVisible(false);
-				this.hide(view);
+				hide(view);
 			}
 			else if(action.equalsIgnoreCase("toggle"))
 			{
 
-				if (win.isShowing() && win.isActive())
+				if (!hidden)
 				{
 					hide(view);
+					hidden = true;
 					//win.setVisible(false);
 				}
-				else if (win.isShowing() && !win.isActive())
+				else if (!hidden && !win.isActive())
 				{
 					win.toFront();
 				}
 				else
 				{
 					show(view);
+					hidden = false;
 					getMainFrame().setState(java.awt.Frame.NORMAL);
 //					win.setVisible(true);
 //					getMainFrame().setState(java.awt.Frame.NORMAL);
@@ -168,17 +168,21 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 		else
 		{
-			if (win.isShowing() && win.isActive())
+			if (!hidden && win.isActive())
 			{
-				win.setVisible(false);
+				hide(view);
+				hidden = true;
+				//win.setVisible(false);
 			}
-			else if (win.isShowing() && !win.isActive())
+			else if (!hidden && !win.isActive())
 			{
 				win.toFront();
 			}
 			else
 			{
-				win.setVisible(true);
+				show(view);
+				hidden = false;
+				//win.setVisible(true);
 				getMainFrame().setState(java.awt.Frame.NORMAL);
 			}
 		}
