@@ -170,6 +170,8 @@ public class TwitzView extends FrameView implements TwitzListener{
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
+        editMenu = new javax.swing.JMenu();
+        prefsMenuItem = new javax.swing.JMenuItem();
         javax.swing.JMenu helpMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem aboutMenuItem = new javax.swing.JMenuItem();
         statusPanel = new javax.swing.JPanel();
@@ -254,7 +256,7 @@ public class TwitzView extends FrameView implements TwitzListener{
             .addGroup(mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tabPane, javax.swing.GroupLayout.PREFERRED_SIZE, 419, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(tabPane, javax.swing.GroupLayout.PREFERRED_SIZE, 419, Short.MAX_VALUE)
                     .addGroup(mainPanelLayout.createSequentialGroup()
                         .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -282,15 +284,30 @@ public class TwitzView extends FrameView implements TwitzListener{
 
         javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
         exitMenuItem.setAction(actionMap.get("quit")); // NOI18N
+        exitMenuItem.setIcon(resourceMap.getIcon("exitMenuItem.icon")); // NOI18N
         exitMenuItem.setName("exitMenuItem"); // NOI18N
         fileMenu.add(exitMenuItem);
 
         menuBar.add(fileMenu);
 
+        editMenu.setText(resourceMap.getString("editMenu.text")); // NOI18N
+        editMenu.setName("editMenu"); // NOI18N
+
+        prefsMenuItem.setAction(actionMap.get("showPrefsBox")); // NOI18N
+        prefsMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_MASK));
+        prefsMenuItem.setIcon(resourceMap.getIcon("prefsMenuItem.icon")); // NOI18N
+        prefsMenuItem.setMnemonic('r');
+        prefsMenuItem.setText(resourceMap.getString("prefsMenuItem.text")); // NOI18N
+        prefsMenuItem.setName("prefsMenuItem"); // NOI18N
+        editMenu.add(prefsMenuItem);
+
+        menuBar.add(editMenu);
+
         helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
         helpMenu.setName("helpMenu"); // NOI18N
 
         aboutMenuItem.setAction(actionMap.get("showAboutBox")); // NOI18N
+        aboutMenuItem.setIcon(resourceMap.getIcon("aboutMenuItem.icon")); // NOI18N
         aboutMenuItem.setName("aboutMenuItem"); // NOI18N
         helpMenu.add(aboutMenuItem);
 
@@ -342,6 +359,7 @@ public class TwitzView extends FrameView implements TwitzListener{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList blockedList;
     private javax.swing.JButton btnTweet;
+    private javax.swing.JMenu editMenu;
     private javax.swing.JList followersList;
     private javax.swing.JList followingList;
     private javax.swing.JList friendsList;
@@ -352,6 +370,7 @@ public class TwitzView extends FrameView implements TwitzListener{
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenuItem prefsMenuItem;
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JLabel statusAnimationLabel;
     private javax.swing.JLabel statusMessageLabel;
