@@ -229,7 +229,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		}
 		DefaultTableModel model = (DefaultTableModel)tblConfig.getModel();
 		model.setDataVector(vConfig, vHeaders);
-		tblConfig.getColumnModel().getColumn(2).setCellEditor(new BrowseCellEditor(config));
+		tblConfig.getColumnModel().getColumn(2).setCellEditor(new BrowseCellEditor());
 	}
 
 	@Action

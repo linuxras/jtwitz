@@ -31,8 +31,10 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="txtTweet" pref="345" max="32767" attributes="0"/>
+              <Component id="txtTweet" pref="322" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
+              <Component id="chkCOT" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
               <Component id="btnTweet" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -47,6 +49,7 @@
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="txtTweet" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="btnTweet" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="chkCOT" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
                   </Group>
@@ -87,6 +90,13 @@
         <Property name="icon" type="javax.swing.Icon" resourceKey="jLabel1.icon"/>
         <Property name="text" type="java.lang.String" resourceKey="jLabel1.text"/>
         <Property name="name" type="java.lang.String" value="jLabel1" noResource="true"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="chkCOT">
+      <Properties>
+        <Property name="text" type="java.lang.String" resourceKey="chkCOT.text"/>
+        <Property name="toolTipText" type="java.lang.String" resourceKey="chkCOT.toolTipText"/>
+        <Property name="name" type="java.lang.String" value="chkCOT" noResource="true"/>
       </Properties>
     </Component>
   </SubComponents>

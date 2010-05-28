@@ -24,8 +24,8 @@ import org.jdesktop.application.Action;
  */
 public class BrowseCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-	public BrowseCellEditor(twitz.util.SettingsManager c) {
-		config = c;
+	public BrowseCellEditor(/*twitz.util.SettingsManager c*/) {
+		//config = c;
 		initComponents();
 	}
 
@@ -33,6 +33,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 
         txtPath = new javax.swing.JTextField();
         btnBrowse = new javax.swing.JButton();
+		boolEditor.setAlignmentX(javax.swing.JSpinner.LEFT_ALIGNMENT);
 
         //panel.setMinimumSize(new java.awt.Dimension(54, 12));
         panel.setName("Form"); // NOI18N
@@ -259,7 +260,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	private javax.swing.JCheckBox chkEditor = new javax.swing.JCheckBox();
 	private String boolModel[] = {"true", "false"};
 	private javax.swing.JSpinner boolEditor = new javax.swing.JSpinner(new javax.swing.SpinnerListModel(boolModel));
-	private twitz.util.SettingsManager config;
+	private twitz.util.SettingsManager config = twitz.util.SettingsManager.getInstance();
 	private String currentEditor = null;
     // End of variables declaration
 

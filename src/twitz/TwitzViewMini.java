@@ -29,8 +29,9 @@ import org.jdesktop.application.Action;
 public class TwitzViewMini extends javax.swing.JFrame {
 
     /** Creates new form TwitzViewMini */
-    public TwitzViewMini() {
+    public TwitzViewMini(TwitzView v) {
 		//tray = t;
+		mainView = v;
 		tm = twitz.twitter.TwitterManager.getInstance();
 		errorDialog.setMaximumSize(new Dimension(300, 100));
         initComponents();
@@ -56,6 +57,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
         txtTweet = new javax.swing.JTextField();
         btnTweet = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        chkCOT = new javax.swing.JCheckBox();
 
         setAlwaysOnTop(true);
         setName("Form"); // NOI18N
@@ -86,6 +88,10 @@ public class TwitzViewMini extends javax.swing.JFrame {
         jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
         jLabel1.setName("jLabel1"); // NOI18N
 
+        chkCOT.setText(resourceMap.getString("chkCOT.text")); // NOI18N
+        chkCOT.setToolTipText(resourceMap.getString("chkCOT.toolTipText")); // NOI18N
+        chkCOT.setName("chkCOT"); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -94,8 +100,10 @@ public class TwitzViewMini extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 345, Short.MAX_VALUE)
+                .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chkCOT)
+                .addGap(6, 6, 6)
                 .addComponent(btnTweet)
                 .addContainerGap())
         );
@@ -107,7 +115,8 @@ public class TwitzViewMini extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(txtTweet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnTweet))
+                            .addComponent(btnTweet)
+                            .addComponent(chkCOT))
                         .addGap(6, 6, 6))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(jLabel1)
@@ -121,7 +130,10 @@ public class TwitzViewMini extends javax.swing.JFrame {
 	{//GEN-HEADEREND:event_txtTweetKeyPressed
 		switch(evt.getKeyCode()) {
 			case KeyEvent.VK_ENTER:
-				sendTweetClicked();
+				mainView.sendTweetClicked();
+				txtTweet.setText("");
+				if(chkCOT.isSelected())
+					dispose();
 				break;
 			case KeyEvent.VK_ESCAPE:
 				dispose();
@@ -140,35 +152,10 @@ public class TwitzViewMini extends javax.swing.JFrame {
 	@SuppressWarnings("static-access")
 	public void sendTweetClicked()
 	{
-		twitter4j.User u = null;
-		try
-		{
-			u = tm.getTwitterInstance().verifyCredentials();
-		}
-		catch (TwitterException ex)
-		{
-			logger.log(Level.SEVERE, ex.getMessage());
-			if(ex.isCausedByNetworkIssue()) {
-				errorDialog.showMessageDialog(this, "Unable to reach "+ex.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
-			}
-			//logger.log(Level.SEVERE, ex.getStatusCode()+"");
-		}
-
-		try
-		{
-			tm.sendTweet(txtTweet.getText());
-		}
-		catch (TwitterException ex)
-		{
-			logger.log(Level.SEVERE, ex.getMessage());
-			errorDialog.showMessageDialog(this, ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
-		}
-		catch (IllegalStateException ex)
-		{
-			logger.log(Level.SEVERE, ex.getMessage());
-			errorDialog.showMessageDialog(this, ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
-		}
-		setVisible(false);
+		mainView.sendTweetClicked();
+		txtTweet.setText("");
+		if(chkCOT.isSelected())
+			dispose();
 	}
 	
     /**
@@ -184,6 +171,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnTweet;
+    private javax.swing.JCheckBox chkCOT;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JTextField txtTweet;
     // End of variables declaration//GEN-END:variables
@@ -191,6 +179,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
 	private SettingsManager config = SettingsManager.getInstance();
 	//private TwitzTrayIcon tray = null;
 	private twitz.twitter.TwitterManager tm;
+	private TwitzView mainView;
 	Logger logger = Logger.getLogger(TwitzViewMini.class.getName());
 	private JOptionPane errorDialog = new JOptionPane();
 	

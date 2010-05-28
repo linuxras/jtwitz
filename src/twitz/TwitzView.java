@@ -14,11 +14,15 @@ import org.jdesktop.application.FrameView;
 import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.logging.Level;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
 import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import twitter4j.TwitterException;
 import twitz.events.TwitzListener;
 import twitz.twitter.TwitterManager;
 
@@ -119,9 +123,48 @@ public class TwitzView extends FrameView implements TwitzListener{
 	@Action
 	public void showMiniTweet() {
 		if(mini == null) {
-			mini = new TwitzViewMini();
+			mini = new TwitzViewMini(this);
 		}
 		mini.setVisible(true);
+	}
+
+	@Action
+	@SuppressWarnings("static-access")
+	public void sendTweetClicked()
+	{
+		twitter4j.User u = null;
+		try
+		{
+			u = tm.getTwitterInstance().verifyCredentials();
+		}
+		catch (TwitterException ex)
+		{
+			logger.log(Level.SEVERE, ex.getMessage());
+			if(ex.isCausedByNetworkIssue()) {
+				errorDialog.showMessageDialog(this.getFrame(), "Unable to reach "+ex.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
+			}
+			//logger.log(Level.SEVERE, ex.getStatusCode()+"");
+		}
+		if(u != null) {
+			try
+			{
+				tm.sendTweet(txtTweet.getText());
+			}
+			catch (TwitterException ex)
+			{
+				logger.log(Level.SEVERE, ex.getMessage());
+				errorDialog.showMessageDialog(this.getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
+			}
+			catch (IllegalStateException ex)
+			{
+				logger.log(Level.SEVERE, ex.getMessage());
+				errorDialog.showMessageDialog(this.getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
+			}
+			//if(mini != null)
+			//	mini.setVisible(false);
+			txtTweet.setText("");
+			btnTweet.setEnabled(false);
+		}
 	}
 
 	public void eventOccurred(TwitzEvent t)
@@ -185,7 +228,14 @@ public class TwitzView extends FrameView implements TwitzListener{
         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
         txtTweet.setText(resourceMap.getString("txtTweet.text")); // NOI18N
         txtTweet.setName("txtTweet"); // NOI18N
+        txtTweet.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtTweetKeyPressed(evt);
+            }
+        });
 
+        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
+        btnTweet.setAction(actionMap.get("sendTweetClicked")); // NOI18N
         btnTweet.setText(resourceMap.getString("btnTweet.text")); // NOI18N
         btnTweet.setToolTipText(resourceMap.getString("btnTweet.toolTipText")); // NOI18N
         btnTweet.setName("btnTweet"); // NOI18N
@@ -282,7 +332,6 @@ public class TwitzView extends FrameView implements TwitzListener{
         fileMenu.setText(resourceMap.getString("fileMenu.text")); // NOI18N
         fileMenu.setName("fileMenu"); // NOI18N
 
-        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
         exitMenuItem.setAction(actionMap.get("quit")); // NOI18N
         exitMenuItem.setIcon(resourceMap.getIcon("exitMenuItem.icon")); // NOI18N
         exitMenuItem.setName("exitMenuItem"); // NOI18N
@@ -355,6 +404,16 @@ public class TwitzView extends FrameView implements TwitzListener{
         setStatusBar(statusPanel);
     }// </editor-fold>//GEN-END:initComponents
 
+	private void txtTweetKeyPressed(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyPressed
+	{//GEN-HEADEREND:event_txtTweetKeyPressed
+		switch(evt.getKeyCode()) {
+			case KeyEvent.VK_ENTER:
+				sendTweetClicked();
+				txtTweet.setText("");
+				break;
+		}
+	}//GEN-LAST:event_txtTweetKeyPressed
+
 	// <editor-fold defaultstate="collapsed" desc="Generated Variables">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList blockedList;
@@ -383,7 +442,7 @@ public class TwitzView extends FrameView implements TwitzListener{
 
 	private SettingsManager config = SettingsManager.getInstance();
 	//private TwitzTrayIcon tray;
-	private TwitterManager tm; // = new TwitterManager();
+	//private TwitterManager tm; // = new TwitterManager();
     private final Timer messageTimer;
     private final Timer busyIconTimer;
     private final Icon idleIcon;
@@ -393,6 +452,8 @@ public class TwitzView extends FrameView implements TwitzListener{
     private JDialog aboutBox;
 	private PreferencesDialog prefs;
 	private TwitzViewMini mini;
+	private twitz.twitter.TwitterManager tm;
+	private JOptionPane errorDialog = new JOptionPane();
 
 	Logger logger = Logger.getLogger(TwitzView.class.getName());
 }
