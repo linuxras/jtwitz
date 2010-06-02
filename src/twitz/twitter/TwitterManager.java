@@ -89,7 +89,7 @@ public class TwitterManager extends DefaultTwitzEventModel {
 //		}
 		if(stat != null) {
 			//TODO Update pertinent list with this new data. I would like to fire an event here
-			this.fireTwitzEvent(new TwitzEvent(stat, twitter, TwitzEvent.TWITZ_UPDATE, new java.util.Date().getTime()));
+			this.fireTwitzEvent(new TwitzEvent(stat, twitter, TwitzEvent.UPDATE, new java.util.Date().getTime()));
 		}
 	}
 

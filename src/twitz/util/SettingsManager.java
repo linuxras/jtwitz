@@ -65,6 +65,8 @@ public class SettingsManager {
 		settings.setProperty("twitter.picture", "");
 		settings.setProperty("twitter.picture.cfgdesc", "Twitter Profile Image");
 		settings.setProperty("twitter.picture.cfgtype", "File");
+		settings.setProperty("minimode", "true");
+		settings.setProperty("minimode.cfgtype", "NULL");
 		saveSettings();
 	}
 

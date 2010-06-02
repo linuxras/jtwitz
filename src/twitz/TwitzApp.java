@@ -4,15 +4,30 @@
 
 package twitz;
 
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.beans.PropertyChangeEvent;
 import twitz.util.SettingsManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.event.WindowStateListener;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import javax.swing.JFrame;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.SingleFrameApplication;
 
@@ -30,14 +45,47 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	Logger logger = Logger.getLogger(TwitzApp.class.getName());
 	TwitzTrayIcon tray = null;
 	private TwitzView view;
-	private boolean hidden = false;
+	private boolean hidden = config.getBoolean("minimize.startup");
+	Image splash = getIcon("resources/splash.png");
+	JFrame splashFrame = new JFrame();
+
+	private void buildSplash() {
+		Point center = getDesktopCenter();
+		GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();
+		splashFrame.setAlwaysOnTop(true);
+		splashFrame.setUndecorated(true);
+		splashFrame.setLayout(gridbag);
+		javax.swing.JLabel img = new javax.swing.JLabel();
+		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(splash);
+		Rectangle bound = new Rectangle();
+		bound.setSize(icon.getIconWidth(), icon.getIconHeight());
+		bound.setLocation((center.x - (icon.getIconWidth() / 2)), (center.y - (icon.getIconHeight() / 2)));
+		splashFrame.setBounds(bound);
+		img.setIcon(icon);
+		splashFrame.add(img);
+		//return splashFrame;
+	}
+
+	private Point getDesktopCenter() {
+		return GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+	}
 
     /**
      * At startup create and show the main frame of the application.
      */
     @Override protected void startup() {
+		buildSplash();
+		splashFrame.setVisible(true);
+		Point c = getDesktopCenter();
+		Rectangle bound = new Rectangle();
+		bound.setSize(420, 300);
+		bound.setLocation((c.x - 210), (c.y - 150));
 		view = new TwitzView(this);
+		view.getFrame().setBounds(bound);
+		view.getFrame().setUndecorated(true);
 		tray = new TwitzTrayIcon(this, view);
+		System.out.println("Inside Startup");
         //show(new TwitzView(this, tray, config));
 		show(view);
     }
@@ -48,30 +96,23 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
      * builder, so this additional configuration is not needed.
      */
     @Override protected void configureWindow(java.awt.Window root) {
+		System.out.println("Inside configureWindow");
 		window = root;
+		window.setIconImage(getIcon("resources/clock.png"));
 		window.addWindowListener(new WindowListener() {
 
 			public void windowIconified(WindowEvent e)
 			{
 				logger.log(Level.INFO, "Window Iconified");
-				//tray.toggleWindowView("down");
-				hide(view);
-				hidden = true;
+				toggleWindowView("down");
 			}
 
 			public void windowOpened(WindowEvent e)
 			{
-				if(config.getBoolean("minimize.startup"))
-				{
-					//e.getWindow().setVisible(false);
-					hide(view);
-					hidden = true;
-//					if(window != null)
-//						window.setVisible(false);
-//					else
-//						logger.log(Level.WARNING, "Window is null");
-				}
-				//throw new UnsupportedOperationException("Not supported yet.");
+//				if(config.getBoolean("minimize.startup"))
+//				{
+//					toggleWindowView("down");
+//				}
 			}
 
 			public void windowClosing(WindowEvent e)
@@ -101,6 +142,21 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		});
     }
 
+	@Override
+	protected void ready() {
+		System.out.println("Inside ready()");
+		if(hidden)
+			toggleWindowView("down");
+		splashFrame.setVisible(false);
+		GraphicsEnvironment gc = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice[] dv = gc.getScreenDevices();
+		for(GraphicsDevice d : dv) {
+			System.out.println(d.getIDstring());
+			GraphicsConfiguration g = d.getDefaultConfiguration();
+			System.out.println(g.toString());
+		}
+	}
+
 	public java.awt.Window getMainWindow() {
 		return window;
 	}
@@ -120,6 +176,25 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
         launch(TwitzApp.class, args);
     }
 
+	public Image getIcon(String path) {
+
+        Image icon = null;
+
+        //ClassLoader loader = TwitzApp.class.getClassLoader();
+        //InputStream is = loader.getResourceAsStream(path);
+		InputStream is = this.getClass().getResourceAsStream(path);
+		try
+		{
+			icon = ImageIO.read(is);
+			is.close();
+		}
+		catch(IOException ex) {
+			logger.log(Level.SEVERE, ex.getMessage());
+		}
+
+        return (icon);
+    }
+
 	public void toggleWindowView(String action) {
 		java.awt.Window win = getMainWindow();
 		//Window win = window;
@@ -136,23 +211,27 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			else if(action.equalsIgnoreCase("up"))
 			{
 				show(view);
+				hidden = false;
 			}
 			else if(action.equalsIgnoreCase("down"))
 			{
 				hide(view);
+				hidden = true;
 			}
 			else if(action.equalsIgnoreCase("toggle"))
 			{
 
-				if (!hidden)
+				if (!hidden && !win.isActive())
 				{
-					hide(view);
-					hidden = true;
+					//hide(view);
+					win.toFront();
 					//win.setVisible(false);
 				}
-				else if (!hidden && !win.isActive())
+				else if (!hidden)
 				{
-					win.toFront();
+					hide(view);
+					getMainFrame().setState(java.awt.Frame.NORMAL);
+					hidden = true;
 				}
 				else
 				{
@@ -190,7 +269,9 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
 		if(cmd.endsWith(TWEET_MINI)) {
-			view.showMiniTweet();
+			//view.showMiniTweet();
+			view.miniTwitz();
+			toggleWindowView("up");
 		}
 		else if(cmd.equals("Exit")) {
 			exit(e);

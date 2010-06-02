@@ -25,10 +25,13 @@ import org.jdesktop.application.Action;
 /**
  *
  * @author mistik1
+ * @deprecated Should no longer be used #see TwitzView.miniTwitz()
  */
+@Deprecated
 public class TwitzViewMini extends javax.swing.JFrame {
 
     /** Creates new form TwitzViewMini */
+	@Deprecated
     public TwitzViewMini(TwitzView v) {
 		//tray = t;
 		mainView = v;
@@ -130,7 +133,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
 	{//GEN-HEADEREND:event_txtTweetKeyPressed
 		switch(evt.getKeyCode()) {
 			case KeyEvent.VK_ENTER:
-				mainView.sendTweetClicked();
+				mainView.sendTweetClicked().execute();
 				txtTweet.setText("");
 				if(chkCOT.isSelected())
 					dispose();
@@ -152,7 +155,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
 	@SuppressWarnings("static-access")
 	public void sendTweetClicked()
 	{
-		mainView.sendTweetClicked();
+		mainView.sendTweetClicked().execute();
 		txtTweet.setText("");
 		if(chkCOT.isSelected())
 			dispose();

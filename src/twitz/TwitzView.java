@@ -4,7 +4,12 @@
 
 package twitz;
 
+import twitz.dialogs.PreferencesDialog;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
+import java.awt.event.WindowEvent;
 import java.util.logging.Logger;
+import org.jdesktop.application.Task;
 import twitz.events.TwitzEvent;
 import twitz.util.SettingsManager;
 import org.jdesktop.application.Action;
@@ -15,6 +20,9 @@ import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowFocusListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.logging.Level;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
@@ -23,6 +31,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import twitter4j.TwitterException;
+import twitz.dialogs.MessageDialog;
 import twitz.events.TwitzListener;
 import twitz.twitter.TwitterManager;
 
@@ -33,17 +42,41 @@ public class TwitzView extends FrameView implements TwitzListener{
 
     public TwitzView(SingleFrameApplication app) {
         super(app);
+		mainApp = (TwitzApp)app;
 		//tray = t;
 		//config = c;
 		tm = TwitterManager.getInstance();
 		tm.addTwitzListener(this);
         initComponents();
 		this.getFrame().setVisible(false);
+		this.getFrame().setSize(400, 300);
+		btnTweet.setEnabled(false);
 
-		//Initialize AboutBox
-//		JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
-//		aboutBox = new TwitzAboutBox(mainFrame);
-//		aboutBox.setVisible(false);
+		//look & feel setup
+		//Default to full view
+		boolean m = config.getBoolean("minimode");
+		fullTwitz();
+		if(m) {
+			miniTwitz();
+		}
+		else
+		{
+			fullTwitz();
+		}
+
+		this.getFrame().addWindowFocusListener(new WindowFocusListener() {
+
+			public void windowGainedFocus(WindowEvent e)
+			{
+				txtTweet.requestFocus();
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			public void windowLostFocus(WindowEvent e)
+			{
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+		});
 
         // status bar initialization - message timeout, idle icon and busy animation, etc
         ResourceMap resourceMap = getResourceMap();
@@ -120,58 +153,189 @@ public class TwitzView extends FrameView implements TwitzListener{
 		prefs.setVisible(true);
 	}
 
-	@Action
-	public void showMiniTweet() {
-		if(mini == null) {
-			mini = new TwitzViewMini(this);
-		}
-		mini.setVisible(true);
-	}
+//	@Action
+//	public void showMiniTweet() {
+//		if(mini == null) {
+//			mini = new TwitzViewMini(this);
+//		}
+//		mini.setVisible(true);
+//	}
 
 	@Action
 	@SuppressWarnings("static-access")
-	public void sendTweetClicked()
+	public Task sendTweetClicked()
 	{
-		twitter4j.User u = null;
-		try
-		{
-			u = tm.getTwitterInstance().verifyCredentials();
-		}
-		catch (TwitterException ex)
-		{
-			logger.log(Level.SEVERE, ex.getMessage());
-			if(ex.isCausedByNetworkIssue()) {
-				errorDialog.showMessageDialog(this.getFrame(), "Unable to reach "+ex.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
-			}
-			//logger.log(Level.SEVERE, ex.getStatusCode()+"");
-		}
-		if(u != null) {
+		return new SendTweetClickedTask(getApplication());
+	}
+
+    private class SendTweetClickedTask extends org.jdesktop.application.Task<Object, Void> {
+        String tweet;
+		int errors = 0;
+		SendTweetClickedTask(org.jdesktop.application.Application app) {
+            // Runs on the EDT.  Copy GUI state that
+            // doInBackground() depends on from parameters
+            // to SendTweetClickedTask fields, here.
+            super(app);
+			tweet = txtTweet.getText();
+			
+        }
+        @Override protected Object doInBackground() {
+            // Your Task's code here.  This method runs
+            // on a background thread, so don't reference
+            // the Swing GUI from here.
+			message("startMessage", 2);
+			twitter4j.User u = null;
 			try
 			{
-				tm.sendTweet(txtTweet.getText());
+				u = tm.getTwitterInstance().verifyCredentials();
 			}
 			catch (TwitterException ex)
 			{
-				logger.log(Level.SEVERE, ex.getMessage());
-				errorDialog.showMessageDialog(this.getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
+//				logger.log(Level.SEVERE, ex.getMessage());
+				errors++;
+				failed(ex);
+//				if (ex.isCausedByNetworkIssue())
+//				{
+//					message("errorMessage", "Unable to reach "+ex.getMessage());
+//					//errorDialog.showMessageDialog(getFrame(), "Unable to reach " + ex.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
+//				}
+			//logger.log(Level.SEVERE, ex.getStatusCode()+"");
 			}
-			catch (IllegalStateException ex)
+			if (u != null)
 			{
-				logger.log(Level.SEVERE, ex.getMessage());
-				errorDialog.showMessageDialog(this.getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
+				//message("startMessage", "Sending tweet...");
+				try
+				{
+					tm.sendTweet(tweet);
+				}
+				catch (TwitterException ex)
+				{
+					errors++;
+					failed(ex);
+//					logger.log(Level.SEVERE, ex.getMessage());
+//					message("errorMessage", "Error Occurred: "+ex.getMessage());
+					//errorDialog.showMessageDialog(getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
+				}
+				catch (IllegalStateException ex)
+				{
+					errors++;
+					failed(ex);
+//					logger.log(Level.SEVERE, ex.getMessage());
+//					message("errorMessage", "Error Occurred: "+ex.getMessage());
+					//errorDialog.showMessageDialog(getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
+				}
+				message("finishMessage", 2, errors);
 			}
-			//if(mini != null)
-			//	mini.setVisible(false);
-			txtTweet.setText("");
-			btnTweet.setEnabled(false);
+            return null;  // return your result
+        }
+        @Override protected void succeeded(Object result) {
+            // Runs on the EDT.  Update the GUI based on
+            // the result computed by doInBackground().
+			if(errors < 1)
+			{
+				txtTweet.setText("");
+				btnTweet.setEnabled(false);
+
+				if (chkCOT.isSelected())
+				{
+					mainApp.toggleWindowView("down");
+				}
+			}
+        }
+
+		@Override protected void failed(Throwable t) {
+			logger.log(Level.SEVERE, t.getMessage());
+			if(t instanceof TwitterException) {
+				TwitterException te = (TwitterException)t;
+				if(te.isCausedByNetworkIssue()) {
+					displayError(t, "Network Error", "Unable to reach: "+te.getMessage());
+					//errorDialog.showMessageDialog(getFrame(), "Unable to reach " + te.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else if(te.resourceNotFound()) {
+					//errorDialog.showMessageDialog(getFrame(), "Unable to locate resource: " + te.getMessage(), "Resource Alocation Error", JOptionPane.ERROR_MESSAGE);
+					displayError(t, "Resource Allocation Error", "Unable to locate resource: "+te.getMessage());
+				}
+			}
+			message("finishMessage", 2, errors);
+		}
+    }
+
+	private void displayError(Throwable t, String title, Object message) {
+		Object[] options = {"Ok", "Stack Trace"};
+		int rv = JOptionPane.showOptionDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, getResourceMap().getIcon("error.icon"), options, options[0]);
+		switch (rv)
+		{
+			case 0:
+				break;
+			case 1:
+				//show the full stack trace here
+				MessageDialog msg = new MessageDialog(getFrame(), false);
+				java.io.StringWriter w = new java.io.StringWriter();
+				java.io.PrintWriter p = new java.io.PrintWriter(w);
+				t.printStackTrace(p);
+				p.flush();
+				msg.setMessage(w.toString());
+				msg.setVisible(true);
+				break;
 		}
 	}
 
+	@Action
+	public void showMiniMode() {
+		if(minimode) {
+			fullTwitz();
+		}
+		else {
+			miniTwitz();
+		}
+	}
+
+	public void miniTwitz() {
+		tabPane.setVisible(false);
+		//this.getStatusBar().setVisible(false);
+		this.getMenuBar().setVisible(false);
+		this.getFrame().setSize(this.getFrame().getWidth(), 100);
+		fixLocation();
+		btnMini.setIcon(getResourceMap().getIcon("btnMini.up.icon"));
+		minimode = true;
+		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
+	}
+
+	public void fullTwitz() {
+		tabPane.setVisible(true);
+		//this.getStatusBar().setVisible(true);
+		this.getMenuBar().setVisible(true);
+		this.getFrame().setSize(this.getFrame().getWidth(), 300);
+		fixLocation();
+		btnMini.setIcon(getResourceMap().getIcon("btnMini.icon"));
+		minimode = false;
+		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
+	}
+
+	private void fixLocation() {
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		Rectangle frame = this.getFrame().getBounds();
+		Rectangle desktop = ge.getMaximumWindowBounds();
+		//System.out.println("Widht of desktop: " + desk.toString());
+		//int x = (desk.width - frame.width);
+		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
+			int x = (desktop.width - frame.width);
+			int y = (desktop.height - frame.height) - 32;
+			//System.out.println("X: " + x + " Y: " + y);
+			this.getFrame().setLocation(x, y);
+		}
+	}
+
+	/**
+	 * Event Processor for all events that are related to twitter activity in the #link TwitterManager
+	 * A TwitzEvent will will have and type.
+	 * @param t
+	 */
 	public void eventOccurred(TwitzEvent t)
 	{
 		int type = t.getEventType();
 		switch(type) {
-			case TwitzEvent.TWITZ_UPDATE:
+			case TwitzEvent.UPDATE:
 				twitter4j.Status s = (twitter4j.Status) t.getSource();
 				twitter4j.User u = s.getUser();
 				String me = u.getScreenName();
@@ -179,12 +343,23 @@ public class TwitzView extends FrameView implements TwitzListener{
 				DefaultListModel model = (DefaultListModel) tweetsList.getModel();
 				model.addElement(me+": "+s.getText());
 				break;
-			case TwitzEvent.TWITZ_LOGIN:
+			case TwitzEvent.LOGIN:
 				break;
-			case TwitzEvent.TWITZ_ADD_FRIEND:
+			case TwitzEvent.ADD_FRIEND:
+				break;
+			case TwitzEvent.DELETE_FRIEND:
+				break;
+			case TwitzEvent.MSG_SENT:
+				break;
+			case TwitzEvent.MSG_RECIEVED:
+				break;
+			case TwitzEvent.ADD_BLOCK:
+				break;
+			case TwitzEvent.REMOVE_BLOCK:
+				break;
+			case TwitzEvent.REPORT_SPAM:
 				break;
 		}
-		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
     /** This method is called from within the constructor to
@@ -197,8 +372,6 @@ public class TwitzView extends FrameView implements TwitzListener{
     private void initComponents() {
 
         mainPanel = new javax.swing.JPanel();
-        txtTweet = new javax.swing.JTextField();
-        btnTweet = new javax.swing.JButton();
         tabPane = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
         tweetsList = new javax.swing.JList();
@@ -210,6 +383,11 @@ public class TwitzView extends FrameView implements TwitzListener{
         followingList = new javax.swing.JList();
         jScrollPane5 = new javax.swing.JScrollPane();
         followersList = new javax.swing.JList();
+        actionPanel = new javax.swing.JPanel();
+        txtTweet = new javax.swing.JTextField();
+        chkCOT = new javax.swing.JCheckBox();
+        btnTweet = new javax.swing.JButton();
+        btnMini = new javax.swing.JButton();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
@@ -222,34 +400,40 @@ public class TwitzView extends FrameView implements TwitzListener{
         statusMessageLabel = new javax.swing.JLabel();
         statusAnimationLabel = new javax.swing.JLabel();
         progressBar = new javax.swing.JProgressBar();
+        contextMenu = new javax.swing.JPopupMenu();
+        prefsItem = new javax.swing.JMenuItem();
+        miniItem = new javax.swing.JMenuItem();
+        helpItem = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JSeparator();
+        exitItem = new javax.swing.JMenuItem();
 
+        mainPanel.setComponentPopupMenu(contextMenu);
         mainPanel.setName("mainPanel"); // NOI18N
-
-        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
-        txtTweet.setText(resourceMap.getString("txtTweet.text")); // NOI18N
-        txtTweet.setName("txtTweet"); // NOI18N
-        txtTweet.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtTweetKeyPressed(evt);
+        mainPanel.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                mainPanelKeyReleased(evt);
             }
         });
 
-        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
-        btnTweet.setAction(actionMap.get("sendTweetClicked")); // NOI18N
-        btnTweet.setText(resourceMap.getString("btnTweet.text")); // NOI18N
-        btnTweet.setToolTipText(resourceMap.getString("btnTweet.toolTipText")); // NOI18N
-        btnTweet.setName("btnTweet"); // NOI18N
-
-        tabPane.setTabPlacement(javax.swing.JTabbedPane.RIGHT);
+        tabPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
+        tabPane.setInheritsPopupMenu(true);
         tabPane.setName("tabPane"); // NOI18N
+        tabPane.setNextFocusableComponent(txtTweet);
+        tabPane.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tabPaneKeyReleased(evt);
+            }
+        });
 
         jScrollPane1.setName("jScrollPane1"); // NOI18N
 
+        tweetsList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tweetsList.setCellRenderer(new TweetsListRenderer());
         tweetsList.setName("tweetsList"); // NOI18N
         jScrollPane1.setViewportView(tweetsList);
 
-        tabPane.addTab(resourceMap.getString("jScrollPane1.TabConstraints.tabTitle"), jScrollPane1); // NOI18N
+        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
+        tabPane.addTab(resourceMap.getString("jScrollPane1.TabConstraints.tabTitle"), resourceMap.getIcon("jScrollPane1.TabConstraints.tabIcon"), jScrollPane1); // NOI18N
 
         jScrollPane2.setName("jScrollPane2"); // NOI18N
 
@@ -299,33 +483,81 @@ public class TwitzView extends FrameView implements TwitzListener{
 
         tabPane.addTab(resourceMap.getString("jScrollPane5.TabConstraints.tabTitle"), jScrollPane5); // NOI18N
 
+        actionPanel.setMinimumSize(new java.awt.Dimension(100, 50));
+        actionPanel.setName("actionPanel"); // NOI18N
+
+        txtTweet.setText(resourceMap.getString("txtTweet.text")); // NOI18N
+        txtTweet.setName("txtTweet"); // NOI18N
+        txtTweet.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtTweetKeyReleased(evt);
+            }
+        });
+
+        chkCOT.setText(resourceMap.getString("chkCOT.text")); // NOI18N
+        chkCOT.setToolTipText(resourceMap.getString("chkCOT.toolTipText")); // NOI18N
+        chkCOT.setName("chkCOT"); // NOI18N
+
+        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
+        btnTweet.setAction(actionMap.get("sendTweetClicked")); // NOI18N
+        btnTweet.setText(resourceMap.getString("btnTweet.text")); // NOI18N
+        btnTweet.setToolTipText(resourceMap.getString("btnTweet.toolTipText")); // NOI18N
+        btnTweet.setName("btnTweet"); // NOI18N
+
+        btnMini.setAction(actionMap.get("showMiniMode")); // NOI18N
+        btnMini.setIcon(resourceMap.getIcon("btnMini.icon")); // NOI18N
+        btnMini.setText(resourceMap.getString("btnMini.text")); // NOI18N
+        btnMini.setToolTipText(resourceMap.getString("btnMini.toolTipText")); // NOI18N
+        btnMini.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        btnMini.setName("btnMini"); // NOI18N
+
+        javax.swing.GroupLayout actionPanelLayout = new javax.swing.GroupLayout(actionPanel);
+        actionPanel.setLayout(actionPanelLayout);
+        actionPanelLayout.setHorizontalGroup(
+            actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 290, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chkCOT)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnTweet)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnMini)
+                .addContainerGap())
+        );
+        actionPanelLayout.setVerticalGroup(
+            actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(txtTweet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(chkCOT)
+                    .addComponent(btnTweet)
+                    .addComponent(btnMini))
+                .addContainerGap())
+        );
+
+        txtTweet.requestFocusInWindow();
+
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(actionPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(mainPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tabPane, javax.swing.GroupLayout.PREFERRED_SIZE, 419, Short.MAX_VALUE)
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnTweet)))
-                .addContainerGap())
+                .addGap(12, 12, 12)
+                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
+                .addGap(12, 12, 12))
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 187, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(txtTweet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnTweet))
-                .addContainerGap())
+                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 217, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(actionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
-
-        txtTweet.requestFocusInWindow();
 
         menuBar.setName("menuBar"); // NOI18N
 
@@ -343,9 +575,7 @@ public class TwitzView extends FrameView implements TwitzListener{
         editMenu.setName("editMenu"); // NOI18N
 
         prefsMenuItem.setAction(actionMap.get("showPrefsBox")); // NOI18N
-        prefsMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_MASK));
         prefsMenuItem.setIcon(resourceMap.getIcon("prefsMenuItem.icon")); // NOI18N
-        prefsMenuItem.setMnemonic('r');
         prefsMenuItem.setText(resourceMap.getString("prefsMenuItem.text")); // NOI18N
         prefsMenuItem.setName("prefsMenuItem"); // NOI18N
         editMenu.add(prefsMenuItem);
@@ -399,36 +629,97 @@ public class TwitzView extends FrameView implements TwitzListener{
                 .addGap(3, 3, 3))
         );
 
+        contextMenu.setName("contextMenu"); // NOI18N
+
+        prefsItem.setAction(actionMap.get("showPrefsBox")); // NOI18N
+        prefsItem.setText(resourceMap.getString("prefsItem.text")); // NOI18N
+        prefsItem.setName("prefsItem"); // NOI18N
+        contextMenu.add(prefsItem);
+
+        miniItem.setAction(actionMap.get("showMiniMode")); // NOI18N
+        miniItem.setText(resourceMap.getString("miniItem.text")); // NOI18N
+        miniItem.setName("miniItem"); // NOI18N
+        contextMenu.add(miniItem);
+
+        helpItem.setAction(actionMap.get("showAboutBox")); // NOI18N
+        helpItem.setText(resourceMap.getString("helpItem.text")); // NOI18N
+        helpItem.setName("helpItem"); // NOI18N
+        contextMenu.add(helpItem);
+
+        jSeparator1.setName("jSeparator1"); // NOI18N
+        contextMenu.add(jSeparator1);
+
+        exitItem.setAction(actionMap.get("quit")); // NOI18N
+        exitItem.setText(resourceMap.getString("exitItem.text")); // NOI18N
+        exitItem.setName("exitItem"); // NOI18N
+        contextMenu.add(exitItem);
+
         setComponent(mainPanel);
         setMenuBar(menuBar);
         setStatusBar(statusPanel);
     }// </editor-fold>//GEN-END:initComponents
 
-	private void txtTweetKeyPressed(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyPressed
-	{//GEN-HEADEREND:event_txtTweetKeyPressed
+	private void txtTweetKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyReleased
+	{//GEN-HEADEREND:event_txtTweetKeyReleased
+		keyTyped(evt);
+	}//GEN-LAST:event_txtTweetKeyReleased
+
+	private void tabPaneKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_tabPaneKeyReleased
+	{//GEN-HEADEREND:event_tabPaneKeyReleased
+		keyTyped(evt);
+	}//GEN-LAST:event_tabPaneKeyReleased
+
+	private void mainPanelKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_mainPanelKeyReleased
+	{//GEN-HEADEREND:event_mainPanelKeyReleased
+		keyTyped(evt);
+	}//GEN-LAST:event_mainPanelKeyReleased
+
+	@Action
+	private void keyTyped(java.awt.event.KeyEvent evt) {
 		switch(evt.getKeyCode()) {
 			case KeyEvent.VK_ENTER:
-				sendTweetClicked();
-				txtTweet.setText("");
+				sendTweetClicked().execute();
+				//txtTweet.setText("");
 				break;
+			case KeyEvent.VK_M:
+				if(evt.isControlDown())
+					showMiniMode();
+				break;
+			case KeyEvent.VK_ESCAPE:
+				mainApp.toggleWindowView("down");
+				break;
+			default:
+				if(!txtTweet.getText().equals(""))
+					btnTweet.setEnabled(true);
+				else
+					btnTweet.setEnabled(false);
 		}
-	}//GEN-LAST:event_txtTweetKeyPressed
+	}
 
 	// <editor-fold defaultstate="collapsed" desc="Generated Variables">
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel actionPanel;
     private javax.swing.JList blockedList;
+    private javax.swing.JButton btnMini;
     private javax.swing.JButton btnTweet;
+    private javax.swing.JCheckBox chkCOT;
+    private javax.swing.JPopupMenu contextMenu;
     private javax.swing.JMenu editMenu;
+    private javax.swing.JMenuItem exitItem;
     private javax.swing.JList followersList;
     private javax.swing.JList followingList;
     private javax.swing.JList friendsList;
+    private javax.swing.JMenuItem helpItem;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenuItem miniItem;
+    private javax.swing.JMenuItem prefsItem;
     private javax.swing.JMenuItem prefsMenuItem;
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JLabel statusAnimationLabel;
@@ -451,9 +742,11 @@ public class TwitzView extends FrameView implements TwitzListener{
 
     private JDialog aboutBox;
 	private PreferencesDialog prefs;
-	private TwitzViewMini mini;
+	//private TwitzViewMini mini;
 	private twitz.twitter.TwitterManager tm;
-	private JOptionPane errorDialog = new JOptionPane();
+	//private JOptionPane errorDialog = new JOptionPane();
+	private boolean minimode = false;
+	private TwitzApp mainApp;
 
-	Logger logger = Logger.getLogger(TwitzView.class.getName());
+	private Logger logger = Logger.getLogger(TwitzView.class.getName());
 }
