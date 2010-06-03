@@ -50,18 +50,19 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	JFrame splashFrame = new JFrame();
 
 	private void buildSplash() {
-		Point center = getDesktopCenter();
+//		Point center = getDesktopCenter();
 		GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
+		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(splash);
 		splashFrame.setAlwaysOnTop(true);
 		splashFrame.setUndecorated(true);
 		splashFrame.setLayout(gridbag);
+		splashFrame.setSize(icon.getIconWidth(), icon.getIconHeight());
 		javax.swing.JLabel img = new javax.swing.JLabel();
-		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(splash);
-		Rectangle bound = new Rectangle();
-		bound.setSize(icon.getIconWidth(), icon.getIconHeight());
-		bound.setLocation((center.x - (icon.getIconWidth() / 2)), (center.y - (icon.getIconHeight() / 2)));
-		splashFrame.setBounds(bound);
+//		Rectangle bound = new Rectangle();
+//		bound.setSize(icon.getIconWidth(), icon.getIconHeight());
+//		bound.setLocation((center.x - (icon.getIconWidth() / 2)), (center.y - (icon.getIconHeight() / 2)));
+		splashFrame.setBounds(getDesktopCenter(splashFrame));
 		img.setIcon(icon);
 		splashFrame.add(img);
 		//return splashFrame;
@@ -69,6 +70,16 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 	private Point getDesktopCenter() {
 		return GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+	}
+
+	public static Rectangle getDesktopCenter(java.awt.Component comp) {
+		Rectangle rv = new Rectangle();
+		Point c = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+		int w = comp.getWidth();
+		int h = comp.getHeight();
+		rv.setSize(w, h);
+		rv.setLocation((c.x - (w / 2)), (c.y - (h / 2)));
+		return rv;
 	}
 
     /**

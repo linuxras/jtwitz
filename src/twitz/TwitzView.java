@@ -78,6 +78,9 @@ public class TwitzView extends FrameView implements TwitzListener{
 			}
 		});
 
+		//Configure the GUI from the defaults in the config file
+		setupDefaults();
+
         // status bar initialization - message timeout, idle icon and busy animation, etc
         ResourceMap resourceMap = getResourceMap();
         int messageTimeout = resourceMap.getInteger("StatusBar.messageTimeout");
@@ -153,13 +156,81 @@ public class TwitzView extends FrameView implements TwitzListener{
 		prefs.setVisible(true);
 	}
 
-//	@Action
-//	public void showMiniTweet() {
-//		if(mini == null) {
-//			mini = new TwitzViewMini(this);
-//		}
-//		mini.setVisible(true);
-//	}
+	public void toggleTabs(java.awt.event.ActionEvent evt) {
+		javax.swing.JCheckBoxMenuItem item = (javax.swing.JCheckBoxMenuItem) evt.getSource();
+		int index = tabPane.getTabCount();
+		if (evt.getActionCommand().equals("Friends"))
+		{
+			config.setProperty("tab.friends", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("friendsPane.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, null, 1);
+			}
+			else
+			{
+				tabPane.remove(friendsPane);
+			}
+		}
+		else if (evt.getActionCommand().equals("Blocked"))
+		{
+			config.setProperty("tab.blocked", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, null, index >= 2 ? 2 : index); // NOI18N
+			}
+			else
+			{
+				tabPane.remove(blockedPane);
+			}
+		}
+		else if (evt.getActionCommand().equals("Following"))
+		{
+			config.setProperty("tab.following", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, null, index >= 3 ? 3 : index); // NOI18N
+			}
+			else
+			{
+				tabPane.remove(followingPane);
+			}
+		}
+		else if (evt.getActionCommand().equals("Followers"))
+		{
+			config.setProperty("tab.followers", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, null, index >= 4 ? 4 : index); // NOI18N
+			}
+			else
+			{
+				tabPane.remove(followersPane);
+			}
+		}
+	}
+
+	/**
+	 * This method is called on startup in the constructor.
+	 * It is used to configure the GUI with the default from the config file.
+	 */
+	private void setupDefaults() {
+		if(!config.getBoolean("tab.friends")) {
+			tabPane.remove(friendsPane);
+			menuItemFriends.setSelected(false);
+		}
+		if(!config.getBoolean("tab.blocked")) {
+			tabPane.remove(blockedPane);
+			menuItemBlocked.setSelected(false);
+		}
+		if(!config.getBoolean("tab.following")) {
+			tabPane.remove(followingPane);
+			menuItemFollowing.setSelected(false);
+		}
+		if(!config.getBoolean("tab.followers")) {
+			tabPane.remove(followersPane);
+			menuItemFollowers.setSelected(false);
+		}
+	}
 
 	@Action
 	@SuppressWarnings("static-access")
@@ -191,19 +262,11 @@ public class TwitzView extends FrameView implements TwitzListener{
 			}
 			catch (TwitterException ex)
 			{
-//				logger.log(Level.SEVERE, ex.getMessage());
 				errors++;
 				failed(ex);
-//				if (ex.isCausedByNetworkIssue())
-//				{
-//					message("errorMessage", "Unable to reach "+ex.getMessage());
-//					//errorDialog.showMessageDialog(getFrame(), "Unable to reach " + ex.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
-//				}
-			//logger.log(Level.SEVERE, ex.getStatusCode()+"");
 			}
 			if (u != null)
 			{
-				//message("startMessage", "Sending tweet...");
 				try
 				{
 					tm.sendTweet(tweet);
@@ -212,17 +275,11 @@ public class TwitzView extends FrameView implements TwitzListener{
 				{
 					errors++;
 					failed(ex);
-//					logger.log(Level.SEVERE, ex.getMessage());
-//					message("errorMessage", "Error Occurred: "+ex.getMessage());
-					//errorDialog.showMessageDialog(getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
 				}
 				catch (IllegalStateException ex)
 				{
 					errors++;
 					failed(ex);
-//					logger.log(Level.SEVERE, ex.getMessage());
-//					message("errorMessage", "Error Occurred: "+ex.getMessage());
-					//errorDialog.showMessageDialog(getFrame(), ex.getMessage(), "Error Occurred", JOptionPane.ERROR_MESSAGE);
 				}
 				message("finishMessage", 2, errors);
 			}
@@ -344,6 +401,7 @@ public class TwitzView extends FrameView implements TwitzListener{
 				model.addElement(me+": "+s.getText());
 				break;
 			case TwitzEvent.LOGIN:
+				//We need to do any post login logic here such as updating of any changed profile data et al.
 				break;
 			case TwitzEvent.ADD_FRIEND:
 				break;
@@ -373,15 +431,18 @@ public class TwitzView extends FrameView implements TwitzListener{
 
         mainPanel = new javax.swing.JPanel();
         tabPane = new javax.swing.JTabbedPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
+        recentPane = new javax.swing.JScrollPane();
         tweetsList = new javax.swing.JList();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        friendsPane = new javax.swing.JSplitPane();
+        nameListPane = new javax.swing.JScrollPane();
+        friendsNameList = new javax.swing.JList();
+        tweetsPane = new javax.swing.JScrollPane();
         friendsList = new javax.swing.JList();
-        jScrollPane3 = new javax.swing.JScrollPane();
+        blockedPane = new javax.swing.JScrollPane();
         blockedList = new javax.swing.JList();
-        jScrollPane4 = new javax.swing.JScrollPane();
+        followingPane = new javax.swing.JScrollPane();
         followingList = new javax.swing.JList();
-        jScrollPane5 = new javax.swing.JScrollPane();
+        followersPane = new javax.swing.JScrollPane();
         followersList = new javax.swing.JList();
         actionPanel = new javax.swing.JPanel();
         txtTweet = new javax.swing.JTextField();
@@ -393,6 +454,11 @@ public class TwitzView extends FrameView implements TwitzListener{
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
         editMenu = new javax.swing.JMenu();
         prefsMenuItem = new javax.swing.JMenuItem();
+        menuTabs = new javax.swing.JMenu();
+        menuItemFriends = new javax.swing.JCheckBoxMenuItem();
+        menuItemBlocked = new javax.swing.JCheckBoxMenuItem();
+        menuItemFollowing = new javax.swing.JCheckBoxMenuItem();
+        menuItemFollowers = new javax.swing.JCheckBoxMenuItem();
         javax.swing.JMenu helpMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem aboutMenuItem = new javax.swing.JMenuItem();
         statusPanel = new javax.swing.JPanel();
@@ -425,17 +491,33 @@ public class TwitzView extends FrameView implements TwitzListener{
             }
         });
 
-        jScrollPane1.setName("jScrollPane1"); // NOI18N
+        recentPane.setName("recentPane"); // NOI18N
 
         tweetsList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tweetsList.setCellRenderer(new TweetsListRenderer());
         tweetsList.setName("tweetsList"); // NOI18N
-        jScrollPane1.setViewportView(tweetsList);
+        recentPane.setViewportView(tweetsList);
 
         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
-        tabPane.addTab(resourceMap.getString("jScrollPane1.TabConstraints.tabTitle"), resourceMap.getIcon("jScrollPane1.TabConstraints.tabIcon"), jScrollPane1); // NOI18N
+        tabPane.addTab(resourceMap.getString("recentPane.TabConstraints.tabTitle"), resourceMap.getIcon("recentPane.TabConstraints.tabIcon"), recentPane); // NOI18N
 
-        jScrollPane2.setName("jScrollPane2"); // NOI18N
+        friendsPane.setDividerLocation(100);
+        friendsPane.setDividerSize(6);
+        friendsPane.setName("friendsPane"); // NOI18N
+
+        nameListPane.setName("nameListPane"); // NOI18N
+
+        friendsNameList.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        friendsNameList.setName("friendsNameList"); // NOI18N
+        nameListPane.setViewportView(friendsNameList);
+
+        friendsPane.setLeftComponent(nameListPane);
+
+        tweetsPane.setName("tweetsPane"); // NOI18N
 
         friendsList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -443,11 +525,13 @@ public class TwitzView extends FrameView implements TwitzListener{
             public Object getElementAt(int i) { return strings[i]; }
         });
         friendsList.setName("friendsList"); // NOI18N
-        jScrollPane2.setViewportView(friendsList);
+        tweetsPane.setViewportView(friendsList);
 
-        tabPane.addTab(resourceMap.getString("jScrollPane2.TabConstraints.tabTitle"), jScrollPane2); // NOI18N
+        friendsPane.setRightComponent(tweetsPane);
 
-        jScrollPane3.setName("jScrollPane3"); // NOI18N
+        tabPane.addTab(resourceMap.getString("friendsPane.TabConstraints.tabTitle"), resourceMap.getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane); // NOI18N
+
+        blockedPane.setName("blockedPane"); // NOI18N
 
         blockedList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -455,11 +539,11 @@ public class TwitzView extends FrameView implements TwitzListener{
             public Object getElementAt(int i) { return strings[i]; }
         });
         blockedList.setName("blockedList"); // NOI18N
-        jScrollPane3.setViewportView(blockedList);
+        blockedPane.setViewportView(blockedList);
 
-        tabPane.addTab(resourceMap.getString("jScrollPane3.TabConstraints.tabTitle"), jScrollPane3); // NOI18N
+        tabPane.addTab(resourceMap.getString("blockedPane.TabConstraints.tabTitle"), resourceMap.getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane); // NOI18N
 
-        jScrollPane4.setName("jScrollPane4"); // NOI18N
+        followingPane.setName("followingPane"); // NOI18N
 
         followingList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -467,11 +551,11 @@ public class TwitzView extends FrameView implements TwitzListener{
             public Object getElementAt(int i) { return strings[i]; }
         });
         followingList.setName("followingList"); // NOI18N
-        jScrollPane4.setViewportView(followingList);
+        followingPane.setViewportView(followingList);
 
-        tabPane.addTab(resourceMap.getString("jScrollPane4.TabConstraints.tabTitle"), jScrollPane4); // NOI18N
+        tabPane.addTab(resourceMap.getString("followingPane.TabConstraints.tabTitle"), resourceMap.getIcon("followingPane.TabConstraints.tabIcon"), followingPane); // NOI18N
 
-        jScrollPane5.setName("jScrollPane5"); // NOI18N
+        followersPane.setName("followersPane"); // NOI18N
 
         followersList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -479,9 +563,9 @@ public class TwitzView extends FrameView implements TwitzListener{
             public Object getElementAt(int i) { return strings[i]; }
         });
         followersList.setName("followersList"); // NOI18N
-        jScrollPane5.setViewportView(followersList);
+        followersPane.setViewportView(followersList);
 
-        tabPane.addTab(resourceMap.getString("jScrollPane5.TabConstraints.tabTitle"), jScrollPane5); // NOI18N
+        tabPane.addTab(resourceMap.getString("followersPane.TabConstraints.tabTitle"), resourceMap.getIcon("followersPane.TabConstraints.tabIcon"), followersPane); // NOI18N
 
         actionPanel.setMinimumSize(new java.awt.Dimension(100, 50));
         actionPanel.setName("actionPanel"); // NOI18N
@@ -580,6 +664,60 @@ public class TwitzView extends FrameView implements TwitzListener{
         prefsMenuItem.setName("prefsMenuItem"); // NOI18N
         editMenu.add(prefsMenuItem);
 
+        menuTabs.setIcon(resourceMap.getIcon("menuTabs.icon")); // NOI18N
+        menuTabs.setText(resourceMap.getString("menuTabs.text")); // NOI18N
+        menuTabs.setName("menuTabs"); // NOI18N
+
+        menuItemFriends.setSelected(true);
+        menuItemFriends.setText(resourceMap.getString("menuItemFriends.text")); // NOI18N
+        menuItemFriends.setToolTipText(resourceMap.getString("menuItemFriends.toolTipText")); // NOI18N
+        menuItemFriends.setIcon(resourceMap.getIcon("menuItemFriends.icon")); // NOI18N
+        menuItemFriends.setName("menuItemFriends"); // NOI18N
+        menuItemFriends.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFriendsActionPerformed(evt);
+            }
+        });
+        menuTabs.add(menuItemFriends);
+
+        menuItemBlocked.setSelected(true);
+        menuItemBlocked.setText(resourceMap.getString("menuItemBlocked.text")); // NOI18N
+        menuItemBlocked.setToolTipText(resourceMap.getString("menuItemBlocked.toolTipText")); // NOI18N
+        menuItemBlocked.setIcon(resourceMap.getIcon("menuItemBlocked.icon")); // NOI18N
+        menuItemBlocked.setName("menuItemBlocked"); // NOI18N
+        menuItemBlocked.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemBlockedActionPerformed(evt);
+            }
+        });
+        menuTabs.add(menuItemBlocked);
+
+        menuItemFollowing.setSelected(true);
+        menuItemFollowing.setText(resourceMap.getString("menuItemFollowing.text")); // NOI18N
+        menuItemFollowing.setToolTipText(resourceMap.getString("menuItemFollowing.toolTipText")); // NOI18N
+        menuItemFollowing.setIcon(resourceMap.getIcon("menuItemFollowing.icon")); // NOI18N
+        menuItemFollowing.setName("menuItemFollowing"); // NOI18N
+        menuItemFollowing.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFollowingActionPerformed(evt);
+            }
+        });
+        menuTabs.add(menuItemFollowing);
+
+        menuItemFollowers.setSelected(true);
+        menuItemFollowers.setText(resourceMap.getString("menuItemFollowers.text")); // NOI18N
+        menuItemFollowers.setToolTipText(resourceMap.getString("menuItemFollowers.toolTipText")); // NOI18N
+        menuItemFollowers.setIcon(resourceMap.getIcon("menuItemFollowers.icon")); // NOI18N
+        menuItemFollowers.setName("menuItemFollowers"); // NOI18N
+        menuItemFollowers.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFollowersActionPerformed(evt);
+            }
+        });
+        menuTabs.add(menuItemFollowers);
+
+        editMenu.add(menuTabs);
+
         menuBar.add(editMenu);
 
         helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
@@ -674,6 +812,26 @@ public class TwitzView extends FrameView implements TwitzListener{
 		keyTyped(evt);
 	}//GEN-LAST:event_mainPanelKeyReleased
 
+	private void menuItemFollowersActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemFollowersActionPerformed
+	{//GEN-HEADEREND:event_menuItemFollowersActionPerformed
+		toggleTabs(evt);
+	}//GEN-LAST:event_menuItemFollowersActionPerformed
+
+	private void menuItemBlockedActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemBlockedActionPerformed
+	{//GEN-HEADEREND:event_menuItemBlockedActionPerformed
+		toggleTabs(evt);
+	}//GEN-LAST:event_menuItemBlockedActionPerformed
+
+	private void menuItemFollowingActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemFollowingActionPerformed
+	{//GEN-HEADEREND:event_menuItemFollowingActionPerformed
+		toggleTabs(evt);
+	}//GEN-LAST:event_menuItemFollowingActionPerformed
+
+	private void menuItemFriendsActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemFriendsActionPerformed
+	{//GEN-HEADEREND:event_menuItemFriendsActionPerformed
+		toggleTabs(evt);
+	}//GEN-LAST:event_menuItemFriendsActionPerformed
+
 	@Action
 	private void keyTyped(java.awt.event.KeyEvent evt) {
 		switch(evt.getKeyCode()) {
@@ -700,6 +858,7 @@ public class TwitzView extends FrameView implements TwitzListener{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionPanel;
     private javax.swing.JList blockedList;
+    private javax.swing.JScrollPane blockedPane;
     private javax.swing.JButton btnMini;
     private javax.swing.JButton btnTweet;
     private javax.swing.JCheckBox chkCOT;
@@ -707,26 +866,33 @@ public class TwitzView extends FrameView implements TwitzListener{
     private javax.swing.JMenu editMenu;
     private javax.swing.JMenuItem exitItem;
     private javax.swing.JList followersList;
+    private javax.swing.JScrollPane followersPane;
     private javax.swing.JList followingList;
+    private javax.swing.JScrollPane followingPane;
     private javax.swing.JList friendsList;
+    private javax.swing.JList friendsNameList;
+    private javax.swing.JSplitPane friendsPane;
     private javax.swing.JMenuItem helpItem;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JCheckBoxMenuItem menuItemBlocked;
+    private javax.swing.JCheckBoxMenuItem menuItemFollowers;
+    private javax.swing.JCheckBoxMenuItem menuItemFollowing;
+    private javax.swing.JCheckBoxMenuItem menuItemFriends;
+    private javax.swing.JMenu menuTabs;
     private javax.swing.JMenuItem miniItem;
+    private javax.swing.JScrollPane nameListPane;
     private javax.swing.JMenuItem prefsItem;
     private javax.swing.JMenuItem prefsMenuItem;
     private javax.swing.JProgressBar progressBar;
+    private javax.swing.JScrollPane recentPane;
     private javax.swing.JLabel statusAnimationLabel;
     private javax.swing.JLabel statusMessageLabel;
     private javax.swing.JPanel statusPanel;
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JList tweetsList;
+    private javax.swing.JScrollPane tweetsPane;
     private javax.swing.JTextField txtTweet;
     // End of variables declaration//GEN-END:variables
 	//</editor-fold>

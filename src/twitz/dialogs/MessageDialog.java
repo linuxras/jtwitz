@@ -24,6 +24,7 @@ public class MessageDialog extends javax.swing.JDialog {
     public MessageDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+		this.setBounds(twitz.TwitzApp.getDesktopCenter(this));
     }
 
     /** This method is called from within the constructor to
@@ -142,7 +143,7 @@ public class MessageDialog extends javax.swing.JDialog {
 	public Icon getIcon() {
 		return imageLabel.getIcon();
 	}
-
+	
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClose;
     private javax.swing.JLabel imageLabel;

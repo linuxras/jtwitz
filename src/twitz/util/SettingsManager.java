@@ -65,8 +65,26 @@ public class SettingsManager {
 		settings.setProperty("twitter.picture", "");
 		settings.setProperty("twitter.picture.cfgdesc", "Twitter Profile Image");
 		settings.setProperty("twitter.picture.cfgtype", "File");
+		//This is a null entry AKA an internally managed property
+		//This keeps the mini/full state of the program between restarts
 		settings.setProperty("minimode", "true");
 		settings.setProperty("minimode.cfgtype", "NULL");
+		//Friends Tab settings
+		settings.setProperty("tab.friends", "true");
+		settings.setProperty("tab.friends.cfgdesc", "Enable Friends Tab");
+		settings.setProperty("tab.friends.cfgtype", "Boolean");
+		//Blocked Tab settings
+		settings.setProperty("tab.blocked", "true");
+		settings.setProperty("tab.blocked.cfgdesc", "Enable Blocked Tab");
+		settings.setProperty("tab.blocked.cfgtype", "Boolean");
+		//Following tab settings
+		settings.setProperty("tab.following", "true");
+		settings.setProperty("tab.following.cfgdesc", "Enable Following Tab");
+		settings.setProperty("tab.following.cfgtype", "Boolean");
+		//Followers tab settings
+		settings.setProperty("tab.followers", "true");
+		settings.setProperty("tab.followers.cfgdesc", "Enable Followers Tab");
+		settings.setProperty("tab.followers.cfgtype", "Boolean");
 		saveSettings();
 	}
 

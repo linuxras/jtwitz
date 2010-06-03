@@ -22,7 +22,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import org.jdesktop.application.Action;
-import org.jdesktop.application.Task;
 import twitz.util.SettingsManager;
 
 /**
@@ -94,6 +93,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		});
 		//cModel.getColumn(1).setMaxWidth(400);
 		//tblConfig.setRowHeight(30);
+		setBounds(TwitzApp.getDesktopCenter(this));
     }
 
     /** This method is called from within the constructor to

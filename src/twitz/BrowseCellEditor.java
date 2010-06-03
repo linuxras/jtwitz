@@ -34,6 +34,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
         txtPath = new javax.swing.JTextField();
         btnBrowse = new javax.swing.JButton();
 		boolEditor.setAlignmentX(javax.swing.JSpinner.LEFT_ALIGNMENT);
+		boolEditor.getEditor().setAlignmentX(javax.swing.JSpinner.LEFT_ALIGNMENT);
 
         //panel.setMinimumSize(new java.awt.Dimension(54, 12));
         panel.setName("Form"); // NOI18N
