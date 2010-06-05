@@ -9,12 +9,14 @@ import java.awt.Font;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.event.ActionListener;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 /**
  *
  * @author mistik1
  */
-public class TwitzPopup extends PopupMenu {
+public class TwitzPopup extends JPopupMenu {
 
 	private ActionListener listener;
 	private Font smallFont = null;
@@ -34,11 +36,11 @@ public class TwitzPopup extends PopupMenu {
 		setFont(smallFont);
 	}
 
-	public void updateEnteries(MenuItem[] items) {
+	public void updateEnteries(JMenuItem[] items) {
 
         removeAll();
 
-        for (MenuItem mi: items) {
+        for (JMenuItem mi: items) {
             if (mi == null)
                 break;
             add(mi);

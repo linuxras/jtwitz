@@ -288,6 +288,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
+		tray.hideGlassPane();
 		if(cmd.endsWith(TWEET_MINI)) {
 			//view.showMiniTweet();
 			view.miniTwitz();
