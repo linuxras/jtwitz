@@ -327,7 +327,7 @@
             <Component class="javax.swing.JButton" name="btnTweet">
               <Properties>
                 <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
-                  <action class="twitz.TwitzView" id="sendTweetClicked" methodName="sendTweetClicked"/>
+                  <action class="twitz.TwitzView" id="sendAsyncTweet" methodName="sendAsyncTweet"/>
                 </Property>
                 <Property name="text" type="java.lang.String" resourceKey="btnTweet.text"/>
                 <Property name="toolTipText" type="java.lang.String" resourceKey="btnTweet.toolTipText"/>

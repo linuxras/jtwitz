@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.SingleFrameApplication;
 
@@ -95,7 +96,15 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		view = new TwitzView(this);
 		view.getFrame().setBounds(bound);
 		view.getFrame().setUndecorated(true);
-		tray = new TwitzTrayIcon(this, view);
+		try
+		{
+			tray = new TwitzTrayIcon(this, view);
+		}
+		catch (Exception ex)
+		{
+			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+			JOptionPane.showMessageDialog(null, ex.getMessage(), "Critical Error", JOptionPane.ERROR_MESSAGE);
+		}
 		System.out.println("Inside Startup");
         //show(new TwitzView(this, tray, config));
 		show(view);

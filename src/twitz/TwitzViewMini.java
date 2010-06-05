@@ -35,7 +35,7 @@ public class TwitzViewMini extends javax.swing.JFrame {
     public TwitzViewMini(TwitzView v) {
 		//tray = t;
 		mainView = v;
-		tm = twitz.twitter.TwitterManager.getInstance();
+		tm = twitz.twitter.TwitterManager.getInstance(v);
 		errorDialog.setMaximumSize(new Dimension(300, 100));
         initComponents();
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();

@@ -11,16 +11,24 @@
 
 package twitz.dialogs;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.ListIterator;
 import twitz.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import org.jdesktop.application.Action;
 import twitz.util.SettingsManager;
 
@@ -42,17 +50,13 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		DefaultTableColumnModel cModel = (DefaultTableColumnModel)tblConfig.getColumnModel();
 		cModel.getColumn(0).setMaxWidth(10);
 		DefaultTableModel mModel = (DefaultTableModel)tblConfig.getModel();
-		mModel.addTableModelListener(new TableModelListener() {
-
-			public void tableChanged(TableModelEvent e)
-			{
-				int t = e.getType();
-				if(t == TableModelEvent.INSERT || t == TableModelEvent.UPDATE ) {
-					btnApply.setEnabled(true);
-				}
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-		});
+		sorter = this.getTableRowSorter(mModel);
+		tblConfig.setRowSorter(sorter);
+		tblConfig.setModel(mModel);
+		sorter.sort();
+		//cModel.getColumn(1).setMaxWidth(400);
+		//tblConfig.setRowHeight(30);
+		setBounds(TwitzApp.getDesktopCenter(this));
 		this.addWindowListener(new WindowListener() {
 
 			public void windowOpened(WindowEvent e)
@@ -91,9 +95,6 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				//throw new UnsupportedOperationException("Not supported yet.");
 			}
 		});
-		//cModel.getColumn(1).setMaxWidth(400);
-		//tblConfig.setRowHeight(30);
-		setBounds(TwitzApp.getDesktopCenter(this));
     }
 
     /** This method is called from within the constructor to
@@ -145,6 +146,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
             }
         });
         tblConfig.setName("tblConfig"); // NOI18N
+        tblConfig.setRowHeight(20);
         jScrollPane1.setViewportView(tblConfig);
 
         javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(PreferencesDialog.class, this);
@@ -213,6 +215,29 @@ public class PreferencesDialog extends javax.swing.JDialog {
         });
     }
 
+	private TableRowSorter getTableRowSorter(DefaultTableModel model) {
+		model.addTableModelListener(new TableModelListener() {
+
+			public void tableChanged(TableModelEvent e)
+			{
+				int t = e.getType();
+				if(t == TableModelEvent.INSERT || t == TableModelEvent.UPDATE ) {
+					btnApply.setEnabled(true);
+				}
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+		});
+		TableRowSorter s = new TableRowSorter(model);
+		s.setSortable(0, false);
+		List<RowSorter.SortKey> list = java.util.Collections.synchronizedList(new ArrayList());
+		RowSorter.SortKey key = new RowSorter.SortKey(1, SortOrder.ASCENDING);
+		list.add(key);
+		s.setSortKeys(list);
+		//s.sort();
+
+		return s;
+	}
+
 	public void loadTable() {
 		Vector vConfig = new Vector();
 		Enumeration en = config.getKeys();
@@ -277,6 +302,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblConfig;
     // End of variables declaration//GEN-END:variables
-	SettingsManager config = SettingsManager.getInstance();
+	private SettingsManager config = SettingsManager.getInstance();
 	private Vector vHeaders = new Vector();
+	private TableRowSorter sorter;
 }

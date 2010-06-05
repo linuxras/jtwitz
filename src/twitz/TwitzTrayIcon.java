@@ -30,14 +30,16 @@ public class TwitzTrayIcon {
 	Logger logger = Logger.getLogger(TwitzTrayIcon.class.getName());
 
 
-	public TwitzTrayIcon(TwitzApp app, TwitzView view) {
+	public TwitzTrayIcon(TwitzApp app, TwitzView view) throws Exception{
 		popup = new TwitzPopup(app);
 		mainApp = app;
 		mainView = view;
-		initComponents();
+		if(!initComponents()) {
+			throw new IllegalStateException("System Tray is not supported on your platform");
+		}
 	}
 
-	private void initComponents() {
+	private boolean initComponents() {
 		try
 		{
 			ImageIcon icon = resourceMap.getImageIcon("Systray.icon");
@@ -73,7 +75,9 @@ public class TwitzTrayIcon {
 			popup.add(item);
 		}
 		catch(Exception e){
+			return false;
 		}
+		return true;
 	}
 
 	public static Image getIcon() throws Exception {

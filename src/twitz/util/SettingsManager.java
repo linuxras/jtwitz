@@ -46,6 +46,10 @@ public class SettingsManager {
 		loadSettings();
 	}
 
+	/**
+	 * Default way to get a SettingsManager instance
+	 * @return SettingsManager singleton
+	 */
 	public static synchronized SettingsManager getInstance() {
 		if(instance == null)
 			instance = new SettingsManager();
@@ -161,22 +165,54 @@ public class SettingsManager {
 	public int getInteger(String param) {
 		logger.log(Level.CONFIG, param);
 		logger.log(Level.CONFIG, settings.getProperty(param));
-		return Integer.parseInt(settings.getProperty(param));
+		try
+		{
+			return Integer.parseInt(settings.getProperty(param));
+		}
+		catch(NumberFormatException ex) {
+			return -1;
+		}
 	}
 	public int getInteger(String param, int defaultParam) {
-		return Integer.parseInt(settings.getProperty(param,defaultParam+""));
+		try
+		{
+			return Integer.parseInt(settings.getProperty(param));
+		}
+		catch (NumberFormatException ex)
+		{
+			return defaultParam;
+		}
 	}
 	public long getLong(String param) {
-		return Long.parseLong(settings.getProperty(param));
+		try
+		{
+			return Long.parseLong(settings.getProperty(param));
+		}
+		catch(NumberFormatException e)
+		{
+			return -1;
+		}
 	}
 	public long getLong(String param, long defaultParam) {
-		return Long.parseLong(settings.getProperty(param, defaultParam+""));
+		try
+		{
+			return Long.parseLong(settings.getProperty(param));
+		}
+		catch(NumberFormatException e)
+		{
+			return defaultParam;
+		}
 	}
+
 	public boolean getBoolean(String param) {
 		return Boolean.parseBoolean(settings.getProperty(param));
 	}
+
 	public boolean getBoolean(String param, boolean defaultParam) {
-		return Boolean.parseBoolean(settings.getProperty(param, defaultParam+""));
+		if(settings.getProperty(param) != null && !settings.getProperty(param).equals(""))
+			return Boolean.parseBoolean(settings.getProperty(param));
+		else
+			return defaultParam;
 	}
 
 

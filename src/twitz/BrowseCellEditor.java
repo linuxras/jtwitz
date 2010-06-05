@@ -145,11 +145,11 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	{
 		//Get the row data type
 		TableModel model = table.getModel();
-		String val = model.getValueAt(row, 0).toString();
+		String val = model.getValueAt(table.convertRowIndexToModel(row), 0).toString();
 		String type = config.getString(val+".cfgtype");
 		String cellVal = table.getValueAt(row, column)+"";
 		String configVal = config.getString(val);
-		//System.out.println(type);
+		System.out.println("Row: "+row+" - Column: "+column+" - Item: "+val+" - Type: "+type);
 		if(type.equalsIgnoreCase("File")) {
 			if(cellVal.equals(configVal)) {
 				txtPath.setText(configVal);

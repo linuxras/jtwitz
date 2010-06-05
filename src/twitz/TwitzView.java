@@ -20,33 +20,39 @@ import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowFocusListener;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.util.List;
 import java.util.logging.Level;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
 import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import twitter4j.TwitterException;
+import javax.swing.JPopupMenu;
+import twitter4j.*;
 import twitz.dialogs.MessageDialog;
 import twitz.events.TwitzListener;
+import twitz.twitter.TwitterConstants;
 import twitz.twitter.TwitterManager;
 
 /**
  * The application's main frame.
  */
-public class TwitzView extends FrameView implements TwitzListener{
+public class TwitzView extends FrameView implements TwitzListener, TwitterListener, ActionListener {
 
     public TwitzView(SingleFrameApplication app) {
         super(app);
 		mainApp = (TwitzApp)app;
-		//tray = t;
-		//config = c;
-		tm = TwitterManager.getInstance();
+		tm = TwitterManager.getInstance(this);
 		tm.addTwitzListener(this);
+		//Initialize twitter
+		aTwitter = tm.getAsyncTwitterInstance();
         initComponents();
 		this.getFrame().setVisible(false);
 		this.getFrame().setSize(400, 300);
@@ -54,15 +60,7 @@ public class TwitzView extends FrameView implements TwitzListener{
 
 		//look & feel setup
 		//Default to full view
-		boolean m = config.getBoolean("minimode");
 		fullTwitz();
-		if(m) {
-			miniTwitz();
-		}
-		else
-		{
-			fullTwitz();
-		}
 
 		this.getFrame().addWindowFocusListener(new WindowFocusListener() {
 
@@ -135,290 +133,6 @@ public class TwitzView extends FrameView implements TwitzListener{
             }
         });
     }
-
-    @Action
-    public void showAboutBox() {
-        if (aboutBox == null) {
-            JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
-            aboutBox = new TwitzAboutBox(mainFrame);
-            aboutBox.setLocationRelativeTo(mainFrame);
-        }
-        //TwitzApp.getApplication().show(aboutBox);
-		aboutBox.setVisible(true);
-    }
-
-	@Action
-	public void showPrefsBox() {
-		if(prefs == null) {
-			JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
-			prefs = new PreferencesDialog(mainFrame, true);
-		}
-		prefs.setVisible(true);
-	}
-
-	public void toggleTabs(java.awt.event.ActionEvent evt) {
-		javax.swing.JCheckBoxMenuItem item = (javax.swing.JCheckBoxMenuItem) evt.getSource();
-		int index = tabPane.getTabCount();
-		if (evt.getActionCommand().equals("Friends"))
-		{
-			config.setProperty("tab.friends", item.isSelected()+"");
-			if (item.isSelected())
-			{
-				tabPane.insertTab(getResourceMap().getString("friendsPane.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, null, 1);
-			}
-			else
-			{
-				tabPane.remove(friendsPane);
-			}
-		}
-		else if (evt.getActionCommand().equals("Blocked"))
-		{
-			config.setProperty("tab.blocked", item.isSelected()+"");
-			if (item.isSelected())
-			{
-				tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, null, index >= 2 ? 2 : index); // NOI18N
-			}
-			else
-			{
-				tabPane.remove(blockedPane);
-			}
-		}
-		else if (evt.getActionCommand().equals("Following"))
-		{
-			config.setProperty("tab.following", item.isSelected()+"");
-			if (item.isSelected())
-			{
-				tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, null, index >= 3 ? 3 : index); // NOI18N
-			}
-			else
-			{
-				tabPane.remove(followingPane);
-			}
-		}
-		else if (evt.getActionCommand().equals("Followers"))
-		{
-			config.setProperty("tab.followers", item.isSelected()+"");
-			if (item.isSelected())
-			{
-				tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, null, index >= 4 ? 4 : index); // NOI18N
-			}
-			else
-			{
-				tabPane.remove(followersPane);
-			}
-		}
-	}
-
-	/**
-	 * This method is called on startup in the constructor.
-	 * It is used to configure the GUI with the default from the config file.
-	 */
-	private void setupDefaults() {
-		if(!config.getBoolean("tab.friends")) {
-			tabPane.remove(friendsPane);
-			menuItemFriends.setSelected(false);
-		}
-		if(!config.getBoolean("tab.blocked")) {
-			tabPane.remove(blockedPane);
-			menuItemBlocked.setSelected(false);
-		}
-		if(!config.getBoolean("tab.following")) {
-			tabPane.remove(followingPane);
-			menuItemFollowing.setSelected(false);
-		}
-		if(!config.getBoolean("tab.followers")) {
-			tabPane.remove(followersPane);
-			menuItemFollowers.setSelected(false);
-		}
-	}
-
-	@Action
-	@SuppressWarnings("static-access")
-	public Task sendTweetClicked()
-	{
-		return new SendTweetClickedTask(getApplication());
-	}
-
-    private class SendTweetClickedTask extends org.jdesktop.application.Task<Object, Void> {
-        String tweet;
-		int errors = 0;
-		SendTweetClickedTask(org.jdesktop.application.Application app) {
-            // Runs on the EDT.  Copy GUI state that
-            // doInBackground() depends on from parameters
-            // to SendTweetClickedTask fields, here.
-            super(app);
-			tweet = txtTweet.getText();
-			
-        }
-        @Override protected Object doInBackground() {
-            // Your Task's code here.  This method runs
-            // on a background thread, so don't reference
-            // the Swing GUI from here.
-			message("startMessage", 2);
-			twitter4j.User u = null;
-			try
-			{
-				u = tm.getTwitterInstance().verifyCredentials();
-			}
-			catch (TwitterException ex)
-			{
-				errors++;
-				failed(ex);
-			}
-			if (u != null)
-			{
-				try
-				{
-					tm.sendTweet(tweet);
-				}
-				catch (TwitterException ex)
-				{
-					errors++;
-					failed(ex);
-				}
-				catch (IllegalStateException ex)
-				{
-					errors++;
-					failed(ex);
-				}
-				message("finishMessage", 2, errors);
-			}
-            return null;  // return your result
-        }
-        @Override protected void succeeded(Object result) {
-            // Runs on the EDT.  Update the GUI based on
-            // the result computed by doInBackground().
-			if(errors < 1)
-			{
-				txtTweet.setText("");
-				btnTweet.setEnabled(false);
-
-				if (chkCOT.isSelected())
-				{
-					mainApp.toggleWindowView("down");
-				}
-			}
-        }
-
-		@Override protected void failed(Throwable t) {
-			logger.log(Level.SEVERE, t.getMessage());
-			if(t instanceof TwitterException) {
-				TwitterException te = (TwitterException)t;
-				if(te.isCausedByNetworkIssue()) {
-					displayError(t, "Network Error", "Unable to reach: "+te.getMessage());
-					//errorDialog.showMessageDialog(getFrame(), "Unable to reach " + te.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
-				}
-				else if(te.resourceNotFound()) {
-					//errorDialog.showMessageDialog(getFrame(), "Unable to locate resource: " + te.getMessage(), "Resource Alocation Error", JOptionPane.ERROR_MESSAGE);
-					displayError(t, "Resource Allocation Error", "Unable to locate resource: "+te.getMessage());
-				}
-			}
-			message("finishMessage", 2, errors);
-		}
-    }
-
-	private void displayError(Throwable t, String title, Object message) {
-		Object[] options = {"Ok", "Stack Trace"};
-		int rv = JOptionPane.showOptionDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, getResourceMap().getIcon("error.icon"), options, options[0]);
-		switch (rv)
-		{
-			case 0:
-				break;
-			case 1:
-				//show the full stack trace here
-				MessageDialog msg = new MessageDialog(getFrame(), false);
-				java.io.StringWriter w = new java.io.StringWriter();
-				java.io.PrintWriter p = new java.io.PrintWriter(w);
-				t.printStackTrace(p);
-				p.flush();
-				msg.setMessage(w.toString());
-				msg.setVisible(true);
-				break;
-		}
-	}
-
-	@Action
-	public void showMiniMode() {
-		if(minimode) {
-			fullTwitz();
-		}
-		else {
-			miniTwitz();
-		}
-	}
-
-	public void miniTwitz() {
-		tabPane.setVisible(false);
-		//this.getStatusBar().setVisible(false);
-		this.getMenuBar().setVisible(false);
-		this.getFrame().setSize(this.getFrame().getWidth(), 100);
-		fixLocation();
-		btnMini.setIcon(getResourceMap().getIcon("btnMini.up.icon"));
-		minimode = true;
-		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
-	}
-
-	public void fullTwitz() {
-		tabPane.setVisible(true);
-		//this.getStatusBar().setVisible(true);
-		this.getMenuBar().setVisible(true);
-		this.getFrame().setSize(this.getFrame().getWidth(), 300);
-		fixLocation();
-		btnMini.setIcon(getResourceMap().getIcon("btnMini.icon"));
-		minimode = false;
-		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
-	}
-
-	private void fixLocation() {
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		Rectangle frame = this.getFrame().getBounds();
-		Rectangle desktop = ge.getMaximumWindowBounds();
-		//System.out.println("Widht of desktop: " + desk.toString());
-		//int x = (desk.width - frame.width);
-		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
-			int x = (desktop.width - frame.width);
-			int y = (desktop.height - frame.height) - 32;
-			//System.out.println("X: " + x + " Y: " + y);
-			this.getFrame().setLocation(x, y);
-		}
-	}
-
-	/**
-	 * Event Processor for all events that are related to twitter activity in the #link TwitterManager
-	 * A TwitzEvent will will have and type.
-	 * @param t
-	 */
-	public void eventOccurred(TwitzEvent t)
-	{
-		int type = t.getEventType();
-		switch(type) {
-			case TwitzEvent.UPDATE:
-				twitter4j.Status s = (twitter4j.Status) t.getSource();
-				twitter4j.User u = s.getUser();
-				String me = u.getScreenName();
-
-				DefaultListModel model = (DefaultListModel) tweetsList.getModel();
-				model.addElement(me+": "+s.getText());
-				break;
-			case TwitzEvent.LOGIN:
-				//We need to do any post login logic here such as updating of any changed profile data et al.
-				break;
-			case TwitzEvent.ADD_FRIEND:
-				break;
-			case TwitzEvent.DELETE_FRIEND:
-				break;
-			case TwitzEvent.MSG_SENT:
-				break;
-			case TwitzEvent.MSG_RECIEVED:
-				break;
-			case TwitzEvent.ADD_BLOCK:
-				break;
-			case TwitzEvent.REMOVE_BLOCK:
-				break;
-			case TwitzEvent.REPORT_SPAM:
-				break;
-		}
-	}
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -583,7 +297,7 @@ public class TwitzView extends FrameView implements TwitzListener{
         chkCOT.setName("chkCOT"); // NOI18N
 
         javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
-        btnTweet.setAction(actionMap.get("sendTweetClicked")); // NOI18N
+        btnTweet.setAction(actionMap.get("sendAsyncTweet")); // NOI18N
         btnTweet.setText(resourceMap.getString("btnTweet.text")); // NOI18N
         btnTweet.setToolTipText(resourceMap.getString("btnTweet.toolTipText")); // NOI18N
         btnTweet.setName("btnTweet"); // NOI18N
@@ -797,6 +511,8 @@ public class TwitzView extends FrameView implements TwitzListener{
         setStatusBar(statusPanel);
     }// </editor-fold>//GEN-END:initComponents
 
+
+	//private methods
 	private void txtTweetKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyReleased
 	{//GEN-HEADEREND:event_txtTweetKeyReleased
 		keyTyped(evt);
@@ -832,12 +548,66 @@ public class TwitzView extends FrameView implements TwitzListener{
 		toggleTabs(evt);
 	}//GEN-LAST:event_menuItemFriendsActionPerformed
 
+	/**
+	 * This method is called on startup in the constructor.
+	 * It is used to configure the GUI with the default from the config file.
+	 */
+	private void setupDefaults() {
+		if(startMode) //We closed in minimode
+			miniTwitz();
+		//Disable tabs that were removed by user
+		if(!config.getBoolean("tab.friends")) {
+			tabPane.remove(friendsPane);
+			menuItemFriends.setSelected(false);
+		}
+		if(!config.getBoolean("tab.blocked")) {
+			tabPane.remove(blockedPane);
+			menuItemBlocked.setSelected(false);
+		}
+		if(!config.getBoolean("tab.following")) {
+			tabPane.remove(followingPane);
+			menuItemFollowing.setSelected(false);
+		}
+		if(!config.getBoolean("tab.followers")) {
+			tabPane.remove(followersPane);
+			menuItemFollowers.setSelected(false);
+		}
+		MouseListener mouseListener = new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				//System.out.println(e.getSource().toString());
+				if(e.getSource() instanceof JList) {
+					//System.out.println("Object is a list");
+					JList list = (JList) e.getSource();
+					//System.out.println("Event Button: "+e.getButton()+" Right Button: "+MouseEvent.BUTTON2);
+					if (e.getButton() == MouseEvent.BUTTON3)
+					{
+						java.awt.Point p = e.getPoint();
+						int index = list.locationToIndex(p);
+						if(index != -1) { //Show menu only if list is not empty
+							list.setSelectedIndex(index);
+							getActionsMenu().show(list, p.x, p.y);
+						}
+						//System.out.println("Double clicked on Item " + index);
+					}
+				}
+			}
+		};
+		friendsNameList.addMouseListener(mouseListener);
+		//friendsNameList.setComponentPopupMenu(getActionsMenu());
+		friendsList.addMouseListener(mouseListener);
+		//friendsList.setComponentPopupMenu(getActionsMenu());
+		tweetsList.addMouseListener(mouseListener);
+		//tweetsList.setComponentPopupMenu(getActionsMenu());
+	}
+
 	@Action
 	private void keyTyped(java.awt.event.KeyEvent evt) {
 		switch(evt.getKeyCode()) {
 			case KeyEvent.VK_ENTER:
-				sendTweetClicked().execute();
-				//txtTweet.setText("");
+				sendAsyncTweet();
+				//sendTweetClicked().execute();
 				break;
 			case KeyEvent.VK_M:
 				if(evt.isControlDown())
@@ -853,6 +623,925 @@ public class TwitzView extends FrameView implements TwitzListener{
 					btnTweet.setEnabled(false);
 		}
 	}
+
+	private JPopupMenu getTweetsMenu() {
+		JPopupMenu menu = new JPopupMenu();
+		return menu;
+	}
+
+	/**
+	 * Method builds the Action menu that is displayed application wide
+	 * when a user is clicked on.
+	 * @return A JPopupMenu
+	 */
+	private JPopupMenu getActionsMenu() {
+		JPopupMenu menu = new JPopupMenu("Actions");
+		JMenuItem item = new JMenuItem("Block User");
+		item.setActionCommand(TwitterConstants.CREATE_BLOCK+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"));
+		menu.add(item);
+
+		item = new JMenuItem("Report SPAM");
+		item.setActionCommand(TwitterConstants.REPORT_SPAM+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.bomb"));
+		menu.add(item);
+		menu.addSeparator();
+
+		item = new JMenuItem("Start Friendship");
+		item.addActionListener(this);
+		item.setActionCommand(TwitterConstants.CREATE_FRIENDSHIP+"");
+		item.setIcon(getResourceMap().getIcon("icon.user"));
+		menu.add(item);
+
+		item = new JMenuItem("Send Direct Message");
+		item.setActionCommand(TwitterConstants.SEND_DIRECT_MESSAGE+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.user_comment"));
+		menu.add(item);
+		return menu;
+	}
+	//END private methods
+
+	@Action
+    public void showAboutBox() {
+        if (aboutBox == null) {
+            JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
+            aboutBox = new TwitzAboutBox(mainFrame);
+            aboutBox.setLocationRelativeTo(mainFrame);
+        }
+        //TwitzApp.getApplication().show(aboutBox);
+		aboutBox.setVisible(true);
+    }
+
+	@Action
+	public void showPrefsBox() {
+		if(prefs == null) {
+			JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
+			prefs = new PreferencesDialog(mainFrame, true);
+		}
+		prefs.setVisible(true);
+	}
+
+	public void toggleTabs(java.awt.event.ActionEvent evt) {
+		javax.swing.JCheckBoxMenuItem item = (javax.swing.JCheckBoxMenuItem) evt.getSource();
+		int index = tabPane.getTabCount();
+		if (evt.getActionCommand().equals("Friends"))
+		{
+			config.setProperty("tab.friends", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("friendsPane.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, null, 1);
+			}
+			else
+			{
+				tabPane.remove(friendsPane);
+			}
+		}
+		else if (evt.getActionCommand().equals("Blocked"))
+		{
+			config.setProperty("tab.blocked", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, null, index >= 2 ? 2 : index); // NOI18N
+			}
+			else
+			{
+				tabPane.remove(blockedPane);
+			}
+		}
+		else if (evt.getActionCommand().equals("Following"))
+		{
+			config.setProperty("tab.following", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, null, index >= 3 ? 3 : index); // NOI18N
+			}
+			else
+			{
+				tabPane.remove(followingPane);
+			}
+		}
+		else if (evt.getActionCommand().equals("Followers"))
+		{
+			config.setProperty("tab.followers", item.isSelected()+"");
+			if (item.isSelected())
+			{
+				tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, null, index >= 4 ? 4 : index); // NOI18N
+			}
+			else
+			{
+				tabPane.remove(followersPane);
+			}
+		}
+	}
+
+	@Action public void sendAsyncTweet() {
+		//aTwitter.updateStatus(txtTweet.getText());
+		sendTweetClicked().execute();
+	}
+
+	@Action
+	@SuppressWarnings("static-access")
+	public Task sendTweetClicked()
+	{
+		return new SendTweetClickedTask(getApplication());
+	}
+
+    private class SendTweetClickedTask extends org.jdesktop.application.Task<Object, Void> {
+        String tweet;
+		int errors = 0;
+		SendTweetClickedTask(org.jdesktop.application.Application app) {
+            // Runs on the EDT.  Copy GUI state that
+            // doInBackground() depends on from parameters
+            // to SendTweetClickedTask fields, here.
+            super(app);
+			tweet = txtTweet.getText();
+			
+        }
+        @Override protected Object doInBackground() {
+            // Your Task's code here.  This method runs
+            // on a background thread, so don't reference
+            // the Swing GUI from here.
+			message("startMessage", 1);
+			//Lets disable the Tweet button and the textfield to prevent button mashing while we wait
+			btnTweet.setEnabled(false);
+			txtTweet.setEnabled(false);
+
+			aTwitter.updateStatus(tweet);
+			//Go into a endless loop until we hear back from the backend
+			boolean active = true;
+			while(!this.isCancelled() && !this.isDone()) {
+				//Run till canceled or finished
+			}
+//			twitter4j.User u = null;
+//			try
+//			{
+//				u = tm.getTwitterInstance().verifyCredentials();
+//			}
+//			catch (TwitterException ex)
+//			{
+//				errors++;
+//				failed(ex);
+//			}
+//			if (u != null)
+//			{
+//				try
+//				{
+//					tm.sendTweet(tweet);
+//				}
+//				catch (TwitterException ex)
+//				{
+//					errors++;
+//					failed(ex);
+//				}
+//				catch (IllegalStateException ex)
+//				{
+//					errors++;
+//					failed(ex);
+//				}
+//				message("finishMessage", 2, errors);
+//			}
+            return null;  // return your result
+        }
+        @Override protected void succeeded(Object result) {
+            // Runs on the EDT.  Update the GUI based on
+            // the result computed by doInBackground().
+			if(errors < 1)
+			{
+				txtTweet.setText("");
+				btnTweet.setEnabled(false);
+
+				if (chkCOT.isSelected())
+				{
+					mainApp.toggleWindowView("down");
+				}
+			}
+        }
+		@Override protected void cancelled() {
+			btnTweet.setEnabled(true);
+			txtTweet.setEnabled(true);
+		}
+		@Override protected void failed(Throwable t) {
+			logger.log(Level.SEVERE, t.getMessage());
+			if(t instanceof TwitterException) {
+				TwitterException te = (TwitterException)t;
+				if(te.isCausedByNetworkIssue()) {
+					displayError(t, "Network Error", "Unable to reach: "+te.getMessage(), null);
+					//errorDialog.showMessageDialog(getFrame(), "Unable to reach " + te.getMessage(), "Network Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else if(te.resourceNotFound()) {
+					//errorDialog.showMessageDialog(getFrame(), "Unable to locate resource: " + te.getMessage(), "Resource Alocation Error", JOptionPane.ERROR_MESSAGE);
+					displayError(t, "Resource Allocation Error", "Unable to locate resource: "+te.getMessage(), null);
+				}
+			}
+			message("finishMessage", 2, errors);
+		}
+    }
+
+	/**
+	 *
+	 * @param t Any Throwable, this is used to gain the stacktrace
+	 * @param title The title of the error dialog
+	 * @param message The error message to be displayed
+	 * @param method The TwitterMethod object that caused this error. This can be null
+	 */
+	public void displayError(Throwable t, String title, Object message, twitter4j.TwitterMethod method) {
+		Object[] options = {"Ok", "Stack Trace"};
+		int rv = JOptionPane.showOptionDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, getResourceMap().getIcon("error.icon"), options, options[0]);
+		switch (rv)
+		{
+			case 0:
+				break;
+			case 1:
+				//show the full stack trace here
+				MessageDialog msg = new MessageDialog(getFrame(), false);
+				java.io.StringWriter w = new java.io.StringWriter();
+				java.io.PrintWriter p = new java.io.PrintWriter(w);
+				t.printStackTrace(p);
+				p.flush();
+				msg.setMessage(w.toString());
+				msg.setVisible(true);
+				break;
+		}
+	}
+
+	@Action
+	public void showMiniMode() {
+		if(minimode) {
+			fullTwitz();
+		}
+		else {
+			miniTwitz();
+		}
+	}
+
+	/**
+	 * Display only a miniature version of Twitz
+	 */
+	public void miniTwitz() {
+		tabPane.setVisible(false);
+		//this.getStatusBar().setVisible(false);
+		this.getMenuBar().setVisible(false);
+		this.getFrame().setSize(this.getFrame().getWidth(), 100);
+		fixLocation();
+		btnMini.setIcon(getResourceMap().getIcon("btnMini.up.icon"));
+		minimode = true;
+		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
+	}
+
+	/**
+	 * Display the full Twitz window
+	 */
+	public void fullTwitz() {
+		tabPane.setVisible(true);
+		//this.getStatusBar().setVisible(true);
+		this.getMenuBar().setVisible(true);
+		this.getFrame().setSize(this.getFrame().getWidth(), 300);
+		fixLocation();
+		btnMini.setIcon(getResourceMap().getIcon("btnMini.icon"));
+		minimode = false;
+		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
+	}
+
+	/**
+	 * Resets the Tweet button, clears the tweet text and closes the window is the close
+	 * on send is checked
+	 */
+	public void resetTweetAndHide() {
+		txtTweet.setText("");
+		btnTweet.setEnabled(false);
+
+		if (chkCOT.isSelected())
+		{
+			mainApp.toggleWindowView("down");
+		}
+	}
+
+	private void fixLocation() {
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		Rectangle frame = this.getFrame().getBounds();
+		Rectangle desktop = ge.getMaximumWindowBounds();
+		//System.out.println("Widht of desktop: " + desk.toString());
+		//int x = (desk.width - frame.width);
+		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
+			int x = (desktop.width - frame.width);
+			int y = (desktop.height - frame.height) - 32;
+			//System.out.println("X: " + x + " Y: " + y);
+			this.getFrame().setLocation(x, y);
+		}
+	}
+
+	/**
+	 * Event Processor for all events that are related to twitter activity in the #link TwitterManager
+	 * A TwitzEvent will will have and type.
+	 * @param t
+	 */
+	
+
+	public void updateTweetsList(twitter4j.Status s ) {
+		twitter4j.User u = s.getUser();
+		String user = u.getScreenName();
+		java.net.URL pUrl = u.getProfileImageURL();
+		//TODO I need to incoporate the Profile image here
+		DefaultListModel model = (DefaultListModel) tweetsList.getModel();
+		model.addElement(user+": "+s.getText());
+	}
+
+
+
+	//TwitterListener abstract methods
+	// <editor-fold defaultstate="collapsed" desc="Abstract Methods">
+
+	//TwitzListener
+	public void eventOccurred(TwitzEvent t)
+	{
+		int type = t.getEventType();
+		switch(type) {
+			case TwitzEvent.UPDATE:
+				twitter4j.Status s = (twitter4j.Status) t.getSource();
+				updateTweetsList(s);
+				break;
+			case TwitzEvent.LOGIN:
+				//We need to do any post login logic here such as updating of any changed profile data et al.
+				break;
+			case TwitzEvent.ADD_FRIEND:
+				break;
+			case TwitzEvent.DELETE_FRIEND:
+				break;
+			case TwitzEvent.MSG_SENT:
+				break;
+			case TwitzEvent.MSG_RECIEVED:
+				break;
+			case TwitzEvent.ADD_BLOCK:
+				break;
+			case TwitzEvent.REMOVE_BLOCK:
+				break;
+			case TwitzEvent.REPORT_SPAM:
+				break;
+		}
+	}
+
+	//ActionListener
+	public void actionPerformed(ActionEvent evt) {
+		int action = -1;
+		try
+		{
+			action = Integer.parseInt(evt.getActionCommand());
+		}
+		catch(NumberFormatException ignore) {}
+		if(action != -1) {
+			switch(action) {
+				case TwitterConstants.SEARCH:
+					break;
+				case TwitterConstants.TRENDS:
+					break;
+				case TwitterConstants.CURRENT_TRENDS:
+					break;
+				case TwitterConstants.DAILY_TRENDS:
+					break;
+				case TwitterConstants.WEEKLY_TRENDS:
+					break;
+				case TwitterConstants.PUBLIC_TIMELINE:
+					break;
+				case TwitterConstants.HOME_TIMELINE:
+					break;
+				case TwitterConstants.FRIENDS_TIMELINE:
+					break;
+				case TwitterConstants.USER_TIMELINE:
+					break;
+				case TwitterConstants.MENTIONS:
+					break;
+				case TwitterConstants.RETWEETED_BY_ME:
+					break;
+				case TwitterConstants.RETWEETED_TO_ME:
+					break;
+				case TwitterConstants.RETWEETS_OF_ME:
+					break;
+				case TwitterConstants.SHOW_STATUS:
+					break;
+				case TwitterConstants.UPDATE_STATUS:
+					break;
+				case TwitterConstants.DESTROY_STATUS:
+					break;
+				case TwitterConstants.RETWEET_STATUS:
+					break;
+				case TwitterConstants.RETWEETS:
+					break;
+				case TwitterConstants.SHOW_USER:
+					break;
+				case TwitterConstants.LOOKUP_USERS:
+					break;
+				case TwitterConstants.SEARCH_USERS:
+					break;
+				case TwitterConstants.SUGGESTED_USER_CATEGORIES:
+					break;
+				case TwitterConstants.USER_SUGGESTIONS:
+					break;
+				case TwitterConstants.FRIENDS_STATUSES:
+					break;
+				case TwitterConstants.FOLLOWERS_STATUSES:
+					break;
+				case TwitterConstants.CREATE_USER_LIST:
+					break;
+				case TwitterConstants.UPDATE_USER_LIST:
+					break;
+				case TwitterConstants.USER_LISTS:
+					break;
+				case TwitterConstants.SHOW_USER_LIST:
+					break;
+				case TwitterConstants.DESTROY_USER_LIST:
+					break;
+				case TwitterConstants.USER_LIST_STATUSES:
+					break;
+				case TwitterConstants.USER_LIST_MEMBERSHIPS:
+					break;
+				case TwitterConstants.USER_LIST_SUBSCRIPTIONS:
+					break;
+				case TwitterConstants.LIST_MEMBERS:
+					break;
+				case TwitterConstants.ADD_LIST_MEMBER:
+					break;
+				case TwitterConstants.DELETE_LIST_MEMBER:
+					break;
+				case TwitterConstants.CHECK_LIST_MEMBERSHIP:
+					break;
+				case TwitterConstants.LIST_SUBSCRIBERS:
+					break;
+				case TwitterConstants.SUBSCRIBE_LIST:
+					break;
+				case TwitterConstants.UNSUBSCRIBE_LIST:
+					break;
+				case TwitterConstants.CHECK_LIST_SUBSCRIPTION:
+					break;
+				case TwitterConstants.DIRECT_MESSAGES:
+					break;
+				case TwitterConstants.SENT_DIRECT_MESSAGES:
+					break;
+				case TwitterConstants.SEND_DIRECT_MESSAGE:
+					System.out.println("Send Direct Meessage Clicked");
+					break;
+				case TwitterConstants.DESTROY_DIRECT_MESSAGES:
+					break;
+				case TwitterConstants.CREATE_FRIENDSHIP:
+					System.out.println("Create Friendship clicked");
+					break;
+				case TwitterConstants.DESTROY_FRIENDSHIP:
+					break;
+				case TwitterConstants.EXISTS_FRIENDSHIP:
+					break;
+				case TwitterConstants.SHOW_FRIENDSHIP:
+					break;
+				case TwitterConstants.INCOMING_FRIENDSHIPS:
+					break;
+				case TwitterConstants.OUTGOING_FRIENDSHIPS:
+					break;
+				case TwitterConstants.FRIENDS_IDS:
+					break;
+				case TwitterConstants.FOLLOWERS_IDS:
+					break;
+				case TwitterConstants.RATE_LIMIT_STATUS:
+					break;
+				case TwitterConstants.UPDATE_DELIVERY_DEVICE:
+					break;
+				case TwitterConstants.UPDATE_PROFILE_COLORS:
+					break;
+				case TwitterConstants.UPDATE_PROFILE_IMAGE:
+					break;
+				case TwitterConstants.UPDATE_PROFILE_BACKGROUND_IMAGE:
+					break;
+				case TwitterConstants.UPDATE_PROFILE:
+					break;
+				case TwitterConstants.FAVORITES:
+					break;
+				case TwitterConstants.CREATE_FAVORITE:
+					break;
+				case TwitterConstants.DESTROY_FAVORITE:
+					break;
+				case TwitterConstants.ENABLE_NOTIFICATION:
+					break;
+				case TwitterConstants.DISABLE_NOTIFICATION:
+					break;
+				case TwitterConstants.CREATE_BLOCK:
+					System.out.println("Create Block clicked");
+					break;
+				case TwitterConstants.DESTROY_BLOCK:
+					break;
+				case TwitterConstants.EXISTS_BLOCK:
+					break;
+				case TwitterConstants.BLOCKING_USERS:
+					break;
+				case TwitterConstants.BLOCKING_USERS_IDS:
+					break;
+				case TwitterConstants.REPORT_SPAM:
+					System.out.println("Report SPAM clicked");
+					break;
+				case TwitterConstants.AVAILABLE_TRENDS:
+					break;
+				case TwitterConstants.LOCATION_TRENDS:
+					break;
+				case TwitterConstants.NEAR_BY_PLACES:
+					break;
+				case TwitterConstants.REVERSE_GEO_CODE:
+					break;
+				case TwitterConstants.GEO_DETAILS:
+					break;
+				case TwitterConstants.TEST:
+					break;
+			} //End switch()
+		} //End if(action != -1)
+	}
+
+	// TwitterListener
+	public void searched(QueryResult queryResult)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotTrends(Trends trends)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotCurrentTrends(Trends trends)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotDailyTrends(List<Trends> trendsList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotWeeklyTrends(List<Trends> trendsList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotPublicTimeline(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotHomeTimeline(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotFriendsTimeline(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserTimeline(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotMentions(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotRetweetedByMe(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotRetweetedToMe(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotRetweetsOfMe(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotShowStatus(Status status)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void updatedStatus(Status status)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void destroyedStatus(Status destroyedStatus)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void retweetedStatus(Status retweetedStatus)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotRetweets(ResponseList<Status> retweets)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserDetail(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void lookedupUsers(ResponseList<User> users)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void searchedUser(ResponseList<User> userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotSuggestedUserCategories(ResponseList<Category> category)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserSuggestions(ResponseList<User> users)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotFriendsStatuses(PagableResponseList<User> users)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotFollowersStatuses(PagableResponseList<User> users)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void createdUserList(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void updatedUserList(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserLists(PagableResponseList<UserList> userLists)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotShowUserList(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void destroyedUserList(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserListStatuses(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserListMemberships(PagableResponseList<UserList> userLists)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserListSubscriptions(PagableResponseList<UserList> userLists)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserListMembers(PagableResponseList<User> users)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void addedUserListMember(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void deletedUserListMember(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void checkedUserListMembership(User users)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotUserListSubscribers(PagableResponseList<User> users)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void subscribedUserList(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void unsubscribedUserList(UserList userList)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void checkedUserListSubscription(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotDirectMessages(ResponseList<DirectMessage> messages)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotSentDirectMessages(ResponseList<DirectMessage> messages)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void sentDirectMessage(DirectMessage message)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void destroyedDirectMessage(DirectMessage message)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void createdFriendship(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void destroyedFriendship(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotExistsFriendship(boolean exists)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotShowFriendship(Relationship relationship)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotIncomingFriendships(IDs ids)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotOutgoingFriendships(IDs ids)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotFriendsIDs(IDs ids)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotFollowersIDs(IDs ids)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotRateLimitStatus(RateLimitStatus rateLimitStatus)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void updatedDeliveryDevice(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void updatedProfileColors(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void updatedProfileImage(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void updatedProfileBackgroundImage(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void updatedProfile(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotFavorites(ResponseList<Status> statuses)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void createdFavorite(Status status)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void destroyedFavorite(Status status)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void enabledNotification(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void disabledNotification(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void createdBlock(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void destroyedBlock(User user)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotExistsBlock(boolean blockExists)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotBlockingUsers(ResponseList<User> blockingUsers)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotBlockingUsersIDs(IDs blockingUsersIDs)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void reportedSpam(User reportedSpammer)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotAvailableTrends(ResponseList<Location> locations)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotLocationTrends(Trends trends)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotNearByPlaces(ResponseList<Place> places)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotReverseGeoCode(ResponseList<Place> places)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotGeoDetails(Place place)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void tested(boolean test)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void onException(TwitterException te, TwitterMethod method)
+	{
+		if(method.equals(TwitterMethod.UPDATE_STATUS))
+			sendTweetClicked().cancel(true);
+		displayError(te, "Twitter Error", "Error Occurred while attempting: \n\t"+tm.getResourceMap().getString(method.name()), method);
+	}
+	//END abstract methods
+	//</editor-fold>
 
 	// <editor-fold defaultstate="collapsed" desc="Generated Variables">
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -898,8 +1587,7 @@ public class TwitzView extends FrameView implements TwitzListener{
 	//</editor-fold>
 
 	private SettingsManager config = SettingsManager.getInstance();
-	//private TwitzTrayIcon tray;
-	//private TwitterManager tm; // = new TwitterManager();
+	private boolean startMode = config.getBoolean("minimode");
     private final Timer messageTimer;
     private final Timer busyIconTimer;
     private final Icon idleIcon;
@@ -908,11 +1596,10 @@ public class TwitzView extends FrameView implements TwitzListener{
 
     private JDialog aboutBox;
 	private PreferencesDialog prefs;
-	//private TwitzViewMini mini;
 	private twitz.twitter.TwitterManager tm;
-	//private JOptionPane errorDialog = new JOptionPane();
 	private boolean minimode = false;
 	private TwitzApp mainApp;
+	private twitter4j.AsyncTwitter aTwitter;
 
 	private Logger logger = Logger.getLogger(TwitzView.class.getName());
 }
