@@ -89,6 +89,10 @@ public class SettingsManager {
 		settings.setProperty("tab.followers", "true");
 		settings.setProperty("tab.followers.cfgdesc", "Enable Followers Tab");
 		settings.setProperty("tab.followers.cfgtype", "Boolean");
+		//Search tab settings
+		settings.setProperty("tab.search", "true");
+		settings.setProperty("tab.search.cfgdesc", "Enable Search Tab");
+		settings.setProperty("tab.search.cfgtype", "Boolean");
 		saveSettings();
 	}
 

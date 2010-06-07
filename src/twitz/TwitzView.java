@@ -4,6 +4,9 @@
 
 package twitz;
 
+import java.awt.Component;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.MenuEvent;
 import twitz.dialogs.PreferencesDialog;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
@@ -27,14 +30,21 @@ import java.awt.event.WindowFocusListener;
 import java.util.List;
 import java.util.logging.Level;
 import javax.swing.DefaultListModel;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.Timer;
 import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.MenuElement;
+import javax.swing.event.MenuListener;
+import javax.swing.table.DefaultTableColumnModel;
+import javax.swing.table.DefaultTableModel;
 import twitter4j.*;
 import twitz.dialogs.MessageDialog;
 import twitz.events.TwitzListener;
@@ -146,7 +156,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         mainPanel = new javax.swing.JPanel();
         tabPane = new javax.swing.JTabbedPane();
         recentPane = new javax.swing.JScrollPane();
-        tweetsList = new javax.swing.JList();
+        recentList = new javax.swing.JTable();
         friendsPane = new javax.swing.JSplitPane();
         nameListPane = new javax.swing.JScrollPane();
         friendsNameList = new javax.swing.JList();
@@ -158,6 +168,13 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         followingList = new javax.swing.JList();
         followersPane = new javax.swing.JScrollPane();
         followersList = new javax.swing.JList();
+        searchPanel = new javax.swing.JPanel();
+        searchBar = new javax.swing.JToolBar();
+        btnExitSearch = new javax.swing.JButton();
+        txtSearch = new javax.swing.JTextField();
+        btnSearch = new javax.swing.JButton();
+        searchPane = new javax.swing.JScrollPane();
+        tblSearch = new javax.swing.JTable();
         actionPanel = new javax.swing.JPanel();
         txtTweet = new javax.swing.JTextField();
         chkCOT = new javax.swing.JCheckBox();
@@ -173,6 +190,8 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         menuItemBlocked = new javax.swing.JCheckBoxMenuItem();
         menuItemFollowing = new javax.swing.JCheckBoxMenuItem();
         menuItemFollowers = new javax.swing.JCheckBoxMenuItem();
+        menuItemSearch = new javax.swing.JCheckBoxMenuItem();
+        actionsMenu = createActionsMenu();
         javax.swing.JMenu helpMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem aboutMenuItem = new javax.swing.JMenuItem();
         statusPanel = new javax.swing.JPanel();
@@ -207,10 +226,32 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
         recentPane.setName("recentPane"); // NOI18N
 
-        tweetsList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        tweetsList.setCellRenderer(new TweetsListRenderer());
-        tweetsList.setName("tweetsList"); // NOI18N
-        recentPane.setViewportView(tweetsList);
+        recentList.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "I", "", "", ""
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        recentList.setFillsViewportHeight(true);
+        recentList.setName("recentList"); // NOI18N
+        recentList.setRowHeight(32);
+        recentList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        recentList.setShowHorizontalLines(false);
+        recentList.setShowVerticalLines(false);
+        recentPane.setViewportView(recentList);
 
         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
         tabPane.addTab(resourceMap.getString("recentPane.TabConstraints.tabTitle"), resourceMap.getIcon("recentPane.TabConstraints.tabIcon"), recentPane); // NOI18N
@@ -281,6 +322,81 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
         tabPane.addTab(resourceMap.getString("followersPane.TabConstraints.tabTitle"), resourceMap.getIcon("followersPane.TabConstraints.tabIcon"), followersPane); // NOI18N
 
+        searchPanel.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        searchPanel.setName("searchPanel"); // NOI18N
+
+        searchBar.setRollover(true);
+        searchBar.setName("searchBar"); // NOI18N
+
+        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
+        btnExitSearch.setAction(actionMap.get("hideSearchTab")); // NOI18N
+        btnExitSearch.setIcon(resourceMap.getIcon("btnExitSearch.icon")); // NOI18N
+        btnExitSearch.setText(resourceMap.getString("btnExitSearch.text")); // NOI18N
+        btnExitSearch.setToolTipText(resourceMap.getString("btnExitSearch.toolTipText")); // NOI18N
+        btnExitSearch.setFocusable(false);
+        btnExitSearch.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnExitSearch.setName("btnExitSearch"); // NOI18N
+        btnExitSearch.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        searchBar.add(btnExitSearch);
+
+        txtSearch.setText(resourceMap.getString("txtSearch.text")); // NOI18N
+        txtSearch.setName("txtSearch"); // NOI18N
+        searchBar.add(txtSearch);
+
+        btnSearch.setIcon(resourceMap.getIcon("btnSearch.icon")); // NOI18N
+        btnSearch.setText(resourceMap.getString("btnSearch.text")); // NOI18N
+        btnSearch.setFocusable(false);
+        btnSearch.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnSearch.setName("btnSearch"); // NOI18N
+        searchBar.add(btnSearch);
+
+        searchPane.setName("searchPane"); // NOI18N
+
+        tblSearch.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null}
+            },
+            new String [] {
+                "Results"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        tblSearch.setFillsViewportHeight(true);
+        tblSearch.setName("tblSearch"); // NOI18N
+        tblSearch.setRowHeight(50);
+        searchPane.setViewportView(tblSearch);
+
+        javax.swing.GroupLayout searchPanelLayout = new javax.swing.GroupLayout(searchPanel);
+        searchPanel.setLayout(searchPanelLayout);
+        searchPanelLayout.setHorizontalGroup(
+            searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(searchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+            .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+        );
+        searchPanelLayout.setVerticalGroup(
+            searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(searchPanelLayout.createSequentialGroup()
+                .addComponent(searchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE))
+        );
+
+        tabPane.addTab(resourceMap.getString("searchPanel.TabConstraints.tabTitle"), resourceMap.getIcon("searchPanel.tabIcon"), searchPanel); // NOI18N
+
         actionPanel.setMinimumSize(new java.awt.Dimension(100, 50));
         actionPanel.setName("actionPanel"); // NOI18N
 
@@ -296,7 +412,6 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         chkCOT.setToolTipText(resourceMap.getString("chkCOT.toolTipText")); // NOI18N
         chkCOT.setName("chkCOT"); // NOI18N
 
-        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(TwitzView.class, this);
         btnTweet.setAction(actionMap.get("sendAsyncTweet")); // NOI18N
         btnTweet.setText(resourceMap.getString("btnTweet.text")); // NOI18N
         btnTweet.setToolTipText(resourceMap.getString("btnTweet.toolTipText")); // NOI18N
@@ -430,9 +545,24 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         });
         menuTabs.add(menuItemFollowers);
 
+        menuItemSearch.setSelected(true);
+        menuItemSearch.setText(resourceMap.getString("menuItemSearch.text")); // NOI18N
+        menuItemSearch.setIcon(resourceMap.getIcon("menuItemSearch.icon")); // NOI18N
+        menuItemSearch.setName("menuItemSearch"); // NOI18N
+        menuItemSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemSearchActionPerformed(evt);
+            }
+        });
+        menuTabs.add(menuItemSearch);
+
         editMenu.add(menuTabs);
 
         menuBar.add(editMenu);
+
+        actionsMenu.setText(resourceMap.getString("actionsMenu.text")); // NOI18N
+        actionsMenu.setName("actionsMenu"); // NOI18N
+        menuBar.add(actionsMenu);
 
         helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
         helpMenu.setName("helpMenu"); // NOI18N
@@ -548,11 +678,20 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		toggleTabs(evt);
 	}//GEN-LAST:event_menuItemFriendsActionPerformed
 
+	private void menuItemSearchActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemSearchActionPerformed
+	{//GEN-HEADEREND:event_menuItemSearchActionPerformed
+		toggleTabs(evt);
+	}//GEN-LAST:event_menuItemSearchActionPerformed
+
 	/**
 	 * This method is called on startup in the constructor.
 	 * It is used to configure the GUI with the default from the config file.
 	 */
 	private void setupDefaults() {
+		DefaultTableColumnModel cModel = (DefaultTableColumnModel) recentList.getColumnModel();
+		cModel.getColumn(0).setMaxWidth(1);
+		cModel.getColumn(1).setMaxWidth(1);
+		
 		if(startMode) //We closed in minimode
 			miniTwitz();
 		//Disable tabs that were removed by user
@@ -572,24 +711,38 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			tabPane.remove(followersPane);
 			menuItemFollowers.setSelected(false);
 		}
+		if(!config.getBoolean("tab.search")) {
+			tabPane.remove(searchPanel);
+			menuItemSearch.setSelected(false);
+		}
 		MouseListener mouseListener = new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
-				//System.out.println(e.getSource().toString());
-				if(e.getSource() instanceof JList) {
-					//System.out.println("Object is a list");
-					JList list = (JList) e.getSource();
-					//System.out.println("Event Button: "+e.getButton()+" Right Button: "+MouseEvent.BUTTON2);
-					if (e.getButton() == MouseEvent.BUTTON3)
+				if (e.getButton() == MouseEvent.BUTTON3)
+				{
+					java.awt.Point p = e.getPoint();
+					if (e.getSource() instanceof JList)
 					{
-						java.awt.Point p = e.getPoint();
+						JList list = (JList) e.getSource();
 						int index = list.locationToIndex(p);
-						if(index != -1) { //Show menu only if list is not empty
+						if (index != -1)
+						{ //Show menu only if list is not empty
 							list.setSelectedIndex(index);
-							getActionsMenu().show(list, p.x, p.y);
+							getActionsMenu(list).show(list, p.x, p.y);
 						}
-						//System.out.println("Double clicked on Item " + index);
+
+					}
+					else if (e.getSource() instanceof javax.swing.JTable)
+					{
+						javax.swing.JTable table = (javax.swing.JTable) e.getSource();
+						int index = table.rowAtPoint(p);
+						if(index != -1)
+						{
+							ListSelectionModel lsm = table.getSelectionModel();
+							lsm.setLeadSelectionIndex(index);
+							getActionsMenu(table).show(table, p.x, p.y);
+						}
 					}
 				}
 			}
@@ -598,7 +751,8 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		//friendsNameList.setComponentPopupMenu(getActionsMenu());
 		friendsList.addMouseListener(mouseListener);
 		//friendsList.setComponentPopupMenu(getActionsMenu());
-		tweetsList.addMouseListener(mouseListener);
+		recentList.addMouseListener(mouseListener);
+		//tweetsList.addMouseListener(mouseListener);
 		//tweetsList.setComponentPopupMenu(getActionsMenu());
 	}
 
@@ -624,8 +778,84 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		}
 	}
 
+	@Action
+	public void hideSearchTab()
+	{
+		tabPane.remove(searchPanel);
+		menuItemSearch.setSelected(false);
+	}
+	
 	private JPopupMenu getTweetsMenu() {
 		JPopupMenu menu = new JPopupMenu();
+		return menu;
+	}
+
+	private JMenu createActionsMenu() {
+		JMenu menu = new JMenu();
+		JMenu users = new JMenu("User Actions");
+		java.awt.Component selected = tabPane.getSelectedComponent();
+		JPopupMenu actions = getActionsMenu(selected);
+		MenuElement[] aelems = actions.getSubElements();
+		for (MenuElement e : aelems) {
+			if(e instanceof JMenuItem) {
+				users.add((JMenuItem)e);
+			}
+			else if(e instanceof JMenu) {
+				users.add((JMenu)e);
+			}
+		}
+
+		menu.addMenuListener(new MenuListener() {
+
+			public void menuSelected(MenuEvent e)
+			{
+				System.out.println("Menu Selected");
+				java.awt.Component o = tabPane.getSelectedComponent();
+				Component c = actionsMenu.getMenuComponent(0);
+				if(o.getName().equals("recentPane")) {
+					if(recentList.getSelectedRow() == -1)
+						c.setEnabled(false);
+					else
+						c.setEnabled(true);
+				}
+				else if(o.getName().equals("friendsPane")) {
+					if(friendsList.getSelectedIndex() == -1)
+						c.setEnabled(false);
+					else
+						c.setEnabled(true);
+				}
+				else if(o.getName().equals("followingPane")) {
+					if(followingList.getSelectedIndex() == -1)
+						c.setEnabled(false);
+					else
+						c.setEnabled(true);
+				}
+				else if(o.getName().equals("followersPane")) {
+					if(followersList.getSelectedIndex() == -1)
+						c.setEnabled(false);
+					else
+						c.setEnabled(true);
+				}
+				else if(o.getName().equals("blockedPane")) {
+					if(blockedList.getSelectedIndex() == -1)
+						c.setEnabled(false);
+					else
+						c.setEnabled(true);
+				}
+			}
+
+			public void menuDeselected(MenuEvent e)
+			{
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			public void menuCanceled(MenuEvent e)
+			{
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+		});
+		menu.add(users);
+		//Setup menus for all other twitter actions
 		return menu;
 	}
 
@@ -634,32 +864,157 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	 * when a user is clicked on.
 	 * @return A JPopupMenu
 	 */
-	private JPopupMenu getActionsMenu() {
-		JPopupMenu menu = new JPopupMenu("Actions");
-		JMenuItem item = new JMenuItem("Block User");
-		item.setActionCommand(TwitterConstants.CREATE_BLOCK+"");
-		item.addActionListener(this);
-		item.setIcon(getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"));
-		menu.add(item);
+	private JPopupMenu getActionsMenu(Object caller) {
+//RETWEETED_BY_ME
+//RETWEETED_TO_ME
+//RETWEETS_OF_ME
+//SHOW_STATUS
+//SHOW_USER
+		boolean selected = true;
+		if(caller instanceof JTable) {
+			JTable t = (JTable)caller;
+			if(t.getSelectedRow() == -1)
+				selected = false;
+		}
+		else if(caller instanceof JList) {
+			JList l = (JList)caller;
+			if(l.getSelectedIndex() == -1)
+				selected = false;
+		}
+		JPopupMenu menu = new JPopupMenu(resource.getString("ACTIONS"));
+		menu.setLabel(resource.getString("ACTIONS"));
 
-		item = new JMenuItem("Report SPAM");
+		JMenuItem item = new JMenuItem(resource.getString("REPORT_SPAM"));
 		item.setActionCommand(TwitterConstants.REPORT_SPAM+"");
 		item.addActionListener(this);
 		item.setIcon(getResourceMap().getIcon("icon.bomb"));
+		item.setEnabled(selected);
 		menu.add(item);
 		menu.addSeparator();
 
-		item = new JMenuItem("Start Friendship");
+		JMenu sub = new JMenu(resource.getString("BLOCKING_USERS"));
+		sub.setIcon(getResourceMap().getIcon("icon.stop"));
+		item = new JMenuItem(resource.getString("CREATE_BLOCK"));
+		item.setActionCommand(TwitterConstants.CREATE_BLOCK+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.stop"));
+		item.setEnabled(selected);
+		sub.add(item);
+
+		item = new JMenuItem(resource.getString("DESTROY_BLOCK"));
+		item.setActionCommand(TwitterConstants.DESTROY_BLOCK+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.stop"));
+		item.setEnabled(selected);
+		sub.add(item);
+		menu.add(sub);
+
+		sub = new JMenu(resource.getString("FRIENDSHIPS"));
+		sub.setIcon(getResourceMap().getIcon("icon.user"));
+		item = new JMenuItem(resource.getString("CREATE_FRIENDSHIP"));
 		item.addActionListener(this);
 		item.setActionCommand(TwitterConstants.CREATE_FRIENDSHIP+"");
-		item.setIcon(getResourceMap().getIcon("icon.user"));
-		menu.add(item);
+		item.setIcon(getResourceMap().getIcon("icon.user_add"));
+		item.setEnabled(selected);
+		sub.add(item);
 
-		item = new JMenuItem("Send Direct Message");
+		item = new JMenuItem(resource.getString("DESTROY_FRIENDSHIP"));
+		item.addActionListener(this);
+		item.setActionCommand(TwitterConstants.DESTROY_FRIENDSHIP+"");
+		item.setIcon(getResourceMap().getIcon("icon.user_delete"));
+		item.setEnabled(selected);
+		sub.add(item);
+
+		item = new JMenuItem(resource.getString("EXISTS_FRIENDSHIP"));
+		item.addActionListener(this);
+		item.setActionCommand(TwitterConstants.EXISTS_FRIENDSHIP+"");
+		item.setIcon(getResourceMap().getIcon("icon.user_go"));
+		item.setEnabled(selected);
+		sub.add(item);
+
+		item = new JMenuItem(resource.getString("SHOW_FRIENDSHIP"));
+		item.addActionListener(this);
+		item.setActionCommand(TwitterConstants.SHOW_FRIENDSHIP+"");
+		item.setIcon(getResourceMap().getIcon("icon.user_gray"));
+		item.setEnabled(selected);
+		sub.add(item);
+		menu.add(sub);
+
+//SENT_DIRECT_MESSAGES
+//SEND_DIRECT_MESSAGE
+		sub = new JMenu(resource.getString("DIRECT_MESSAGES"));
+		sub.setIcon(getResourceMap().getIcon("icon.user_comment"));
+		item = new JMenuItem(resource.getString("SEND_DIRECT_MESSAGE"));
 		item.setActionCommand(TwitterConstants.SEND_DIRECT_MESSAGE+"");
 		item.addActionListener(this);
 		item.setIcon(getResourceMap().getIcon("icon.user_comment"));
+		item.setEnabled(selected);
+		sub.add(item);
+
+//		item = new JMenuItem(resource.getString("SEND_DIRECT_MESSAGES"));
+//		item.setActionCommand(TwitterConstants.SEND_DIRECT_MESSAGES+"");
+//		item.addActionListener(this);
+//		item.setIcon(getResourceMap().getIcon("icon.user_comment"));
+//		item.setEnabled(selected);
+//		sub.add(item);
+		menu.add(sub);
+//NEAR_BY_PLACES
+//GEO_DETAILS
+
+		sub = new JMenu(resource.getString("LOCATION"));
+		sub.setIcon(getResourceMap().getIcon("icon.map"));
+		item = new JMenuItem(resource.getString("NEAR_BY_PLACES"));
+		item.setActionCommand(TwitterConstants.NEAR_BY_PLACES+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.map"));
+		item.setEnabled(selected);
+		sub.add(item);
+
+		item = new JMenuItem(resource.getString("GEO_DETAILS"));
+		item.setActionCommand(TwitterConstants.GEO_DETAILS+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.map_edit"));
+		item.setEnabled(selected);
+		sub.add(item);
+		menu.add(sub);
+
+//ADD_LIST_MEMBER
+//DELETE_LIST_MEMBER
+//CHECK_LIST_MEMBERSHIP
+		sub = new JMenu(resource.getString("USER_LISTS"));
+		sub.setIcon(getResourceMap().getIcon("icon.group"));
+		item = new JMenuItem(resource.getString("ADD_LIST_MEMBER"));
+		item.setActionCommand(TwitterConstants.ADD_LIST_MEMBER+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.group_add"));
+		item.setEnabled(selected);
+		sub.add(item);
+
+		item = new JMenuItem(resource.getString("DELETE_LIST_MEMBER"));
+		item.setActionCommand(TwitterConstants.DELETE_LIST_MEMBER+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.group_delete"));
+		item.setEnabled(selected);
+		sub.add(item);
+
+		item = new JMenuItem(resource.getString("CHECK_LIST_MEMBERSHIP"));
+		item.setActionCommand(TwitterConstants.CHECK_LIST_MEMBERSHIP+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.group_gear"));
+		item.setEnabled(selected);
+		sub.add(item);
+		menu.add(sub);
+
+	//USER_TIMELINE
+		item = new JMenuItem(resource.getString("USER_TIMELINE"));
+		item.setActionCommand(TwitterConstants.USER_TIMELINE+"");
+		item.addActionListener(this);
+		item.setIcon(getResourceMap().getIcon("icon.timeline_marker"));
+		item.setEnabled(selected);
 		menu.add(item);
+
+		//menu.setEnabled(selected);
+
 		return menu;
 	}
 	//END private methods
@@ -733,6 +1088,17 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			else
 			{
 				tabPane.remove(followersPane);
+			}
+		}
+		else if(evt.getActionCommand().equals("Search"))
+		{
+			config.setProperty("tab.search", item.isSelected()+"");
+			if(item.isSelected()) {
+				tabPane.addTab(getResourceMap().getString("searchPanel.TabConstraints.tabTitle"), getResourceMap().getIcon("searchPanel.tabIcon"), searchPanel); // NOI18N
+			}
+			else
+			{
+				tabPane.remove(searchPanel);
 			}
 		}
 	}
@@ -945,8 +1311,14 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		String user = u.getScreenName();
 		java.net.URL pUrl = u.getProfileImageURL();
 		//TODO I need to incoporate the Profile image here
-		DefaultListModel model = (DefaultListModel) tweetsList.getModel();
-		model.addElement(user+": "+s.getText());
+		java.util.Vector vData = new java.util.Vector();
+		vData.add(s.getId());
+		vData.add(s.isRetweet());
+		vData.add(u.getScreenName());
+		vData.add(s.getText());
+		DefaultTableModel model = (DefaultTableModel) recentList.getModel();
+		model.addRow(vData);
+		//model.addElement(user+": "+s.getText());
 	}
 
 
@@ -985,6 +1357,16 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
 	//ActionListener
 	public void actionPerformed(ActionEvent evt) {
+		System.out.println(evt.getSource().toString());
+		JList list = null;
+		if(evt.getSource() instanceof javax.swing.JMenuItem) {
+			JMenuItem item = (JMenuItem)evt.getSource();
+			if(item.getParent() instanceof javax.swing.JPopupMenu) {
+				JPopupMenu m = (JPopupMenu)item.getParent();
+				if(m.getInvoker() instanceof JList)
+					list = (JList)m.getInvoker();
+			}
+		}
 		int action = -1;
 		try
 		{
@@ -1081,6 +1463,11 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 					break;
 				case TwitterConstants.SEND_DIRECT_MESSAGE:
 					System.out.println("Send Direct Meessage Clicked");
+					if(list != null) {
+						int s = list.getSelectedIndex();
+						javax.swing.ListModel model = list.getModel();
+						String value = (String)model.getElementAt(s);
+					}
 					break;
 				case TwitterConstants.DESTROY_DIRECT_MESSAGES:
 					break;
@@ -1546,9 +1933,12 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	// <editor-fold defaultstate="collapsed" desc="Generated Variables">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionPanel;
+    private javax.swing.JMenu actionsMenu;
     private javax.swing.JList blockedList;
     private javax.swing.JScrollPane blockedPane;
+    private javax.swing.JButton btnExitSearch;
     private javax.swing.JButton btnMini;
+    private javax.swing.JButton btnSearch;
     private javax.swing.JButton btnTweet;
     private javax.swing.JCheckBox chkCOT;
     private javax.swing.JPopupMenu contextMenu;
@@ -1562,6 +1952,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
     private javax.swing.JList friendsNameList;
     private javax.swing.JSplitPane friendsPane;
     private javax.swing.JMenuItem helpItem;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
@@ -1569,19 +1960,25 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
     private javax.swing.JCheckBoxMenuItem menuItemFollowers;
     private javax.swing.JCheckBoxMenuItem menuItemFollowing;
     private javax.swing.JCheckBoxMenuItem menuItemFriends;
+    private javax.swing.JCheckBoxMenuItem menuItemSearch;
     private javax.swing.JMenu menuTabs;
     private javax.swing.JMenuItem miniItem;
     private javax.swing.JScrollPane nameListPane;
     private javax.swing.JMenuItem prefsItem;
     private javax.swing.JMenuItem prefsMenuItem;
     private javax.swing.JProgressBar progressBar;
+    private javax.swing.JTable recentList;
     private javax.swing.JScrollPane recentPane;
+    private javax.swing.JToolBar searchBar;
+    private javax.swing.JScrollPane searchPane;
+    private javax.swing.JPanel searchPanel;
     private javax.swing.JLabel statusAnimationLabel;
     private javax.swing.JLabel statusMessageLabel;
     private javax.swing.JPanel statusPanel;
     private javax.swing.JTabbedPane tabPane;
-    private javax.swing.JList tweetsList;
+    private javax.swing.JTable tblSearch;
     private javax.swing.JScrollPane tweetsPane;
+    private javax.swing.JTextField txtSearch;
     private javax.swing.JTextField txtTweet;
     // End of variables declaration//GEN-END:variables
 	//</editor-fold>
@@ -1600,6 +1997,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	private boolean minimode = false;
 	private TwitzApp mainApp;
 	private twitter4j.AsyncTwitter aTwitter;
+	private ResourceMap resource = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(twitz.twitter.TwitterManager.class);
 
 	private Logger logger = Logger.getLogger(TwitzView.class.getName());
 }

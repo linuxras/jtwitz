@@ -95,7 +95,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		bound.setLocation((c.x - 210), (c.y - 150));
 		view = new TwitzView(this);
 		view.getFrame().setBounds(bound);
-		view.getFrame().setUndecorated(true);
+		view.getFrame().setUndecorated(false);
 		try
 		{
 			tray = new TwitzTrayIcon(this, view);
