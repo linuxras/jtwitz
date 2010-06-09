@@ -5,16 +5,15 @@
 
 package twitz;
 
-import java.awt.event.FocusEvent;
 import javax.swing.event.PopupMenuEvent;
 import twitz.util.SettingsManager;
 import java.awt.Image;
-import java.awt.MenuItem;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
-import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.InputStream;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -26,7 +25,7 @@ import javax.swing.event.PopupMenuListener;
  *
  * @author mistik1
  */
-public class TwitzTrayIcon implements MouseListener{
+public class TwitzTrayIcon implements MouseListener, PropertyChangeListener{
 
 	private TrayIcon trayIcon = null;
 	private TwitzPopup popup = null;
@@ -130,6 +129,32 @@ public class TwitzTrayIcon implements MouseListener{
 
 	public void hideGlassPane() {
 		menuHack.setVisible(false);
+	}
+
+	public void propertyChange(PropertyChangeEvent evt)
+	{
+		if(evt.getPropertyName().equalsIgnoreCase("POPUP"))
+		{
+			String[] s2 = (String[])evt.getNewValue();
+			if(s2.length >= 3) {
+				int msgType = Integer.parseInt(s2[2]);
+				switch (msgType)
+				{
+					case 1:
+						trayIcon.displayMessage(s2[0], s2[1], TrayIcon.MessageType.ERROR);
+						break;
+					case 2:
+						trayIcon.displayMessage(s2[0], s2[1], TrayIcon.MessageType.INFO);
+						break;
+					case 3:
+						trayIcon.displayMessage(s2[0], s2[1], TrayIcon.MessageType.NONE);
+						break;
+					case 4:
+						trayIcon.displayMessage(s2[0], s2[1], TrayIcon.MessageType.WARNING);
+						break;
+				}
+			}
+		}
 	}
 
 	public void mouseClicked(MouseEvent e)

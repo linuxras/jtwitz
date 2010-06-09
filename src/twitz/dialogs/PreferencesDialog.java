@@ -56,7 +56,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		sorter.sort();
 		//cModel.getColumn(1).setMaxWidth(400);
 		//tblConfig.setRowHeight(30);
-		setBounds(TwitzApp.getDesktopCenter(this));
+		//setBounds(TwitzApp.getDesktopCenter(this));
 		this.addWindowListener(new WindowListener() {
 
 			public void windowOpened(WindowEvent e)
@@ -286,7 +286,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			String value = row.get(2)+"";
 			p.setProperty(key, value);
 		}
-		config.setProperty(p);
+		config.setProperties(p);
 	}
 
 	@Action

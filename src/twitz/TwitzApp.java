@@ -87,15 +87,15 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
      * At startup create and show the main frame of the application.
      */
     @Override protected void startup() {
-		buildSplash();
-		splashFrame.setVisible(true);
+		//buildSplash();
+		//splashFrame.setVisible(true);
 		Point c = getDesktopCenter();
 		Rectangle bound = new Rectangle();
 		bound.setSize(420, 300);
 		bound.setLocation((c.x - 210), (c.y - 150));
 		view = new TwitzView(this);
 		view.getFrame().setBounds(bound);
-		view.getFrame().setUndecorated(false);
+		view.getFrame().setUndecorated(config.getBoolean("twitz.undecorated"));
 		try
 		{
 			tray = new TwitzTrayIcon(this, view);
@@ -105,6 +105,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
 			JOptionPane.showMessageDialog(null, ex.getMessage(), "Critical Error", JOptionPane.ERROR_MESSAGE);
 		}
+		view.addPropertyChangeListener("POPUP", tray);
 		System.out.println("Inside Startup");
         //show(new TwitzView(this, tray, config));
 		show(view);
@@ -167,7 +168,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		System.out.println("Inside ready()");
 		if(hidden)
 			toggleWindowView("down");
-		splashFrame.setVisible(false);
+		//splashFrame.setVisible(false);
 		GraphicsEnvironment gc = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice[] dv = gc.getScreenDevices();
 		for(GraphicsDevice d : dv) {
