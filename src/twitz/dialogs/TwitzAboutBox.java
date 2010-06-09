@@ -2,7 +2,7 @@
  * TwitzAboutBox.java
  */
 
-package twitz;
+package twitz.dialogs;
 
 import org.jdesktop.application.Action;
 

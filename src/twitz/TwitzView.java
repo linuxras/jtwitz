@@ -4,8 +4,10 @@
 
 package twitz;
 
+import twitz.dialogs.TwitzAboutBox;
 import java.awt.Component;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.MenuEvent;
 import twitz.dialogs.PreferencesDialog;
 import java.awt.GraphicsEnvironment;
@@ -28,6 +30,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowFocusListener;
 import java.util.List;
+import java.util.Vector;
 import java.util.logging.Level;
 import javax.swing.DefaultListModel;
 import javax.swing.DefaultListSelectionModel;
@@ -41,7 +44,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+import javax.swing.ListModel;
 import javax.swing.MenuElement;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuListener;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
@@ -63,10 +68,14 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		tm.addTwitzListener(this);
 		//Initialize twitter
 		aTwitter = tm.getAsyncTwitterInstance();
+		resource = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(twitz.twitter.TwitterManager.class);
         initComponents();
 		this.getFrame().setVisible(false);
 		this.getFrame().setSize(400, 300);
 		btnTweet.setEnabled(false);
+
+		searchHeaders.add("User");
+		searchHeaders.add("Results");
 
 		//look & feel setup
 		//Default to full view
@@ -77,12 +86,12 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			public void windowGainedFocus(WindowEvent e)
 			{
 				txtTweet.requestFocus();
-				//throw new UnsupportedOperationException("Not supported yet.");
+				//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 			}
 
 			public void windowLostFocus(WindowEvent e)
 			{
-				//throw new UnsupportedOperationException("Not supported yet.");
+				//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 			}
 		});
 
@@ -175,11 +184,25 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         btnSearch = new javax.swing.JButton();
         searchPane = new javax.swing.JScrollPane();
         tblSearch = new javax.swing.JTable();
+        advSearchBar = new javax.swing.JToolBar();
+        jLabel1 = new javax.swing.JLabel();
+        txtSinceDate = new org.jdesktop.swingx.JXDatePicker();
+        jSeparator2 = new javax.swing.JToolBar.Separator();
+        jLabel2 = new javax.swing.JLabel();
+        txtUntilDate = new org.jdesktop.swingx.JXDatePicker();
+        jSeparator3 = new javax.swing.JToolBar.Separator();
+        jLabel3 = new javax.swing.JLabel();
+        cmbRpp = new javax.swing.JComboBox();
+        btnNext = new javax.swing.JButton();
+        btnPrev = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        lblPage = new javax.swing.JLabel();
         actionPanel = new javax.swing.JPanel();
-        txtTweet = new javax.swing.JTextField();
         chkCOT = new javax.swing.JCheckBox();
         btnTweet = new javax.swing.JButton();
         btnMini = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txtTweet = new javax.swing.JTextArea();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
@@ -205,6 +228,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         helpItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         exitItem = new javax.swing.JMenuItem();
+        buttonGroup1 = new javax.swing.ButtonGroup();
 
         mainPanel.setComponentPopupMenu(contextMenu);
         mainPanel.setName("mainPanel"); // NOI18N
@@ -214,7 +238,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
             }
         });
 
-        tabPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
+        tabPane.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
         tabPane.setInheritsPopupMenu(true);
         tabPane.setName("tabPane"); // NOI18N
         tabPane.setNextFocusableComponent(txtTweet);
@@ -325,6 +349,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         searchPanel.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
         searchPanel.setName("searchPanel"); // NOI18N
 
+        searchBar.setFloatable(false);
         searchBar.setRollover(true);
         searchBar.setName("searchBar"); // NOI18N
 
@@ -341,10 +366,16 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
         txtSearch.setText(resourceMap.getString("txtSearch.text")); // NOI18N
         txtSearch.setName("txtSearch"); // NOI18N
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtSearchKeyReleased(evt);
+            }
+        });
         searchBar.add(txtSearch);
 
         btnSearch.setIcon(resourceMap.getIcon("btnSearch.icon")); // NOI18N
         btnSearch.setText(resourceMap.getString("btnSearch.text")); // NOI18N
+        btnSearch.setEnabled(false);
         btnSearch.setFocusable(false);
         btnSearch.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
         btnSearch.setName("btnSearch"); // NOI18N
@@ -354,17 +385,17 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
         tblSearch.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null}
+                {null, null}
             },
             new String [] {
-                "Results"
+                "User", "Results"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class
+                java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false
+                false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -380,39 +411,122 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         tblSearch.setRowHeight(50);
         searchPane.setViewportView(tblSearch);
 
+        advSearchBar.setFloatable(false);
+        advSearchBar.setRollover(true);
+        advSearchBar.setName("advSearchBar"); // NOI18N
+
+        jLabel1.setLabelFor(txtSinceDate);
+        jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
+        jLabel1.setName("jLabel1"); // NOI18N
+        advSearchBar.add(jLabel1);
+
+        txtSinceDate.setToolTipText(resourceMap.getString("txtSinceDate.toolTipText")); // NOI18N
+        txtSinceDate.setFormats("yyyy-MM-dd");
+        txtSinceDate.setMinimumSize(new java.awt.Dimension(100, 23));
+        txtSinceDate.setName("txtSinceDate"); // NOI18N
+        txtSinceDate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtSinceDateActionPerformed(evt);
+            }
+        });
+        advSearchBar.add(txtSinceDate);
+
+        jSeparator2.setName("jSeparator2"); // NOI18N
+        advSearchBar.add(jSeparator2);
+
+        jLabel2.setLabelFor(txtUntilDate);
+        jLabel2.setText(resourceMap.getString("jLabel2.text")); // NOI18N
+        jLabel2.setName("jLabel2"); // NOI18N
+        advSearchBar.add(jLabel2);
+
+        txtUntilDate.setToolTipText(resourceMap.getString("txtUntilDate.toolTipText")); // NOI18N
+        txtUntilDate.setFormats("yyyy-MM-dd");
+        txtUntilDate.setName("txtUntilDate"); // NOI18N
+        txtUntilDate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtUntilDateActionPerformed(evt);
+            }
+        });
+        advSearchBar.add(txtUntilDate);
+
+        jSeparator3.setName("jSeparator3"); // NOI18N
+        advSearchBar.add(jSeparator3);
+
+        jLabel3.setLabelFor(cmbRpp);
+        jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
+        jLabel3.setName("jLabel3"); // NOI18N
+        advSearchBar.add(jLabel3);
+
+        cmbRpp.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "70", "80", "90", "100" }));
+        cmbRpp.setToolTipText(resourceMap.getString("cmbRpp.toolTipText")); // NOI18N
+        cmbRpp.setMaximumSize(new java.awt.Dimension(52, 24));
+        cmbRpp.setName("cmbRpp"); // NOI18N
+        advSearchBar.add(cmbRpp);
+
+        btnNext.setIcon(resourceMap.getIcon("btnNext.icon")); // NOI18N
+        btnNext.setText(resourceMap.getString("btnNext.text")); // NOI18N
+        btnNext.setToolTipText(resourceMap.getString("btnNext.toolTipText")); // NOI18N
+        btnNext.setFocusable(false);
+        btnNext.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
+        btnNext.setName("btnNext"); // NOI18N
+
+        btnPrev.setIcon(resourceMap.getIcon("btnPrev.icon")); // NOI18N
+        btnPrev.setText(resourceMap.getString("btnPrev.text")); // NOI18N
+        btnPrev.setFocusable(false);
+        btnPrev.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnPrev.setName("btnPrev"); // NOI18N
+
+        jLabel4.setText(resourceMap.getString("jLabel4.text")); // NOI18N
+        jLabel4.setName("jLabel4"); // NOI18N
+
+        lblPage.setText(resourceMap.getString("lblPage.text")); // NOI18N
+        lblPage.setName("lblPage"); // NOI18N
+
         javax.swing.GroupLayout searchPanelLayout = new javax.swing.GroupLayout(searchPanel);
         searchPanel.setLayout(searchPanelLayout);
         searchPanelLayout.setHorizontalGroup(
             searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(searchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
-            .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+            .addComponent(searchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(advSearchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addGroup(searchPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(btnPrev)
+                .addGap(83, 83, 83)
+                .addComponent(jLabel4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lblPage)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 118, Short.MAX_VALUE)
+                .addComponent(btnNext)
+                .addContainerGap())
+            .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
         );
         searchPanelLayout.setVerticalGroup(
             searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(searchPanelLayout.createSequentialGroup()
                 .addComponent(searchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE))
+                .addComponent(advSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnNext, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4)
+                    .addComponent(lblPage))
+                .addContainerGap())
         );
 
         tabPane.addTab(resourceMap.getString("searchPanel.TabConstraints.tabTitle"), resourceMap.getIcon("searchPanel.tabIcon"), searchPanel); // NOI18N
 
+        actionPanel.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
         actionPanel.setMinimumSize(new java.awt.Dimension(100, 50));
         actionPanel.setName("actionPanel"); // NOI18N
-
-        txtTweet.setText(resourceMap.getString("txtTweet.text")); // NOI18N
-        txtTweet.setName("txtTweet"); // NOI18N
-        txtTweet.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                txtTweetKeyReleased(evt);
-            }
-        });
 
         chkCOT.setText(resourceMap.getString("chkCOT.text")); // NOI18N
         chkCOT.setToolTipText(resourceMap.getString("chkCOT.toolTipText")); // NOI18N
         chkCOT.setName("chkCOT"); // NOI18N
 
-        btnTweet.setAction(actionMap.get("sendAsyncTweet")); // NOI18N
         btnTweet.setText(resourceMap.getString("btnTweet.text")); // NOI18N
         btnTweet.setToolTipText(resourceMap.getString("btnTweet.toolTipText")); // NOI18N
         btnTweet.setName("btnTweet"); // NOI18N
@@ -424,13 +538,26 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         btnMini.setMargin(new java.awt.Insets(2, 2, 2, 2));
         btnMini.setName("btnMini"); // NOI18N
 
+        jScrollPane1.setName("jScrollPane1"); // NOI18N
+
+        txtTweet.setColumns(20);
+        txtTweet.setRows(5);
+        txtTweet.setWrapStyleWord(true);
+        txtTweet.setName("txtTweet"); // NOI18N
+        txtTweet.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtTweetKeyReleased(evt);
+            }
+        });
+        jScrollPane1.setViewportView(txtTweet);
+
         javax.swing.GroupLayout actionPanelLayout = new javax.swing.GroupLayout(actionPanel);
         actionPanel.setLayout(actionPanelLayout);
         actionPanelLayout.setHorizontalGroup(
             actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 290, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkCOT)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -444,32 +571,32 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(txtTweet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(chkCOT)
                     .addComponent(btnTweet)
                     .addComponent(btnMini))
                 .addContainerGap())
         );
 
-        txtTweet.requestFocusInWindow();
-
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(actionPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(mainPanelLayout.createSequentialGroup()
-                .addGap(12, 12, 12)
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
-                .addGap(12, 12, 12))
+                .addContainerGap()
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(actionPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(tabPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 518, Short.MAX_VALUE))
+                .addContainerGap())
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 217, Short.MAX_VALUE)
+                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 282, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(actionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(actionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         menuBar.setName("menuBar"); // NOI18N
@@ -589,11 +716,11 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         statusPanel.setLayout(statusPanelLayout);
         statusPanelLayout.setHorizontalGroup(
             statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 443, Short.MAX_VALUE)
+            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 542, Short.MAX_VALUE)
             .addGroup(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(statusMessageLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 259, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 358, Short.MAX_VALUE)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(statusAnimationLabel)
@@ -643,11 +770,6 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
 
 	//private methods
-	private void txtTweetKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyReleased
-	{//GEN-HEADEREND:event_txtTweetKeyReleased
-		keyTyped(evt);
-	}//GEN-LAST:event_txtTweetKeyReleased
-
 	private void tabPaneKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_tabPaneKeyReleased
 	{//GEN-HEADEREND:event_tabPaneKeyReleased
 		keyTyped(evt);
@@ -682,6 +804,35 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	{//GEN-HEADEREND:event_menuItemSearchActionPerformed
 		toggleTabs(evt);
 	}//GEN-LAST:event_menuItemSearchActionPerformed
+
+	private void txtSinceDateActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_txtSinceDateActionPerformed
+	{//GEN-HEADEREND:event_txtSinceDateActionPerformed
+		// TODO add your handling code here:
+}//GEN-LAST:event_txtSinceDateActionPerformed
+
+	private void txtUntilDateActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_txtUntilDateActionPerformed
+	{//GEN-HEADEREND:event_txtUntilDateActionPerformed
+		// TODO add your handling code here:
+}//GEN-LAST:event_txtUntilDateActionPerformed
+
+	private void txtSearchKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtSearchKeyReleased
+	{//GEN-HEADEREND:event_txtSearchKeyReleased
+		switch(evt.getKeyCode()) {
+			case KeyEvent.VK_ENTER:
+				btnSearch.doClick();
+				break;
+			default:
+				if(!txtSearch.getText().equals(""))
+					btnSearch.setEnabled(true);
+				else
+					btnSearch.setEnabled(false);
+		}
+	}//GEN-LAST:event_txtSearchKeyReleased
+
+	private void txtTweetKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyReleased
+	{//GEN-HEADEREND:event_txtTweetKeyReleased
+		keyTyped(evt);
+	}//GEN-LAST:event_txtTweetKeyReleased
 
 	/**
 	 * This method is called on startup in the constructor.
@@ -754,13 +905,33 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		recentList.addMouseListener(mouseListener);
 		//tweetsList.addMouseListener(mouseListener);
 		//tweetsList.setComponentPopupMenu(getActionsMenu());
+		tabPane.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e)
+			{
+				if(tabPane.getSelectedComponent().equals(searchPanel)) {
+					actionPanel.setVisible(false);
+				}
+				else {
+					actionPanel.setVisible(true);
+				}
+				//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+			}
+		});
+		//Setup the ActionListener for the search buttin
+		btnSearch.setActionCommand(TwitterConstants.SEARCH+"");
+		btnSearch.addActionListener(this);
+		btnTweet.setActionCommand(TwitterConstants.UPDATE_STATUS+"");
+		btnTweet.addActionListener(this);
 	}
 
 	@Action
 	private void keyTyped(java.awt.event.KeyEvent evt) {
 		switch(evt.getKeyCode()) {
 			case KeyEvent.VK_ENTER:
-				sendAsyncTweet();
+				//sendAsyncTweet();
+				if(evt.isShiftDown())
+					btnTweet.doClick();
 				//sendTweetClicked().execute();
 				break;
 			case KeyEvent.VK_M:
@@ -785,6 +956,11 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		menuItemSearch.setSelected(false);
 	}
 	
+	@Action
+	public void doSearch() {
+		
+	}
+
 	private JPopupMenu getTweetsMenu() {
 		JPopupMenu menu = new JPopupMenu();
 		return menu;
@@ -1035,6 +1211,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		if(prefs == null) {
 			JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
 			prefs = new PreferencesDialog(mainFrame, true);
+			prefs.setLocationRelativeTo(mainFrame);
 		}
 		prefs.setVisible(true);
 	}
@@ -1048,6 +1225,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			if (item.isSelected())
 			{
 				tabPane.insertTab(getResourceMap().getString("friendsPane.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, null, 1);
+				tabPane.setSelectedComponent(friendsPane);
 			}
 			else
 			{
@@ -1060,6 +1238,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			if (item.isSelected())
 			{
 				tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, null, index >= 2 ? 2 : index); // NOI18N
+				tabPane.setSelectedComponent(blockedPane);
 			}
 			else
 			{
@@ -1072,6 +1251,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			if (item.isSelected())
 			{
 				tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, null, index >= 3 ? 3 : index); // NOI18N
+				tabPane.setSelectedComponent(followingPane);
 			}
 			else
 			{
@@ -1084,6 +1264,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			if (item.isSelected())
 			{
 				tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, null, index >= 4 ? 4 : index); // NOI18N
+				tabPane.setSelectedComponent(followersPane);
 			}
 			else
 			{
@@ -1095,6 +1276,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			config.setProperty("tab.search", item.isSelected()+"");
 			if(item.isSelected()) {
 				tabPane.addTab(getResourceMap().getString("searchPanel.TabConstraints.tabTitle"), getResourceMap().getIcon("searchPanel.tabIcon"), searchPanel); // NOI18N
+				tabPane.setSelectedComponent(searchPanel);
 			}
 			else
 			{
@@ -1223,6 +1405,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 			case 1:
 				//show the full stack trace here
 				MessageDialog msg = new MessageDialog(getFrame(), false);
+				msg.setLocationRelativeTo(TwitzApp.getApplication().getMainFrame());
 				java.io.StringWriter w = new java.io.StringWriter();
 				java.io.PrintWriter p = new java.io.PrintWriter(w);
 				t.printStackTrace(p);
@@ -1250,7 +1433,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		tabPane.setVisible(false);
 		//this.getStatusBar().setVisible(false);
 		this.getMenuBar().setVisible(false);
-		this.getFrame().setSize(this.getFrame().getWidth(), 100);
+		this.getFrame().setSize(this.getFrame().getWidth(), 150);
 		fixLocation();
 		btnMini.setIcon(getResourceMap().getIcon("btnMini.up.icon"));
 		minimode = true;
@@ -1264,7 +1447,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		tabPane.setVisible(true);
 		//this.getStatusBar().setVisible(true);
 		this.getMenuBar().setVisible(true);
-		this.getFrame().setSize(this.getFrame().getWidth(), 300);
+		this.getFrame().setSize(this.getFrame().getWidth(), 350);
 		fixLocation();
 		btnMini.setIcon(getResourceMap().getIcon("btnMini.icon"));
 		minimode = false;
@@ -1299,13 +1482,6 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		}
 	}
 
-	/**
-	 * Event Processor for all events that are related to twitter activity in the #link TwitterManager
-	 * A TwitzEvent will will have and type.
-	 * @param t
-	 */
-	
-
 	public void updateTweetsList(twitter4j.Status s ) {
 		twitter4j.User u = s.getUser();
 		String user = u.getScreenName();
@@ -1321,12 +1497,101 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		//model.addElement(user+": "+s.getText());
 	}
 
+	public String getScreenNameFromActiveTab() {
+		String rv = "";
+		if(tabPane.getSelectedComponent().equals(recentPane)) {
+			int row = recentList.getSelectedRow();
+			if(row != -1)
+				rv = (String)recentList.getValueAt(row, 2);
+		}
+		else if(tabPane.getSelectedComponent().equals(friendsPane)) {
+			if(friendsNameList.getSelectedIndex() != -1)
+				rv = (String)friendsNameList.getSelectedValue();
+		}
+		else if(tabPane.getSelectedComponent().equals(blockedPane)) {
+			if(blockedList.getSelectedIndex() != -1)
+				rv = (String)blockedList.getSelectedValue();
+		}
+		else if(tabPane.getSelectedComponent().equals(followingPane)) {
+			if(followingList.getSelectedIndex() != -1)
+				rv = (String)followingList.getSelectedValue();
+		}
+		else if(tabPane.getSelectedComponent().equals(followersPane)) {
+			if(followersList.getSelectedIndex() != -1)
+				rv = (String)followersList.getSelectedValue();
+		}
+		else if(tabPane.getSelectedComponent().equals(searchPanel)) {
+			int row = tblSearch.getSelectedRow();
+			if(row != -1)
+				rv = (String)tblSearch.getValueAt(row, 2);
+		}
+		return rv;
+	}
 
+	public Vector<String> getScreenNamesFromActiveTab() {
+		Vector<String> rv = new Vector<String>();
+		String ua = "";
+		String ub = "";
+		if(tabPane.getSelectedComponent().equals(recentPane)) {
+			int row[] = recentList.getSelectedRows();
+			if(row.length >= 2) {
+				rv.add((String)recentList.getValueAt(row[0], 2));
+				rv.add((String)recentList.getValueAt(row[1], 2));
+				return rv;
+			}
+		}
+		else if(tabPane.getSelectedComponent().equals(friendsPane)) {
+			Object row[] = friendsNameList.getSelectedValues();
+			if(row.length >= 2) {
+				rv.add((String)row[0]);
+				rv.add((String)row[1]);
+				return rv;
+			}
+		}
+		else if(tabPane.getSelectedComponent().equals(blockedPane)) {
+			Object row[] = blockedList.getSelectedValues();
+			if(row.length >= 2) {
+				rv.add((String)row[0]);
+				rv.add((String)row[1]);
+				return rv;
+			}
+		}
+		else if(tabPane.getSelectedComponent().equals(followingPane)) {
+			Object row[] = followingList.getSelectedValues();
+			if(row.length >= 2) {
+				rv.add((String)row[0]);
+				rv.add((String)row[1]);
+				return rv;
+			}
+		}
+		else if(tabPane.getSelectedComponent().equals(followersPane)) {
+			Object row[] = followersList.getSelectedValues();
+			if(row.length >= 2) {
+				rv.add((String)row[0]);
+				rv.add((String)row[1]);
+				return rv;
+			}
+		}
+		else if(tabPane.getSelectedComponent().equals(searchPanel)) {
+			int row[] = tblSearch.getSelectedRows();
+			if(row.length >= 2) {
+				rv.add((String)tblSearch.getValueAt(row[0], 2));
+				rv.add((String)tblSearch.getValueAt(row[1], 2));
+				return rv;
+			}
+		}
+		return rv;
+	}
 
 	//TwitterListener abstract methods
 	// <editor-fold defaultstate="collapsed" desc="Abstract Methods">
 
 	//TwitzListener
+	/**
+	 * Event Processor for all events that are related to twitter activity in the #link TwitterManager
+	 * A TwitzEvent will will have and type.
+	 * @param t
+	 */
 	public void eventOccurred(TwitzEvent t)
 	{
 		int type = t.getEventType();
@@ -1357,16 +1622,8 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
 	//ActionListener
 	public void actionPerformed(ActionEvent evt) {
-		System.out.println(evt.getSource().toString());
-		JList list = null;
-		if(evt.getSource() instanceof javax.swing.JMenuItem) {
-			JMenuItem item = (JMenuItem)evt.getSource();
-			if(item.getParent() instanceof javax.swing.JPopupMenu) {
-				JPopupMenu m = (JPopupMenu)item.getParent();
-				if(m.getInvoker() instanceof JList)
-					list = (JList)m.getInvoker();
-			}
-		}
+		//System.out.println(evt.getSource().toString());
+		String screenName = null;
 		int action = -1;
 		try
 		{
@@ -1376,165 +1633,288 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		if(action != -1) {
 			switch(action) {
 				case TwitterConstants.SEARCH:
+					Query query = new Query();
+					query.setQuery(txtSearch.getText());
+					if(!txtSinceDate.getEditor().getText().equals(""))
+						query.setSince(txtSinceDate.getEditor().getText());
+					if(!txtUntilDate.getEditor().getText().equals(""))
+						query.setUntil(txtUntilDate.getEditor().getText());
+					query.setRpp(Integer.parseInt((String)cmbRpp.getSelectedItem()));
+					aTwitter.search(query);
 					break;
 				case TwitterConstants.TRENDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.CURRENT_TRENDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.DAILY_TRENDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.WEEKLY_TRENDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.PUBLIC_TIMELINE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.HOME_TIMELINE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.FRIENDS_TIMELINE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.USER_TIMELINE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.MENTIONS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.RETWEETED_BY_ME:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.RETWEETED_TO_ME:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.RETWEETS_OF_ME:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SHOW_STATUS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UPDATE_STATUS:
+					String tweet = txtTweet.getText();
+					btnTweet.setEnabled(false);
+					txtTweet.setEnabled(false);
+					aTwitter.updateStatus(tweet);
 					break;
 				case TwitterConstants.DESTROY_STATUS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.RETWEET_STATUS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.RETWEETS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SHOW_USER:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.LOOKUP_USERS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SEARCH_USERS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SUGGESTED_USER_CATEGORIES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.USER_SUGGESTIONS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.FRIENDS_STATUSES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.FOLLOWERS_STATUSES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.CREATE_USER_LIST:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UPDATE_USER_LIST:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.USER_LISTS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SHOW_USER_LIST:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.DESTROY_USER_LIST:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.USER_LIST_STATUSES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.USER_LIST_MEMBERSHIPS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.USER_LIST_SUBSCRIPTIONS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.LIST_MEMBERS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.ADD_LIST_MEMBER:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.DELETE_LIST_MEMBER:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.CHECK_LIST_MEMBERSHIP:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.LIST_SUBSCRIBERS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SUBSCRIBE_LIST:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UNSUBSCRIBE_LIST:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.CHECK_LIST_SUBSCRIPTION:
 					break;
 				case TwitterConstants.DIRECT_MESSAGES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SENT_DIRECT_MESSAGES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.SEND_DIRECT_MESSAGE:
 					System.out.println("Send Direct Meessage Clicked");
-					if(list != null) {
-						int s = list.getSelectedIndex();
-						javax.swing.ListModel model = list.getModel();
-						String value = (String)model.getElementAt(s);
-					}
+					screenName = getScreenNameFromActiveTab();
+					String text = JOptionPane.showInputDialog("Compose Message for "+screenName);
+					if(text != null)
+						aTwitter.sendDirectMessage(screenName, text);
 					break;
 				case TwitterConstants.DESTROY_DIRECT_MESSAGES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.CREATE_FRIENDSHIP:
+					screenName = getScreenNameFromActiveTab();
+					if(!screenName.equals(""))
+						aTwitter.createFriendship(screenName);
 					System.out.println("Create Friendship clicked");
 					break;
 				case TwitterConstants.DESTROY_FRIENDSHIP:
+					screenName = getScreenNameFromActiveTab();
+					if(!screenName.equals(""))
+						aTwitter.destroyFriendship(screenName);
 					break;
 				case TwitterConstants.EXISTS_FRIENDSHIP:
+					names = getScreenNamesFromActiveTab();
+					if(names.size() >= 2)
+					{
+						aTwitter.existsFriendship(names.get(0), names.get(1));
+					}
 					break;
 				case TwitterConstants.SHOW_FRIENDSHIP:
+					names = getScreenNamesFromActiveTab();
+					if(names.size() >= 2) {
+						aTwitter.showFriendship(names.get(0), names.get(1));
+					}
 					break;
 				case TwitterConstants.INCOMING_FRIENDSHIPS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.OUTGOING_FRIENDSHIPS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.FRIENDS_IDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.FOLLOWERS_IDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.RATE_LIMIT_STATUS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UPDATE_DELIVERY_DEVICE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UPDATE_PROFILE_COLORS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UPDATE_PROFILE_IMAGE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UPDATE_PROFILE_BACKGROUND_IMAGE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.UPDATE_PROFILE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.FAVORITES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.CREATE_FAVORITE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.DESTROY_FAVORITE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.ENABLE_NOTIFICATION:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.DISABLE_NOTIFICATION:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.CREATE_BLOCK:
 					System.out.println("Create Block clicked");
+					screenName = getScreenNameFromActiveTab();
+					if(!screenName.equals(""))
+						aTwitter.createBlock(screenName);
 					break;
 				case TwitterConstants.DESTROY_BLOCK:
+					screenName = getScreenNameFromActiveTab();
+					if(!screenName.equals(""))
+						aTwitter.destroyBlock(screenName);
 					break;
 				case TwitterConstants.EXISTS_BLOCK:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.BLOCKING_USERS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.BLOCKING_USERS_IDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.REPORT_SPAM:
 					System.out.println("Report SPAM clicked");
+					//get the username from the active tab and selected row
+					screenName = getScreenNameFromActiveTab();
+					if(!screenName.equals("")) {
+						try
+						{
+							aTwitter.reportSpam(screenName);
+						}
+						catch (TwitterException ex)
+						{
+							onException(ex, TwitterMethod.REPORT_SPAM);
+						}
+					}
 					break;
 				case TwitterConstants.AVAILABLE_TRENDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.LOCATION_TRENDS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.NEAR_BY_PLACES:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+//					screenName = getScreenNameFromActiveTab();
+//					User usr = null;
+//					try
+//					{
+//						usr = tm.getTwitterInstance().showUser(screenName);
+//					}
+//					catch (TwitterException ex)
+//					{
+//						displayError(ex, "Error", "Error while looking up GEO data", NEAR_BY_PLACES);
+//					}
+//					if(usr != null) {
+//						//GeoQuery q1 = new GeoQuery();
+//						//aTwitter.getNearbyPlaces(query);
+//					}
 					break;
 				case TwitterConstants.REVERSE_GEO_CODE:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.GEO_DETAILS:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 				case TwitterConstants.TEST:
+					firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 					break;
 			} //End switch()
 		} //End if(action != -1)
@@ -1543,389 +1923,437 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	// TwitterListener
 	public void searched(QueryResult queryResult)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		Vector results = new Vector();
+		List<Tweet> l = queryResult.getTweets();
+		for(Tweet t : l) {
+			//results.add(t);
+			Vector v = new Vector();
+			v.add(t.getFromUser());
+			v.add(t.getText());
+			results.add(v);
+		}
+		DefaultTableModel m = (DefaultTableModel) tblSearch.getModel();
+		m.setDataVector(results, searchHeaders);
+		lblPage.setText(queryResult.getPage()+"");
+		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public void gotTrends(Trends trends)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotCurrentTrends(Trends trends)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotDailyTrends(List<Trends> trendsList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotWeeklyTrends(List<Trends> trendsList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotPublicTimeline(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotHomeTimeline(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotFriendsTimeline(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserTimeline(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotMentions(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotRetweetedByMe(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotRetweetedToMe(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotRetweetsOfMe(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotShowStatus(Status status)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void updatedStatus(Status status)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		txtTweet.setText("");
+		btnTweet.setEnabled(false);
+
+		if (chkCOT.isSelected())
+		{
+			mainApp.toggleWindowView("down");
+		}
+		updateTweetsList(status);
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void destroyedStatus(Status destroyedStatus)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void retweetedStatus(Status retweetedStatus)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotRetweets(ResponseList<Status> retweets)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserDetail(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void lookedupUsers(ResponseList<User> users)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void searchedUser(ResponseList<User> userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotSuggestedUserCategories(ResponseList<Category> category)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserSuggestions(ResponseList<User> users)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotFriendsStatuses(PagableResponseList<User> users)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotFollowersStatuses(PagableResponseList<User> users)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void createdUserList(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void updatedUserList(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserLists(PagableResponseList<UserList> userLists)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotShowUserList(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void destroyedUserList(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserListStatuses(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserListMemberships(PagableResponseList<UserList> userLists)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserListSubscriptions(PagableResponseList<UserList> userLists)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserListMembers(PagableResponseList<User> users)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void addedUserListMember(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void deletedUserListMember(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void checkedUserListMembership(User users)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotUserListSubscribers(PagableResponseList<User> users)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void subscribedUserList(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void unsubscribedUserList(UserList userList)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void checkedUserListSubscription(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotDirectMessages(ResponseList<DirectMessage> messages)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotSentDirectMessages(ResponseList<DirectMessage> messages)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void sentDirectMessage(DirectMessage message)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		String str[] = {"Twitz Message", getResourceMap().getString("DIRECT_MESSAGE_SENT.TEXT", message.getRecipientScreenName()), "2"};
+		this.firePropertyChange("POPUP", new Object(), str);
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void destroyedDirectMessage(DirectMessage message)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void createdFriendship(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		String[] str = {"Twitz Message", getResourceMap().getString("FRIENDSHIP_CREATED.TEXT",user.getScreenName()),"2"};
+		this.firePropertyChange("POPUP", new Object(), str);
 	}
 
 	public void destroyedFriendship(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		String[] str = {"Twitz Message", getResourceMap().getString("FRIENDSHIP_DELETED.TEXT",user.getScreenName()),"2"};
+		this.firePropertyChange("POPUP", new Object(), str);
 	}
 
 	public void gotExistsFriendship(boolean exists)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		if(exists) {
+			String[] str = {"Twitz Message", getResourceMap().getString("FRIENDSHIP_EXISTS.TEXT",names.get(0),names.get(1)),"2"};
+			this.firePropertyChange("POPUP", new Object(), str);
+		}
+		else {
+			String[] str = {"Twitz Message", getResourceMap().getString("FRIENDSHIP_NOT_EXISTS.TEXT",names.get(0),names.get(1)),"2"};
+			this.firePropertyChange("POPUP", new Object(), str);
+		}
+		//firePropertyChange("POPUP", new Object(), {"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotShowFriendship(Relationship relationship)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		//TODO create model for displaying relationships
+		//relationship.//.getSourceUserScreenName();
+		//firePropertyChange("POPUP", new Object(), {"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotIncomingFriendships(IDs ids)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotOutgoingFriendships(IDs ids)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotFriendsIDs(IDs ids)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotFollowersIDs(IDs ids)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotRateLimitStatus(RateLimitStatus rateLimitStatus)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void updatedDeliveryDevice(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void updatedProfileColors(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void updatedProfileImage(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void updatedProfileBackgroundImage(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void updatedProfile(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotFavorites(ResponseList<Status> statuses)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void createdFavorite(Status status)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void destroyedFavorite(Status status)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void enabledNotification(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void disabledNotification(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void createdBlock(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		DefaultListModel m = (DefaultListModel)blockedList.getModel();
+		m.addElement(user.getScreenName());
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void destroyedBlock(User user)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		DefaultListModel m = (DefaultListModel)blockedList.getModel();
+		int i = m.indexOf(user.getScreenName());
+		if(i != -1)
+			m.removeElementAt(i);
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotExistsBlock(boolean blockExists)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotBlockingUsers(ResponseList<User> blockingUsers)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotBlockingUsersIDs(IDs blockingUsersIDs)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void reportedSpam(User reportedSpammer)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotAvailableTrends(ResponseList<Location> locations)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotLocationTrends(Trends trends)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotNearByPlaces(ResponseList<Place> places)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotReverseGeoCode(ResponseList<Place> places)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void gotGeoDetails(Place place)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void tested(boolean test)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
 	public void onException(TwitterException te, TwitterMethod method)
 	{
-		if(method.equals(TwitterMethod.UPDATE_STATUS))
-			sendTweetClicked().cancel(true);
-		displayError(te, "Twitter Error", "Error Occurred while attempting: \n\t"+tm.getResourceMap().getString(method.name()), method);
+		if(method != null && method.equals(TwitterMethod.UPDATE_STATUS))
+		{
+			btnTweet.setEnabled(true);
+			txtTweet.setEnabled(true);
+		}
+			//sendTweetClicked().cancel(true);
+		System.out.println(method);
+		if(method != null)
+			displayError(te, "Twitter Error", "Error Occurred while attempting: \n\t"+tm.getResourceMap().getString(method.name()), method);
+		else
+			displayError(te, "Twitter Error", "Unexpected fatal error\nCannot complete operation\n"+te.getCause().getMessage(), null);
 	}
 	//END abstract methods
 	//</editor-fold>
@@ -1934,13 +2362,18 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionPanel;
     private javax.swing.JMenu actionsMenu;
+    private javax.swing.JToolBar advSearchBar;
     private javax.swing.JList blockedList;
     private javax.swing.JScrollPane blockedPane;
     private javax.swing.JButton btnExitSearch;
     private javax.swing.JButton btnMini;
+    private javax.swing.JButton btnNext;
+    private javax.swing.JButton btnPrev;
     private javax.swing.JButton btnSearch;
     private javax.swing.JButton btnTweet;
+    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JCheckBox chkCOT;
+    private javax.swing.JComboBox cmbRpp;
     private javax.swing.JPopupMenu contextMenu;
     private javax.swing.JMenu editMenu;
     private javax.swing.JMenuItem exitItem;
@@ -1952,8 +2385,15 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
     private javax.swing.JList friendsNameList;
     private javax.swing.JSplitPane friendsPane;
     private javax.swing.JMenuItem helpItem;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JToolBar.Separator jSeparator2;
+    private javax.swing.JToolBar.Separator jSeparator3;
+    private javax.swing.JLabel lblPage;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JCheckBoxMenuItem menuItemBlocked;
@@ -1979,7 +2419,9 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
     private javax.swing.JTable tblSearch;
     private javax.swing.JScrollPane tweetsPane;
     private javax.swing.JTextField txtSearch;
-    private javax.swing.JTextField txtTweet;
+    private org.jdesktop.swingx.JXDatePicker txtSinceDate;
+    private javax.swing.JTextArea txtTweet;
+    private org.jdesktop.swingx.JXDatePicker txtUntilDate;
     // End of variables declaration//GEN-END:variables
 	//</editor-fold>
 
@@ -1997,7 +2439,11 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	private boolean minimode = false;
 	private TwitzApp mainApp;
 	private twitter4j.AsyncTwitter aTwitter;
-	private ResourceMap resource = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(twitz.twitter.TwitterManager.class);
+	private ResourceMap resource;// = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(twitz.twitter.TwitterManager.class);
 
 	private Logger logger = Logger.getLogger(TwitzView.class.getName());
+
+	private Vector searchHeaders = new Vector();
+	private Vector<String> names = new Vector<String>();
+
 }

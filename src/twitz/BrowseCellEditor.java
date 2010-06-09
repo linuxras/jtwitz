@@ -149,7 +149,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		String type = config.getString(val+".cfgtype");
 		String cellVal = table.getValueAt(row, column)+"";
 		String configVal = config.getString(val);
-		System.out.println("Row: "+row+" - Column: "+column+" - Item: "+val+" - Type: "+type);
+		//System.out.println("Row: "+row+" - Column: "+column+" - Item: "+val+" - Type: "+type);
 		if(type.equalsIgnoreCase("File")) {
 			if(cellVal.equals(configVal)) {
 				txtPath.setText(configVal);

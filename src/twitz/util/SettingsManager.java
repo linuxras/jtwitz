@@ -20,15 +20,13 @@ import java.util.logging.Logger;
  *
  * @author mistik1
  */
-public class SettingsManager {
+public class SettingsManager extends Properties{
 
-	private Properties settings;
 	String configFile = System.getenv("HOME")+"/.twitz/user_prefs.ini";
 	Logger logger = Logger.getLogger(SettingsManager.class.getName());
 	private static SettingsManager instance;
 
 	private SettingsManager() {
-		settings = new Properties();
 		if(!loadSettings())
 		{
 			setDefaults();
@@ -42,7 +40,6 @@ public class SettingsManager {
 	 */
 	public SettingsManager(String cfg) {
 		this.configFile = cfg;
-		settings = new Properties();
 		loadSettings();
 	}
 
@@ -57,53 +54,56 @@ public class SettingsManager {
 	}
 
 	private void setDefaults() {
-		settings.setProperty("twitter.id", "changeme");
-		settings.setProperty("twitter.id.cfgdesc", "Twitter ID");
-		settings.setProperty("twitter.id.cfgtype", "String");
-		settings.setProperty("twitter.password", "changeme");
-		settings.setProperty("twitter.password.cfgdesc", "Twitter Password");
-		settings.setProperty("twitter.password.cfgtype", "Password");
-		settings.setProperty("minimize.startup", "true");
-		settings.setProperty("minimize.startup.cfgdesc", "Minimize on Startup");
-		settings.setProperty("minimize.startup.cfgtype", "Boolean");
-		settings.setProperty("twitter.picture", "");
-		settings.setProperty("twitter.picture.cfgdesc", "Twitter Profile Image");
-		settings.setProperty("twitter.picture.cfgtype", "File");
+		setProperty("twitter.id", "changeme");
+		setProperty("twitter.id.cfgdesc", "Twitter ID");
+		setProperty("twitter.id.cfgtype", "String");
+		setProperty("twitter.password", "changeme");
+		setProperty("twitter.password.cfgdesc", "Twitter Password");
+		setProperty("twitter.password.cfgtype", "Password");
+		setProperty("minimize.startup", "false");
+		setProperty("minimize.startup.cfgdesc", "Minimize on Startup");
+		setProperty("minimize.startup.cfgtype", "Boolean");
+		setProperty("twitter.picture", "");
+		setProperty("twitter.picture.cfgdesc", "Twitter Profile Image");
+		setProperty("twitter.picture.cfgtype", "File");
+		setProperty("twitz.undecorated", "false");
+		setProperty("twitz.undecorated.cfgdesc", "Start Undecorated");
+		setProperty("twitz.undecorated.cfgtype", "Boolean");
 		//This is a null entry AKA an internally managed property
 		//This keeps the mini/full state of the program between restarts
-		settings.setProperty("minimode", "true");
-		settings.setProperty("minimode.cfgtype", "NULL");
+		setProperty("minimode", "true");
+		setProperty("minimode.cfgtype", "NULL");
 		//Friends Tab settings
-		settings.setProperty("tab.friends", "true");
-		settings.setProperty("tab.friends.cfgdesc", "Enable Friends Tab");
-		settings.setProperty("tab.friends.cfgtype", "Boolean");
+		setProperty("tab.friends", "true");
+		setProperty("tab.friends.cfgdesc", "Enable Friends Tab");
+		setProperty("tab.friends.cfgtype", "Boolean");
 		//Blocked Tab settings
-		settings.setProperty("tab.blocked", "true");
-		settings.setProperty("tab.blocked.cfgdesc", "Enable Blocked Tab");
-		settings.setProperty("tab.blocked.cfgtype", "Boolean");
+		setProperty("tab.blocked", "true");
+		setProperty("tab.blocked.cfgdesc", "Enable Blocked Tab");
+		setProperty("tab.blocked.cfgtype", "Boolean");
 		//Following tab settings
-		settings.setProperty("tab.following", "true");
-		settings.setProperty("tab.following.cfgdesc", "Enable Following Tab");
-		settings.setProperty("tab.following.cfgtype", "Boolean");
+		setProperty("tab.following", "true");
+		setProperty("tab.following.cfgdesc", "Enable Following Tab");
+		setProperty("tab.following.cfgtype", "Boolean");
 		//Followers tab settings
-		settings.setProperty("tab.followers", "true");
-		settings.setProperty("tab.followers.cfgdesc", "Enable Followers Tab");
-		settings.setProperty("tab.followers.cfgtype", "Boolean");
+		setProperty("tab.followers", "true");
+		setProperty("tab.followers.cfgdesc", "Enable Followers Tab");
+		setProperty("tab.followers.cfgtype", "Boolean");
 		//Search tab settings
-		settings.setProperty("tab.search", "true");
-		settings.setProperty("tab.search.cfgdesc", "Enable Search Tab");
-		settings.setProperty("tab.search.cfgtype", "Boolean");
+		setProperty("tab.search", "false");
+		setProperty("tab.search.cfgdesc", "Enable Search Tab");
+		setProperty("tab.search.cfgtype", "Boolean");
 		saveSettings();
 	}
 
 	public Enumeration<Object> getKeys() {
-		return settings.keys();
+		return keys();
 	}
 
 	private boolean loadSettings() {
 		try
 		{
-			settings.load(new FileInputStream(configFile));
+			load(new FileInputStream(configFile));
 		}
 		catch (IOException ex)
 		{
@@ -116,7 +116,7 @@ public class SettingsManager {
 	private void saveSettings() {
 		try
 		{
-			settings.store(new FileOutputStream(configFile), "DO NOT EDIT MANUALLY");
+			store(new FileOutputStream(configFile), "DO NOT EDIT MANUALLY");
 		}
 		catch (FileNotFoundException ex)
 		{
@@ -154,24 +154,63 @@ public class SettingsManager {
 		return rc;
 	}
 
-	public String getProperty(String param) {
-		return settings.getProperty(param);
+	/**
+	 * @param param The key to search the configuration for.
+	 * @param args Arguments to be passed to the formatter.
+     *
+	 * If no arguments are specified, return the String value
+     * of the resource named <tt>param</tt>.
+     * If arguments are provided, then the type of the resource
+     * named <tt>param</tt> is assumed to be
+     * {@link String#format(String, Object...) format} string,
+     * which is applied to the arguments if it's non null.
+     * For example, given the following resources
+     * <pre>
+     * hello = Hello %s
+     * </pre>
+     * then the value of <tt>getString("hello", "World")</tt> would
+     * be <tt>"Hello World"</tt>.
+     *
+     * @return the String value of the resource named <tt>param</tt>
+     * @see String#format(String, Object...)
+     */
+	public String getString(String param, Object... args) {
+		if(args.length == 0) {
+			return getProperty(param);
+		}
+		else {
+			String str = getProperty(param);
+			return (str == null) ? null : String.format(str, args);
+		}
 	}
-	public String getString(String param) {
-		return settings.getProperty(param);
-	}
-	public String getString(String param, String defaultParam) {
-		return settings.getProperty(param, defaultParam);
+
+	/**
+	 *
+	 * @param param The key to search the configuration for.
+	 * @param defaultParam If <tt>param</tt> is null this returned.
+	 * @param args Arguments to be passed to the formatter.
+	 * @return the String value of the resource named <tt>param</tt> or <tt>defaultParam</tt>
+	 * @see #getString(java.lang.String, java.lang.Object...)
+	 * param is not available.
+	 */
+	public String getString(String param, String defaultParam, Object... args) {
+		if(args.length == 0) {
+			return getProperty(param, defaultParam);
+		}
+		else {
+			String str = getProperty(param, defaultParam);
+			return (str == null) ? null : String.format(str, args);
+		}
 	}
 	public String[] getStringArray(String param, String separator) {
-		return settings.getProperty(param).split(separator);
+		return getProperty(param).split(separator);
 	}
 	public int getInteger(String param) {
 		logger.log(Level.CONFIG, param);
-		logger.log(Level.CONFIG, settings.getProperty(param));
+		logger.log(Level.CONFIG, getProperty(param));
 		try
 		{
-			return Integer.parseInt(settings.getProperty(param));
+			return Integer.parseInt(getProperty(param));
 		}
 		catch(NumberFormatException ex) {
 			return -1;
@@ -180,7 +219,7 @@ public class SettingsManager {
 	public int getInteger(String param, int defaultParam) {
 		try
 		{
-			return Integer.parseInt(settings.getProperty(param));
+			return Integer.parseInt(getProperty(param));
 		}
 		catch (NumberFormatException ex)
 		{
@@ -190,7 +229,7 @@ public class SettingsManager {
 	public long getLong(String param) {
 		try
 		{
-			return Long.parseLong(settings.getProperty(param));
+			return Long.parseLong(getProperty(param));
 		}
 		catch(NumberFormatException e)
 		{
@@ -200,7 +239,7 @@ public class SettingsManager {
 	public long getLong(String param, long defaultParam) {
 		try
 		{
-			return Long.parseLong(settings.getProperty(param));
+			return Long.parseLong(getProperty(param));
 		}
 		catch(NumberFormatException e)
 		{
@@ -209,26 +248,28 @@ public class SettingsManager {
 	}
 
 	public boolean getBoolean(String param) {
-		return Boolean.parseBoolean(settings.getProperty(param));
+		return Boolean.parseBoolean(getProperty(param));
 	}
 
 	public boolean getBoolean(String param, boolean defaultParam) {
-		if(settings.getProperty(param) != null && !settings.getProperty(param).equals(""))
-			return Boolean.parseBoolean(settings.getProperty(param));
+		if(getProperty(param) != null && !getProperty(param).equals(""))
+			return Boolean.parseBoolean(getProperty(param));
 		else
 			return defaultParam;
 	}
 
 
-	public void setProperty(String property, String value) {
-		settings.setProperty(property, value);
+	@Override
+	public Object setProperty(String property, String value) {
+		Object rv = super.setProperty(property, value);
 		saveSettings();
+		return rv;
 	}
-	public void setProperty(Properties list) {
+	public void setProperties(Properties list) {
 		Enumeration e = list.propertyNames();
 		while (e.hasMoreElements()) {
 			String key = (String)e.nextElement();
-			settings.setProperty(key, list.getProperty(key));
+			setProperty(key, list.getProperty(key));
 		}
 		saveSettings();
 	}
