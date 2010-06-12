@@ -282,8 +282,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         recentList.setFillsViewportHeight(true);
         recentList.setIntercellSpacing(new java.awt.Dimension(3, 3));
         recentList.setName("recentList"); // NOI18N
-        recentList.setRowHeight(32);
-        recentList.setRowMargin(3);
+        recentList.setRowHeight(50);
         recentList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         recentList.setShowHorizontalLines(false);
         recentList.setShowVerticalLines(false);
@@ -860,7 +859,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		cModel.getColumn(1).setMaxWidth(1);
 		//recentList.setDefaultRenderer(String.class, new TweetTableCellRenderer());
 
-		String tcc = "<html><P><IMG SRC=\"/home/mistik1/public_html/me_2.jpg\" BORDER=0>This is a tweet I hope its nice. Lets add some more text and see how it looks</P>";
+		String tcc = "<html><P><IMG SRC=\"http://localhost/~mistik1/me_3.jpg\" BORDER=0>This is a tweet I hope its nice. Lets add some more text and see how it looks</P>";
 		recentList.setValueAt(tcc, 0, 3);
 		
 		if(startMode) //We closed in minimode

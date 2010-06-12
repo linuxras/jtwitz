@@ -170,7 +170,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			public void run() {
 				String skin = config.getString("twitz.skin");
 				//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
-				if (skin != null && !skin.equals(""))
+				String currentSkin = SubstanceLookAndFeel.getCurrentSkin().getDisplayName().replaceAll(" ", "");
+				if (skin != null && !skin.equals("") && !skin.equals(currentSkin))
 				{
 					//SubstanceLookAndFeel.setSkin("org.pushingpixels.substance.api.skin.Substance"+skin+"LookAndFeel");
 					System.out.println(SubstanceLookAndFeel.getCurrentSkin().getDisplayName());
