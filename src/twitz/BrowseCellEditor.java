@@ -5,6 +5,10 @@
 
 package twitz;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.EventObject;
@@ -17,6 +21,7 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import org.jdesktop.application.Action;
+import test.check.SubstanceSkinComboSelector;
 
 /**
  *
@@ -26,6 +31,14 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 
 	public BrowseCellEditor(/*twitz.util.SettingsManager c*/) {
 		//config = c;
+		cmbSkins.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e)
+			{
+				stopCellEditing();
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+		});
 		initComponents();
 	}
 
@@ -172,6 +185,17 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 			currentEditor = "Boolean";
 			return boolEditor;
 		}
+		else if(type.equalsIgnoreCase("Theme")) {
+			if(cellVal.equals(configVal)) {
+				cmbSkins.setSelectedItem(configVal);
+			}
+			else
+			{
+				cmbSkins.setSelectedItem(cellVal);
+			}
+			currentEditor = "Theme";
+			return cmbSkins;
+		}
 		else if(type.equalsIgnoreCase("password")) {
 			if(cellVal.equals(configVal)) {
 				txtString.setText(configVal);
@@ -203,6 +227,9 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		}
 		else if(currentEditor.equals("Boolean")) {
 			rv = boolEditor.getValue().toString();
+		}
+		else if (currentEditor.equals("Theme")) {
+			rv = (String)cmbSkins.getSelectedItem();
 		}
 		else {
 			rv = txtString.getText();
@@ -259,6 +286,16 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	private javax.swing.JTextField txtString = new javax.swing.JTextField();
 	private javax.swing.JPanel panel = new javax.swing.JPanel();
 	private javax.swing.JCheckBox chkEditor = new javax.swing.JCheckBox();
+	private String[] skins =
+	{
+		"Autumn", "BusinessBlackSteel", "BusinessBlueSteel", "Business", 
+		"ChallengerDeep", "CremeCoffee", "Creme", "DustCoffee", "Dust",
+		"EmeraldDusk", "Gemini", "GraphiteAqua", "GraphiteGlass", "Graphite", 
+		"Magellan", "MistAqua", "MistSilver", "Moderate", "NebulaBrickWall",
+		"Nebula", "OfficeBlue2007", "OfficeSilver2007", "Raven", "Sahara", "Twilight"
+	};
+	private javax.swing.JComboBox cmbSkins = new javax.swing.JComboBox(skins);
+	//private javax.swing.JComboBox cmbSkins = new SubstanceSkinComboSelector();
 	private String boolModel[] = {"true", "false"};
 	private javax.swing.JSpinner boolEditor = new javax.swing.JSpinner(new javax.swing.SpinnerListModel(boolModel));
 	private twitz.util.SettingsManager config = twitz.util.SettingsManager.getInstance();

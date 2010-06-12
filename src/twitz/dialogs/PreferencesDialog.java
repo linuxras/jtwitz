@@ -39,12 +39,13 @@ import twitz.util.SettingsManager;
 public class PreferencesDialog extends javax.swing.JDialog {
 
     /** Creates new form PreferencesDialog */
-    public PreferencesDialog(java.awt.Frame parent, boolean modal/*, SettingsManager c*/) {
+    public PreferencesDialog(java.awt.Frame parent, boolean modal, TwitzApp app) {
         super(parent, modal);
 		//config = c;
 		vHeaders.add("T");
 		vHeaders.add("Config");
 		vHeaders.add("Values");
+		this.mainApp = app;
         initComponents();
 		loadTable();
 		DefaultTableColumnModel cModel = (DefaultTableColumnModel)tblConfig.getColumnModel();
@@ -200,20 +201,20 @@ public class PreferencesDialog extends javax.swing.JDialog {
     /**
     * @param args the command line arguments
     */
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                PreferencesDialog dialog = new PreferencesDialog(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-					@Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
+//    public static void main(String args[]) {
+//        java.awt.EventQueue.invokeLater(new Runnable() {
+//            public void run() {
+//                PreferencesDialog dialog = new PreferencesDialog(new javax.swing.JFrame(), true);
+//                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+//					@Override
+//                    public void windowClosing(java.awt.event.WindowEvent e) {
+//                        System.exit(0);
+//                    }
+//                });
+//                dialog.setVisible(true);
+//            }
+//        });
+//    }
 
 	private TableRowSorter getTableRowSorter(DefaultTableModel model) {
 		model.addTableModelListener(new TableModelListener() {
@@ -285,8 +286,16 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			String key = row.get(0)+"";
 			String value = row.get(2)+"";
 			p.setProperty(key, value);
+			if(key.equals("twitz.skin")) {
+				if(!value.equals(config.getString(key))) {
+					updateSkin = true;
+				}
+			}
 		}
 		config.setProperties(p);
+		if(updateSkin)
+			mainApp.setLAFFromSettings();
+		updateSkin = false;
 	}
 
 	@Action
@@ -305,4 +314,6 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	private SettingsManager config = SettingsManager.getInstance();
 	private Vector vHeaders = new Vector();
 	private TableRowSorter sorter;
+	private TwitzApp mainApp;
+	private boolean updateSkin = false;
 }

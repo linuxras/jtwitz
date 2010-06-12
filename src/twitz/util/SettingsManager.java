@@ -69,9 +69,12 @@ public class SettingsManager extends Properties{
 		setProperty("twitz.undecorated", "false");
 		setProperty("twitz.undecorated.cfgdesc", "Start Undecorated");
 		setProperty("twitz.undecorated.cfgtype", "Boolean");
+		setProperty("twitz.skin", "Twilight");
+		setProperty("twitz.skin.cfgdesc", "Twitz Theme");
+		setProperty("twitz.skin.cfgtype", "Theme");
 		//This is a null entry AKA an internally managed property
 		//This keeps the mini/full state of the program between restarts
-		setProperty("minimode", "true");
+		setProperty("minimode", "false");
 		setProperty("minimode.cfgtype", "NULL");
 		//Friends Tab settings
 		setProperty("tab.friends", "true");
@@ -96,14 +99,10 @@ public class SettingsManager extends Properties{
 		saveSettings();
 	}
 
-	public Enumeration<Object> getKeys() {
-		return keys();
-	}
-
 	private boolean loadSettings() {
 		try
 		{
-			load(new FileInputStream(configFile));
+			loadFromXML(new FileInputStream(configFile));
 		}
 		catch (IOException ex)
 		{
@@ -116,7 +115,7 @@ public class SettingsManager extends Properties{
 	private void saveSettings() {
 		try
 		{
-			store(new FileOutputStream(configFile), "DO NOT EDIT MANUALLY");
+			storeToXML(new FileOutputStream(configFile), "DO NOT EDIT MANUALLY");
 		}
 		catch (FileNotFoundException ex)
 		{
@@ -152,6 +151,10 @@ public class SettingsManager extends Properties{
 			rc = false;
 		}
 		return rc;
+	}
+
+	public Enumeration<Object> getKeys() {
+		return keys();
 	}
 
 	/**
@@ -191,7 +194,6 @@ public class SettingsManager extends Properties{
 	 * @param args Arguments to be passed to the formatter.
 	 * @return the String value of the resource named <tt>param</tt> or <tt>defaultParam</tt>
 	 * @see #getString(java.lang.String, java.lang.Object...)
-	 * param is not available.
 	 */
 	public String getString(String param, String defaultParam, Object... args) {
 		if(args.length == 0) {

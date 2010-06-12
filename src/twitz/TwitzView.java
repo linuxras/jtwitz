@@ -4,6 +4,8 @@
 
 package twitz;
 
+import java.awt.Color;
+import javax.swing.event.DocumentEvent;
 import twitz.dialogs.TwitzAboutBox;
 import java.awt.Component;
 import javax.swing.ListSelectionModel;
@@ -47,14 +49,18 @@ import javax.swing.JTable;
 import javax.swing.ListModel;
 import javax.swing.MenuElement;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.MenuListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.Document;
 import twitter4j.*;
 import twitz.dialogs.MessageDialog;
 import twitz.events.TwitzListener;
 import twitz.twitter.TwitterConstants;
 import twitz.twitter.TwitterManager;
+import twitz.ui.TweetTableCellRenderer;
 
 /**
  * The application's main frame.
@@ -195,7 +201,6 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         cmbRpp = new javax.swing.JComboBox();
         btnNext = new javax.swing.JButton();
         btnPrev = new javax.swing.JButton();
-        jLabel4 = new javax.swing.JLabel();
         lblPage = new javax.swing.JLabel();
         actionPanel = new javax.swing.JPanel();
         chkCOT = new javax.swing.JCheckBox();
@@ -203,6 +208,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         btnMini = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtTweet = new javax.swing.JTextArea();
+        lblChars = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
@@ -239,7 +245,9 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         });
 
         tabPane.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        tabPane.setTabPlacement(javax.swing.JTabbedPane.RIGHT);
         tabPane.setInheritsPopupMenu(true);
+        tabPane.setMinimumSize(new java.awt.Dimension(300, 37));
         tabPane.setName("tabPane"); // NOI18N
         tabPane.setNextFocusableComponent(txtTweet);
         tabPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -248,6 +256,8 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
             }
         });
 
+        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
+        recentPane.setBackground(resourceMap.getColor("recentPane.background")); // NOI18N
         recentPane.setName("recentPane"); // NOI18N
 
         recentList.setModel(new javax.swing.table.DefaultTableModel(
@@ -270,15 +280,16 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
             }
         });
         recentList.setFillsViewportHeight(true);
+        recentList.setIntercellSpacing(new java.awt.Dimension(3, 3));
         recentList.setName("recentList"); // NOI18N
         recentList.setRowHeight(32);
+        recentList.setRowMargin(3);
         recentList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         recentList.setShowHorizontalLines(false);
         recentList.setShowVerticalLines(false);
         recentPane.setViewportView(recentList);
 
-        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
-        tabPane.addTab(resourceMap.getString("recentPane.TabConstraints.tabTitle"), resourceMap.getIcon("recentPane.TabConstraints.tabIcon"), recentPane); // NOI18N
+        tabPane.addTab(resourceMap.getString("recentPane.TabConstraints.tabTitle"), resourceMap.getIcon("recentPane.TabConstraints.tabIcon"), recentPane, resourceMap.getString("recentPane.TabConstraints.tabToolTip")); // NOI18N
 
         friendsPane.setDividerLocation(100);
         friendsPane.setDividerSize(6);
@@ -308,7 +319,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
         friendsPane.setRightComponent(tweetsPane);
 
-        tabPane.addTab(resourceMap.getString("friendsPane.TabConstraints.tabTitle"), resourceMap.getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane); // NOI18N
+        tabPane.addTab(resourceMap.getString("friendsPane.TabConstraints.tabTitle"), resourceMap.getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, resourceMap.getString("friendsPane.TabConstraints.tabToolTip")); // NOI18N
 
         blockedPane.setName("blockedPane"); // NOI18N
 
@@ -320,7 +331,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         blockedList.setName("blockedList"); // NOI18N
         blockedPane.setViewportView(blockedList);
 
-        tabPane.addTab(resourceMap.getString("blockedPane.TabConstraints.tabTitle"), resourceMap.getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane); // NOI18N
+        tabPane.addTab(resourceMap.getString("blockedPane.TabConstraints.tabTitle"), resourceMap.getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, resourceMap.getString("blockedPane.TabConstraints.tabToolTip")); // NOI18N
 
         followingPane.setName("followingPane"); // NOI18N
 
@@ -332,7 +343,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         followingList.setName("followingList"); // NOI18N
         followingPane.setViewportView(followingList);
 
-        tabPane.addTab(resourceMap.getString("followingPane.TabConstraints.tabTitle"), resourceMap.getIcon("followingPane.TabConstraints.tabIcon"), followingPane); // NOI18N
+        tabPane.addTab(resourceMap.getString("followingPane.TabConstraints.tabTitle"), resourceMap.getIcon("followingPane.TabConstraints.tabIcon"), followingPane, resourceMap.getString("followingPane.TabConstraints.tabToolTip")); // NOI18N
 
         followersPane.setName("followersPane"); // NOI18N
 
@@ -344,7 +355,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         followersList.setName("followersList"); // NOI18N
         followersPane.setViewportView(followersList);
 
-        tabPane.addTab(resourceMap.getString("followersPane.TabConstraints.tabTitle"), resourceMap.getIcon("followersPane.TabConstraints.tabIcon"), followersPane); // NOI18N
+        tabPane.addTab(resourceMap.getString("followersPane.TabConstraints.tabTitle"), resourceMap.getIcon("followersPane.TabConstraints.tabIcon"), followersPane, resourceMap.getString("followersPane.TabConstraints.tabToolTip")); // NOI18N
 
         searchPanel.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
         searchPanel.setName("searchPanel"); // NOI18N
@@ -413,6 +424,8 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
         advSearchBar.setFloatable(false);
         advSearchBar.setRollover(true);
+        advSearchBar.setMaximumSize(new java.awt.Dimension(32600, 28));
+        advSearchBar.setMinimumSize(new java.awt.Dimension(300, 28));
         advSearchBar.setName("advSearchBar"); // NOI18N
 
         jLabel1.setLabelFor(txtSinceDate);
@@ -422,7 +435,6 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 
         txtSinceDate.setToolTipText(resourceMap.getString("txtSinceDate.toolTipText")); // NOI18N
         txtSinceDate.setFormats("yyyy-MM-dd");
-        txtSinceDate.setMinimumSize(new java.awt.Dimension(100, 23));
         txtSinceDate.setName("txtSinceDate"); // NOI18N
         txtSinceDate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -476,9 +488,6 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         btnPrev.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
         btnPrev.setName("btnPrev"); // NOI18N
 
-        jLabel4.setText(resourceMap.getString("jLabel4.text")); // NOI18N
-        jLabel4.setName("jLabel4"); // NOI18N
-
         lblPage.setText(resourceMap.getString("lblPage.text")); // NOI18N
         lblPage.setName("lblPage"); // NOI18N
 
@@ -486,19 +495,17 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         searchPanel.setLayout(searchPanelLayout);
         searchPanelLayout.setHorizontalGroup(
             searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(searchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
-            .addComponent(advSearchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(searchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 485, Short.MAX_VALUE)
+            .addComponent(advSearchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 485, Short.MAX_VALUE)
             .addGroup(searchPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnPrev)
-                .addGap(83, 83, 83)
-                .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(lblPage)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 118, Short.MAX_VALUE)
+                .addGap(98, 98, 98)
+                .addComponent(lblPage, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 111, Short.MAX_VALUE)
                 .addComponent(btnNext)
                 .addContainerGap())
-            .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 485, Short.MAX_VALUE)
         );
         searchPanelLayout.setVerticalGroup(
             searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -507,17 +514,16 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(advSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
+                .addGap(6, 6, 6)
+                .addGroup(searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(btnNext, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4)
-                    .addComponent(lblPage))
+                    .addComponent(lblPage, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
-        tabPane.addTab(resourceMap.getString("searchPanel.TabConstraints.tabTitle"), resourceMap.getIcon("searchPanel.tabIcon"), searchPanel); // NOI18N
+        tabPane.addTab(resourceMap.getString("searchPanel.TabConstraints.tabTitle"), resourceMap.getIcon("searchPanel.tabIcon"), searchPanel, resourceMap.getString("searchPanel.TabConstraints.tabToolTip")); // NOI18N
 
         actionPanel.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
         actionPanel.setMinimumSize(new java.awt.Dimension(100, 50));
@@ -538,6 +544,9 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         btnMini.setMargin(new java.awt.Insets(2, 2, 2, 2));
         btnMini.setName("btnMini"); // NOI18N
 
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        jScrollPane1.setHorizontalScrollBar(null);
         jScrollPane1.setName("jScrollPane1"); // NOI18N
 
         txtTweet.setColumns(20);
@@ -551,13 +560,19 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         });
         jScrollPane1.setViewportView(txtTweet);
 
+        lblChars.setFont(resourceMap.getFont("lblChars.font")); // NOI18N
+        lblChars.setForeground(resourceMap.getColor("lblChars.foreground")); // NOI18N
+        lblChars.setText(resourceMap.getString("lblChars.text")); // NOI18N
+        lblChars.setName("lblChars"); // NOI18N
+
         javax.swing.GroupLayout actionPanelLayout = new javax.swing.GroupLayout(actionPanel);
         actionPanel.setLayout(actionPanelLayout);
         actionPanelLayout.setHorizontalGroup(
             actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
+                .addComponent(lblChars, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 347, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkCOT)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -568,13 +583,14 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         );
         actionPanelLayout.setVerticalGroup(
             actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(chkCOT)
-                    .addComponent(btnTweet)
-                    .addComponent(btnMini))
+            .addGroup(actionPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 37, Short.MAX_VALUE)
+                    .addComponent(lblChars, javax.swing.GroupLayout.DEFAULT_SIZE, 37, Short.MAX_VALUE)
+                    .addComponent(chkCOT, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnTweet, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnMini, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addContainerGap())
         );
 
@@ -586,7 +602,7 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
                 .addContainerGap()
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(actionPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(tabPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 518, Short.MAX_VALUE))
+                    .addComponent(tabPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 545, Short.MAX_VALUE))
                 .addContainerGap())
         );
         mainPanelLayout.setVerticalGroup(
@@ -716,11 +732,11 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
         statusPanel.setLayout(statusPanelLayout);
         statusPanelLayout.setHorizontalGroup(
             statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 542, Short.MAX_VALUE)
+            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 569, Short.MAX_VALUE)
             .addGroup(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(statusMessageLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 358, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 385, Short.MAX_VALUE)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(statusAnimationLabel)
@@ -842,6 +858,10 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 		DefaultTableColumnModel cModel = (DefaultTableColumnModel) recentList.getColumnModel();
 		cModel.getColumn(0).setMaxWidth(1);
 		cModel.getColumn(1).setMaxWidth(1);
+		//recentList.setDefaultRenderer(String.class, new TweetTableCellRenderer());
+
+		String tcc = "<html><P><IMG SRC=\"/home/mistik1/public_html/me_2.jpg\" BORDER=0>This is a tweet I hope its nice. Lets add some more text and see how it looks</P>";
+		recentList.setValueAt(tcc, 0, 3);
 		
 		if(startMode) //We closed in minimode
 			miniTwitz();
@@ -942,10 +962,20 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 				mainApp.toggleWindowView("down");
 				break;
 			default:
-				if(!txtTweet.getText().equals(""))
+				int c = txtTweet.getDocument().getLength();
+				lblChars.setText((140 - c)+"");
+				if((c > 0) && (c < 141)) {
 					btnTweet.setEnabled(true);
-				else
+					lblChars.setForeground(getResourceMap().getColor("lblChars.foreground"));
+				}
+				else if(c > 140) {
+					lblChars.setForeground(Color.RED);
 					btnTweet.setEnabled(false);
+				}
+				else
+				{
+					btnTweet.setEnabled(false);
+				}
 		}
 	}
 
@@ -958,7 +988,8 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	
 	@Action
 	public void doSearch() {
-		
+		DefaultTableCellRenderer ren = new DefaultTableCellRenderer();
+
 	}
 
 	private JPopupMenu getTweetsMenu() {
@@ -1210,77 +1241,81 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	public void showPrefsBox() {
 		if(prefs == null) {
 			JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
-			prefs = new PreferencesDialog(mainFrame, true);
+			prefs = new PreferencesDialog(mainFrame, true, mainApp);
 			prefs.setLocationRelativeTo(mainFrame);
 		}
 		prefs.setVisible(true);
 	}
 
 	public void toggleTabs(java.awt.event.ActionEvent evt) {
-		javax.swing.JCheckBoxMenuItem item = (javax.swing.JCheckBoxMenuItem) evt.getSource();
-		int index = tabPane.getTabCount();
-		if (evt.getActionCommand().equals("Friends"))
+		if (evt.getSource() instanceof javax.swing.JCheckBoxMenuItem)
 		{
-			config.setProperty("tab.friends", item.isSelected()+"");
-			if (item.isSelected())
+			javax.swing.JCheckBoxMenuItem item = (javax.swing.JCheckBoxMenuItem) evt.getSource();
+			int index = tabPane.getTabCount();
+			if (evt.getActionCommand().equals("Friends"))
 			{
-				tabPane.insertTab(getResourceMap().getString("friendsPane.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, null, 1);
-				tabPane.setSelectedComponent(friendsPane);
+				config.setProperty("tab.friends", item.isSelected() + "");
+				if (item.isSelected())
+				{
+					tabPane.insertTab(getResourceMap().getString("friendsPane.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, getResourceMap().getString("friendsPane.TabConstraints.tabTooltip"), 1);
+					tabPane.setSelectedComponent(friendsPane);
+				}
+				else
+				{
+					tabPane.remove(friendsPane);
+				}
 			}
-			else
+			else if (evt.getActionCommand().equals("Blocked"))
 			{
-				tabPane.remove(friendsPane);
+				config.setProperty("tab.blocked", item.isSelected() + "");
+				if (item.isSelected())
+				{
+					tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, getResourceMap().getString("blockedPane.TabConstraints.tabTooltip"), index >= 2 ? 2 : index); // NOI18N
+					tabPane.setSelectedComponent(blockedPane);
+				}
+				else
+				{
+					tabPane.remove(blockedPane);
+				}
 			}
-		}
-		else if (evt.getActionCommand().equals("Blocked"))
-		{
-			config.setProperty("tab.blocked", item.isSelected()+"");
-			if (item.isSelected())
+			else if (evt.getActionCommand().equals("Following"))
 			{
-				tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, null, index >= 2 ? 2 : index); // NOI18N
-				tabPane.setSelectedComponent(blockedPane);
+				config.setProperty("tab.following", item.isSelected() + "");
+				if (item.isSelected())
+				{
+					tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, getResourceMap().getString("followingPane.TabConstraints.tabTooltip"), index >= 3 ? 3 : index); // NOI18N
+					tabPane.setSelectedComponent(followingPane);
+				}
+				else
+				{
+					tabPane.remove(followingPane);
+				}
 			}
-			else
+			else if (evt.getActionCommand().equals("Followers"))
 			{
-				tabPane.remove(blockedPane);
+				config.setProperty("tab.followers", item.isSelected() + "");
+				if (item.isSelected())
+				{
+					tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, getResourceMap().getString("followersPane.TabConstraints.tabTooltip"), index >= 4 ? 4 : index); // NOI18N
+					tabPane.setSelectedComponent(followersPane);
+				}
+				else
+				{
+					tabPane.remove(followersPane);
+				}
 			}
-		}
-		else if (evt.getActionCommand().equals("Following"))
-		{
-			config.setProperty("tab.following", item.isSelected()+"");
-			if (item.isSelected())
+			else if (evt.getActionCommand().equals("Search"))
 			{
-				tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, null, index >= 3 ? 3 : index); // NOI18N
-				tabPane.setSelectedComponent(followingPane);
-			}
-			else
-			{
-				tabPane.remove(followingPane);
-			}
-		}
-		else if (evt.getActionCommand().equals("Followers"))
-		{
-			config.setProperty("tab.followers", item.isSelected()+"");
-			if (item.isSelected())
-			{
-				tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, null, index >= 4 ? 4 : index); // NOI18N
-				tabPane.setSelectedComponent(followersPane);
-			}
-			else
-			{
-				tabPane.remove(followersPane);
-			}
-		}
-		else if(evt.getActionCommand().equals("Search"))
-		{
-			config.setProperty("tab.search", item.isSelected()+"");
-			if(item.isSelected()) {
-				tabPane.addTab(getResourceMap().getString("searchPanel.TabConstraints.tabTitle"), getResourceMap().getIcon("searchPanel.tabIcon"), searchPanel); // NOI18N
-				tabPane.setSelectedComponent(searchPanel);
-			}
-			else
-			{
-				tabPane.remove(searchPanel);
+				config.setProperty("tab.search", item.isSelected() + "");
+				if (item.isSelected())
+				{
+					tabPane.addTab(getResourceMap().getString("searchPanel.TabConstraints.tabTitle"), getResourceMap().getIcon("searchPanel.tabIcon"), searchPanel, getResourceMap().getString("searchPanel.TabConstraints.tabTooltip")); // NOI18N
+					tabPane.setSelectedComponent(searchPanel);
+				}
+				else
+				{
+					tabPane.remove(searchPanel);
+				}
 			}
 		}
 	}
@@ -1397,24 +1432,24 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
 	 */
 	public void displayError(Throwable t, String title, Object message, twitter4j.TwitterMethod method) {
 		Object[] options = {"Ok", "Stack Trace"};
-		int rv = JOptionPane.showOptionDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, getResourceMap().getIcon("error.icon"), options, options[0]);
-		switch (rv)
-		{
-			case 0:
-				break;
-			case 1:
-				//show the full stack trace here
-				MessageDialog msg = new MessageDialog(getFrame(), false);
-				msg.setLocationRelativeTo(TwitzApp.getApplication().getMainFrame());
-				java.io.StringWriter w = new java.io.StringWriter();
-				java.io.PrintWriter p = new java.io.PrintWriter(w);
-				t.printStackTrace(p);
-				p.flush();
-				msg.setMessage(w.toString());
-				msg.setVisible(true);
-				break;
+			int rv = JOptionPane.showOptionDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, getResourceMap().getIcon("error.icon"), options, options[0]);
+			switch (rv)
+			{
+				case 0:
+					break;
+				case 1:
+					//show the full stack trace here
+					MessageDialog msg = new MessageDialog(getFrame(), false);
+					msg.setLocationRelativeTo(TwitzApp.getApplication().getMainFrame());
+					java.io.StringWriter w = new java.io.StringWriter();
+					java.io.PrintWriter p = new java.io.PrintWriter(w);
+					t.printStackTrace(p);
+					p.flush();
+					msg.setMessage(w.toString());
+					msg.setVisible(true);
+					break;
+			}
 		}
-	}
 
 	@Action
 	public void showMiniMode() {
@@ -2388,11 +2423,11 @@ public class TwitzView extends FrameView implements TwitzListener, TwitterListen
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
     private javax.swing.JToolBar.Separator jSeparator3;
+    private javax.swing.JLabel lblChars;
     private javax.swing.JLabel lblPage;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;

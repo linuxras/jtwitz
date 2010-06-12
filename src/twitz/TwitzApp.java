@@ -12,11 +12,14 @@ import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
 import java.beans.PropertyChangeEvent;
+import javax.swing.UnsupportedLookAndFeelException;
 import twitz.util.SettingsManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -29,8 +32,12 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.SingleFrameApplication;
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.skin.*;
 
 /**
  * The main class of the application.
@@ -42,30 +49,30 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	public static final String TWEET_MINI = "TweetMini";
 
 	private java.awt.Window window = null;
-	SettingsManager config = SettingsManager.getInstance();
+	private static SettingsManager config = SettingsManager.getInstance();
 	Logger logger = Logger.getLogger(TwitzApp.class.getName());
 	TwitzTrayIcon tray = null;
 	private TwitzView view;
 	private boolean hidden = config.getBoolean("minimize.startup");
-	Image splash = getIcon("resources/splash.png");
-	JFrame splashFrame = new JFrame();
+	//Image splash = getIcon("resources/splash.png");
+	//JFrame splashFrame = new JFrame();
 
 	private void buildSplash() {
 //		Point center = getDesktopCenter();
 		GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
-		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(splash);
-		splashFrame.setAlwaysOnTop(true);
-		splashFrame.setUndecorated(true);
-		splashFrame.setLayout(gridbag);
-		splashFrame.setSize(icon.getIconWidth(), icon.getIconHeight());
-		javax.swing.JLabel img = new javax.swing.JLabel();
+//		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(splash);
+//		splashFrame.setAlwaysOnTop(true);
+//		splashFrame.setUndecorated(true);
+//		splashFrame.setLayout(gridbag);
+//		splashFrame.setSize(icon.getIconWidth(), icon.getIconHeight());
+//		javax.swing.JLabel img = new javax.swing.JLabel();
 //		Rectangle bound = new Rectangle();
 //		bound.setSize(icon.getIconWidth(), icon.getIconHeight());
 //		bound.setLocation((center.x - (icon.getIconWidth() / 2)), (center.y - (icon.getIconHeight() / 2)));
-		splashFrame.setBounds(getDesktopCenter(splashFrame));
-		img.setIcon(icon);
-		splashFrame.add(img);
+//		splashFrame.setBounds(getDesktopCenter(splashFrame));
+//		img.setIcon(icon);
+//		splashFrame.add(img);
 		//return splashFrame;
 	}
 
@@ -120,48 +127,28 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		System.out.println("Inside configureWindow");
 		window = root;
 		window.setIconImage(getIcon("resources/clock.png"));
-		window.addWindowListener(new WindowListener() {
+		WindowListener wl = new WindowAdapter() {
 
+			@Override
 			public void windowIconified(WindowEvent e)
 			{
 				logger.log(Level.INFO, "Window Iconified");
 				toggleWindowView("down");
 			}
 
-			public void windowOpened(WindowEvent e)
-			{
-//				if(config.getBoolean("minimize.startup"))
-//				{
-//					toggleWindowView("down");
-//				}
-			}
-
-			public void windowClosing(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowClosed(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowDeiconified(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowActivated(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowDeactivated(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-		});
+		};
+		window.addWindowListener(wl);
+		getMainFrame().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		getMainFrame().setIconImage(getIcon("resources/clock.png"));
     }
+
+	@Override
+	protected void initialize(String[] args) {
+		System.out.println("Inside initialize...");
+		setLAFFromSettings();
+		//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
+		System.out.println("Leaving initialize...");
+	}
 
 	@Override
 	protected void ready() {
@@ -169,13 +156,49 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		if(hidden)
 			toggleWindowView("down");
 		//splashFrame.setVisible(false);
-		GraphicsEnvironment gc = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsDevice[] dv = gc.getScreenDevices();
-		for(GraphicsDevice d : dv) {
-			System.out.println(d.getIDstring());
-			GraphicsConfiguration g = d.getDefaultConfiguration();
-			System.out.println(g.toString());
-		}
+//		GraphicsEnvironment gc = GraphicsEnvironment.getLocalGraphicsEnvironment();
+//		GraphicsDevice[] dv = gc.getScreenDevices();
+//		for(GraphicsDevice d : dv) {
+//			System.out.println(d.getIDstring());
+//			GraphicsConfiguration g = d.getDefaultConfiguration();
+//			System.out.println(g.toString());
+//		}
+	}
+
+	public static void setLAFFromSettings() {
+		Runnable doLAF = new Runnable() {
+			public void run() {
+				String skin = config.getString("twitz.skin");
+				//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
+				if (skin != null && !skin.equals(""))
+				{
+					//SubstanceLookAndFeel.setSkin("org.pushingpixels.substance.api.skin.Substance"+skin+"LookAndFeel");
+					System.out.println(SubstanceLookAndFeel.getCurrentSkin().getDisplayName());
+					try
+					{
+						System.out.println("Setting LAF...");
+						UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.Substance" + skin + "LookAndFeel");
+
+					}
+					catch (UnsupportedLookAndFeelException ex)
+					{
+						Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+					}
+					catch (Exception ex)
+					{
+						Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+					}
+					System.out.println("Updating UI...");
+					for (Window win : Window.getWindows())
+					{
+						SwingUtilities.updateComponentTreeUI(win);
+					}
+					System.out.println(SubstanceLookAndFeel.getCurrentSkin().getDisplayName());
+//					SwingUtilities.updateComponentTreeUI(getMainFrame());
+				}
+			}
+		};
+		SwingUtilities.invokeLater(doLAF);
 	}
 
 	public java.awt.Window getMainWindow() {
