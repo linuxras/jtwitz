@@ -85,7 +85,6 @@
       <SubComponents>
         <Component class="javax.swing.JEditorPane" name="messagePane">
           <Properties>
-            <Property name="background" type="java.awt.Color" resourceKey="messagePane.background"/>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.SoftBevelBorderInfo">
                 <BevelBorder>

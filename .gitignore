@@ -1,2 +1,13 @@
-build/
+build/classes/
 *.class
+*.swp
+*.swo
+build/classes/twitz/
+build/classes/twitz/ui/
+build/classes/twitz/ui/resources/
+build/classes/twitz/events/
+build/classes/twitz/util/
+build/classes/twitz/twitter/
+build/classes/twitz/twitter/resources/
+build/classes/twitz/dialogs/
+build/classes/twitz/dialogs/resources

@@ -11,6 +11,7 @@
 
 package twitz.dialogs;
 
+import java.awt.Color;
 import javax.swing.Icon;
 import org.jdesktop.application.Action;
 
@@ -24,6 +25,8 @@ public class MessageDialog extends javax.swing.JDialog {
     public MessageDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+		messagePane.setBackground(Color.BLACK);
+		messagePane.setForeground(Color.WHITE);
 		//this.setBounds(twitz.TwitzApp.getDesktopCenter(this));
     }
 
@@ -42,12 +45,12 @@ public class MessageDialog extends javax.swing.JDialog {
         imageLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(MessageDialog.class);
+		org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(MessageDialog.class);
         setTitle(resourceMap.getString("Form.title")); // NOI18N
         setMinimumSize(new java.awt.Dimension(520, 314));
         setName("Form"); // NOI18N
 
-        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(MessageDialog.class, this);
+        javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(MessageDialog.class, this);
         btnClose.setAction(actionMap.get("closeDialog")); // NOI18N
         btnClose.setIcon(resourceMap.getIcon("btnClose.icon")); // NOI18N
         btnClose.setText(resourceMap.getString("btnClose.text")); // NOI18N
@@ -55,7 +58,6 @@ public class MessageDialog extends javax.swing.JDialog {
 
         jScrollPane1.setName("jScrollPane1"); // NOI18N
 
-        messagePane.setBackground(resourceMap.getColor("messagePane.background")); // NOI18N
         messagePane.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED, resourceMap.getColor("messagePane.border.highlightOuterColor"), resourceMap.getColor("messagePane.border.highlightInnerColor"), resourceMap.getColor("messagePane.border.shadowOuterColor"), resourceMap.getColor("messagePane.border.shadowInnerColor"))); // NOI18N
         messagePane.setEditable(false);
         messagePane.setForeground(resourceMap.getColor("messagePane.foreground")); // NOI18N

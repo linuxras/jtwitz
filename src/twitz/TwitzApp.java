@@ -4,8 +4,7 @@
 
 package twitz;
 
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
+import java.awt.Component;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -18,26 +17,24 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
-import java.beans.PropertyChangeEvent;
-import javax.swing.UnsupportedLookAndFeelException;
 import twitz.util.SettingsManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.event.WindowStateListener;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
+import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import org.jdesktop.application.Application;
+import javax.swing.UnsupportedLookAndFeelException;
+import org.jdesktop.application.ResourceMap;
 import org.jdesktop.application.SingleFrameApplication;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
-import org.pushingpixels.substance.api.skin.*;
 
 /**
  * The main class of the application.
@@ -52,8 +49,9 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	private static SettingsManager config = SettingsManager.getInstance();
 	Logger logger = Logger.getLogger(TwitzApp.class.getName());
 	TwitzTrayIcon tray = null;
-	private TwitzView view;
+	private static TwitzMainView view;
 	private boolean hidden = config.getBoolean("minimize.startup");
+	private ResourceMap resources = null;
 	//Image splash = getIcon("resources/splash.png");
 	//JFrame splashFrame = new JFrame();
 
@@ -90,43 +88,17 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		return rv;
 	}
 
-    /**
-     * At startup create and show the main frame of the application.
-     */
-    @Override protected void startup() {
-		//buildSplash();
-		//splashFrame.setVisible(true);
+	@Override
+	protected void configureTopLevel(JFrame top) {
+		top.setUndecorated(config.getBoolean("twitz.undecorated"));
+		resources = getContext().getResourceMap(TwitzApp.class);
 		Point c = getDesktopCenter();
 		Rectangle bound = new Rectangle();
-		bound.setSize(420, 300);
+		bound.setSize(600, 400);
 		bound.setLocation((c.x - 210), (c.y - 150));
-		view = new TwitzView(this);
-		view.getFrame().setBounds(bound);
-		view.getFrame().setUndecorated(config.getBoolean("twitz.undecorated"));
-		try
-		{
-			tray = new TwitzTrayIcon(this, view);
-		}
-		catch (Exception ex)
-		{
-			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
-			JOptionPane.showMessageDialog(null, ex.getMessage(), "Critical Error", JOptionPane.ERROR_MESSAGE);
-		}
-		view.addPropertyChangeListener("POPUP", tray);
-		System.out.println("Inside Startup");
-        //show(new TwitzView(this, tray, config));
-		show(view);
-    }
-
-    /**
-     * This method is to initialize the specified window by injecting resources.
-     * Windows shown in our application come fully initialized from the GUI
-     * builder, so this additional configuration is not needed.
-     */
-    @Override protected void configureWindow(java.awt.Window root) {
-		System.out.println("Inside configureWindow");
-		window = root;
-		window.setIconImage(getIcon("resources/clock.png"));
+		top.setBounds(bound);
+		configureWindow(top, "mainView");
+		top.setIconImage(resources.getImageIcon("Application.icon").getImage());
 		WindowListener wl = new WindowAdapter() {
 
 			@Override
@@ -136,16 +108,79 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				toggleWindowView("down");
 			}
 
+			@Override
+			public void windowClosing(WindowEvent e) {
+				exit(e);
+			}
+
 		};
-		window.addWindowListener(wl);
-		getMainFrame().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		getMainFrame().setIconImage(getIcon("resources/clock.png"));
+		top.addWindowListener(wl);
+		top.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		top.setTitle(getContext().getResourceMap().getString("Application.title"));
+		top.setVisible(true);
+		System.out.println("Inside configureTopLevel....");
+	}
+
+    @Override protected  Component createMainComponent() {
+		view = new TwitzMainView(this);
+		try
+		{
+			tray = new TwitzTrayIcon(this, view);
+		}
+		catch (Exception ex)
+		{
+			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+			JOptionPane.showMessageDialog(null, ex.getMessage(), "Critical Error", JOptionPane.ERROR_MESSAGE);
+			exit();
+		}
+		view.addPropertyChangeListener("POPUP", tray);
+		System.out.println("Inside createMainComponent");
+		return view;
     }
+
+    /**
+     * At startup create and show the main frame of the application.
+     */
+	@Override
+	protected void startup() {
+		getMainTopLevel().setJMenuBar(view.getMenuBar());
+		view.init();
+		view.fixTables();
+		if(hidden)
+			toggleWindowView("down");
+		//setLAFFromSettings();
+		System.out.println("Inside Startup");
+	}
+
+	@Override
+	protected JMenuBar createJMenuBar() {
+		System.out.println("Inside createJMenuBar");
+        return null;
+    }
+
 
 	@Override
 	protected void initialize(String[] args) {
 		System.out.println("Inside initialize...");
-		setLAFFromSettings();
+		//setLAFFromSettings();
+		String skin = config.getString("twitz.skin");
+		try
+		{
+			UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.Substance" + skin + "LookAndFeel");
+		}
+		catch (UnsupportedLookAndFeelException ex)
+		{
+			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		catch (Exception ex)
+		{
+			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		System.out.println("Updating UI...");
+		for (Window win : Window.getWindows())
+		{
+			SwingUtilities.updateComponentTreeUI(win);
+		}
 		//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
 		System.out.println("Leaving initialize...");
 	}
@@ -155,14 +190,6 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		System.out.println("Inside ready()");
 		if(hidden)
 			toggleWindowView("down");
-		//splashFrame.setVisible(false);
-//		GraphicsEnvironment gc = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//		GraphicsDevice[] dv = gc.getScreenDevices();
-//		for(GraphicsDevice d : dv) {
-//			System.out.println(d.getIDstring());
-//			GraphicsConfiguration g = d.getDefaultConfiguration();
-//			System.out.println(g.toString());
-//		}
 	}
 
 	public static void setLAFFromSettings() {
@@ -170,16 +197,24 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			public void run() {
 				String skin = config.getString("twitz.skin");
 				//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
-				String currentSkin = SubstanceLookAndFeel.getCurrentSkin().getDisplayName().replaceAll(" ", "");
+				String currentSkin = "";
+				LookAndFeel laf = UIManager.getLookAndFeel();
+
+				currentSkin = laf.getName().replaceAll(" ", "");
+
+				if(UIManager.getLookAndFeel() instanceof SubstanceLookAndFeel)
+					currentSkin = SubstanceLookAndFeel.getCurrentSkin().getDisplayName().replaceAll(" ", "");
+				
+				System.out.println("Current Skin: "+ currentSkin);
 				if (skin != null && !skin.equals("") && !skin.equals(currentSkin))
 				{
+					System.out.println("Setting LAF...");
+					//SubstanceLookAndFeel.setSkin(skin);
 					//SubstanceLookAndFeel.setSkin("org.pushingpixels.substance.api.skin.Substance"+skin+"LookAndFeel");
-					System.out.println(SubstanceLookAndFeel.getCurrentSkin().getDisplayName());
+					//System.out.println(SubstanceLookAndFeel.getCurrentSkin().getDisplayName());
 					try
 					{
-						System.out.println("Setting LAF...");
 						UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.Substance" + skin + "LookAndFeel");
-
 					}
 					catch (UnsupportedLookAndFeelException ex)
 					{
@@ -194,7 +229,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 					{
 						SwingUtilities.updateComponentTreeUI(win);
 					}
-					System.out.println(SubstanceLookAndFeel.getCurrentSkin().getDisplayName());
+					view.fixTables();
+					System.out.println("New Skin: "+UIManager.getLookAndFeel().getName().replaceAll(" ", ""));
 //					SwingUtilities.updateComponentTreeUI(getMainFrame());
 				}
 			}
@@ -206,13 +242,6 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		return window;
 	}
 
-    /**
-     * A convenient static getter for the application instance.
-     * @return the instance of TwitzApp
-     */
-    public static TwitzApp getApplication() {
-        return Application.getInstance(TwitzApp.class);
-    }
 
     /**
      * Main method launching the application.
@@ -241,8 +270,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
     }
 
 	public void toggleWindowView(String action) {
-		java.awt.Window win = getMainWindow();
-		//Window win = window;
+		JFrame win = getMainTopLevel();
 		if(action != null)
 		{
 			if(action.equalsIgnoreCase("front"))
@@ -255,12 +283,12 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			}
 			else if(action.equalsIgnoreCase("up"))
 			{
-				show(view);
+				win.setVisible(true);
 				hidden = false;
 			}
 			else if(action.equalsIgnoreCase("down"))
 			{
-				hide(view);
+				win.setVisible(false);
 				hidden = true;
 			}
 			else if(action.equalsIgnoreCase("toggle"))
@@ -268,24 +296,20 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 				if (!hidden && !win.isActive())
 				{
-					//hide(view);
 					win.toFront();
-					//win.setVisible(false);
 				}
 				else if (!hidden)
 				{
-					hide(view);
-					getMainFrame().setState(java.awt.Frame.NORMAL);
+					win.setVisible(false);
+					win.setState(java.awt.Frame.NORMAL);
 					hidden = true;
 				}
 				else
 				{
-					show(view);
+					win.setVisible(true);
 					hidden = false;
-					getMainFrame().setState(java.awt.Frame.NORMAL);
-//					win.setVisible(true);
-//					getMainFrame().setState(java.awt.Frame.NORMAL);
-//					win.toFront();
+					win.setState(java.awt.Frame.NORMAL);
+
 				}
 			}
 		}
@@ -293,9 +317,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		{
 			if (!hidden && win.isActive())
 			{
-				hide(view);
 				hidden = true;
-				//win.setVisible(false);
+				win.setVisible(false);
 			}
 			else if (!hidden && !win.isActive())
 			{
@@ -303,10 +326,9 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			}
 			else
 			{
-				show(view);
+				win.setVisible(true);
 				hidden = false;
-				//win.setVisible(true);
-				getMainFrame().setState(java.awt.Frame.NORMAL);
+				win.setState(java.awt.Frame.NORMAL);
 			}
 		}
 	}
@@ -315,7 +337,6 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		String cmd = e.getActionCommand();
 		tray.hideGlassPane();
 		if(cmd.endsWith(TWEET_MINI)) {
-			//view.showMiniTweet();
 			view.miniTwitz();
 			toggleWindowView("up");
 		}
@@ -326,8 +347,6 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			view.showAboutBox();
 		}
 		else if(cmd.equals("PrefsDlg")) {
-			//prefs = new PreferencesDialog(null, true/*, config*/);
-			//prefs.setVisible(true);
 			view.showPrefsBox();
 		}
 		//throw new UnsupportedOperationException("Not supported yet.");

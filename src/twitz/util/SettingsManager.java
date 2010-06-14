@@ -76,6 +76,9 @@ public class SettingsManager extends Properties{
 		//This keeps the mini/full state of the program between restarts
 		setProperty("minimode", "false");
 		setProperty("minimode.cfgtype", "NULL");
+		//Tab positions
+		setProperty("tab.position", "north");
+		setProperty("tab.position.cfgtype", "NULL");
 		//Friends Tab settings
 		setProperty("tab.friends", "true");
 		setProperty("tab.friends.cfgdesc", "Enable Friends Tab");
@@ -93,7 +96,7 @@ public class SettingsManager extends Properties{
 		setProperty("tab.followers.cfgdesc", "Enable Followers Tab");
 		setProperty("tab.followers.cfgtype", "Boolean");
 		//Search tab settings
-		setProperty("tab.search", "false");
+		setProperty("tab.search", "true");
 		setProperty("tab.search.cfgdesc", "Enable Search Tab");
 		setProperty("tab.search.cfgtype", "Boolean");
 		saveSettings();

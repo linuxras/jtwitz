@@ -31,15 +31,15 @@ public class TwitzTrayIcon implements MouseListener, PropertyChangeListener{
 	private TwitzPopup popup = null;
 	private SettingsManager config = SettingsManager.getInstance();
 	private static TwitzApp mainApp;
-	org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzTrayIcon.class);
-	org.jdesktop.application.ResourceMap viewResource = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(TwitzView.class);
-	private TwitzView mainView;
+	org.jdesktop.application.ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(TwitzTrayIcon.class);
+	org.jdesktop.application.ResourceMap viewResource = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
+	private TwitzMainView mainView;
 	private javax.swing.JFrame f = new javax.swing.JFrame();
 	private java.awt.Component menuHack = f.getGlassPane();
 	Logger logger = Logger.getLogger(TwitzTrayIcon.class.getName());
 
 
-	public TwitzTrayIcon(TwitzApp app, TwitzView view) throws Exception{
+	public TwitzTrayIcon(TwitzApp app, TwitzMainView view) throws Exception{
 		popup = new TwitzPopup(app);
 		popup.addPopupMenuListener(new PopupMenuListener() {
 

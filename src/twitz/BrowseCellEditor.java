@@ -12,6 +12,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.EventObject;
+import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JFileChooser;
@@ -21,7 +22,9 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import org.jdesktop.application.Action;
-import test.check.SubstanceSkinComboSelector;
+import org.pushingpixels.substance.api.SubstanceSkin;
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.skin.SkinInfo;
 
 /**
  *
@@ -42,7 +45,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		initComponents();
 	}
 
-	private void initComponents() {
+	private void initComponents() {//{{{
 
         txtPath = new javax.swing.JTextField();
         btnBrowse = new javax.swing.JButton();
@@ -52,7 +55,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
         //panel.setMinimumSize(new java.awt.Dimension(54, 12));
         panel.setName("Form"); // NOI18N
 
-        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance().getContext().getResourceMap(BrowseCellEditor.class);
+        org.jdesktop.application.ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(BrowseCellEditor.class);
         txtPath.setText(resourceMap.getString("txtPath.text")); // NOI18N
         txtPath.setName("txtPath"); // NOI18N
         txtPath.addActionListener(new java.awt.event.ActionListener() {
@@ -111,7 +114,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
                 .addComponent(btnBrowse)
                 .addComponent(txtPath, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
-    }
+    }//}}}
 
 	private void txtPathActionPerformed(java.awt.event.ActionEvent evt)
 	{
@@ -154,7 +157,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		}
 	}
 
-	public java.awt.Component getTableCellEditorComponent(javax.swing.JTable table, Object value, boolean isSelected, int row, int column)
+	public java.awt.Component getTableCellEditorComponent(javax.swing.JTable table, Object value, boolean isSelected, int row, int column)//{{{
 	{
 		//Get the row data type
 		TableModel model = table.getModel();
@@ -217,9 +220,9 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		currentEditor = "Text";
 		return txtString;
 
-	}
+	}//}}}
 
-	public Object getCellEditorValue()
+	public Object getCellEditorValue()//{{{
 	{
 		String rv = null;
 		if(currentEditor.equals("File")) {
@@ -235,7 +238,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 			rv = txtString.getText();
 		}
 		return rv;
-	}
+	}//}}}
 
 	@Override
 	public boolean isCellEditable(EventObject anEvent)

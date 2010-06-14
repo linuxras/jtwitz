@@ -66,7 +66,7 @@ import twitz.dialogs.MessageDialog;
 import twitz.events.TwitzListener;
 import twitz.twitter.TwitterConstants;
 import twitz.twitter.TwitterManager;
-import twitz.ui.TwitzTabButton;
+//import twitz.ui.TwitzTabButton;
 import org.pushingpixels.substance.api.*;
 import org.pushingpixels.substance.api.tabbed.*;
 import org.pushingpixels.substance.api.SubstanceConstants.TabCloseKind;
@@ -1418,40 +1418,40 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		return this.menuBar;
 	}
 
-	private void setTabComponent() {
-		for(int i=1; i < tabPane.getTabCount(); i++) {
-			TwitzTabButton tb = new TwitzTabButton(tabPane, i);
-			PropertyChangeListener pcl = new PropertyChangeListener() {
-				public void propertyChange(PropertyChangeEvent evt) {
-					String value = (String)evt.getNewValue();
-					System.out.println(value);
-
-					if(value.equals("searchPanel")) {
-						config.setProperty("tab.search", false + "");
-						menuItemSearch.setSelected(false);
-					}
-					else if(value.equals("blockedPane")) {
-						config.setProperty("tab.blocked", false + "");
-						menuItemBlocked.setSelected(false);
-					}
-					else if(value.equals("friendsPane")) {
-						config.setProperty("tab.friends", false + "");
-						menuItemFriends.setSelected(false);
-					}
-					else if(value.equals("followingPane")) {
-						config.setProperty("tab.following", false + "");
-						menuItemFollowing.setSelected(false);
-					}
-					else if(value.equals("followersPane")) {
-						config.setProperty("tab.followers", false + "");
-						menuItemFollowers.setSelected(false);
-					}
-				}
-			};
-			tb.addPropertyChangeListener("Tab_Closed", pcl);
-			tabPane.setTabComponentAt(i, tb);
-		}
-	}
+//	private void setTabComponent() {//{{{
+//		for(int i=1; i < tabPane.getTabCount(); i++) {
+//			TwitzTabButton tb = new TwitzTabButton(tabPane, i);
+//			PropertyChangeListener pcl = new PropertyChangeListener() {
+//				public void propertyChange(PropertyChangeEvent evt) {
+//					String value = (String)evt.getNewValue();
+//					System.out.println(value);
+//
+//					if(value.equals("searchPanel")) {
+//						config.setProperty("tab.search", false + "");
+//						menuItemSearch.setSelected(false);
+//					}
+//					else if(value.equals("blockedPane")) {
+//						config.setProperty("tab.blocked", false + "");
+//						menuItemBlocked.setSelected(false);
+//					}
+//					else if(value.equals("friendsPane")) {
+//						config.setProperty("tab.friends", false + "");
+//						menuItemFriends.setSelected(false);
+//					}
+//					else if(value.equals("followingPane")) {
+//						config.setProperty("tab.following", false + "");
+//						menuItemFollowing.setSelected(false);
+//					}
+//					else if(value.equals("followersPane")) {
+//						config.setProperty("tab.followers", false + "");
+//						menuItemFollowers.setSelected(false);
+//					}
+//				}
+//			};
+//			tb.addPropertyChangeListener("Tab_Closed", pcl);
+//			tabPane.setTabComponentAt(i, tb);
+//		}
+//	}//}}}
 
 	public void toggleTabs(java.awt.event.ActionEvent evt) {//{{{
 		if (evt.getSource() instanceof javax.swing.JCheckBoxMenuItem)

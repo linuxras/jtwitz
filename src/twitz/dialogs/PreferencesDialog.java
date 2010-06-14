@@ -11,9 +11,7 @@
 
 package twitz.dialogs;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.ListIterator;
+import java.awt.event.WindowAdapter;
 import twitz.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -58,32 +56,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		//cModel.getColumn(1).setMaxWidth(400);
 		//tblConfig.setRowHeight(30);
 		//setBounds(TwitzApp.getDesktopCenter(this));
-		this.addWindowListener(new WindowListener() {
-
-			public void windowOpened(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowClosing(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowClosed(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowIconified(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-			public void windowDeiconified(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
+		WindowListener wl = new WindowAdapter() {
 
 			public void windowActivated(WindowEvent e)
 			{
@@ -91,11 +64,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				//throw new UnsupportedOperationException("Not supported yet.");
 			}
 
-			public void windowDeactivated(WindowEvent e)
-			{
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-		});
+		};
+		this.addWindowListener(wl);
     }
 
     /** This method is called from within the constructor to
@@ -114,7 +84,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
         btnCancel = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(PreferencesDialog.class);
+        org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(PreferencesDialog.class);
         setTitle(resourceMap.getString("Form.title")); // NOI18N
         setName("Form"); // NOI18N
 
@@ -150,7 +120,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
         tblConfig.setRowHeight(20);
         jScrollPane1.setViewportView(tblConfig);
 
-        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getActionMap(PreferencesDialog.class, this);
+        javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(PreferencesDialog.class, this);
         btnOk.setAction(actionMap.get("btnOkClicked")); // NOI18N
         btnOk.setIcon(resourceMap.getIcon("btnOk.icon")); // NOI18N
         btnOk.setText(resourceMap.getString("btnOk.text")); // NOI18N
@@ -223,7 +193,15 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			{
 				int t = e.getType();
 				if(t == TableModelEvent.INSERT || t == TableModelEvent.UPDATE ) {
-					btnApply.setEnabled(true);
+				//	if(e.getColumn() != TableModelEvent.ALL_COLUMNS) {
+				//		int row = tblConfig.convertRowIndexToModel(e.getFirstRow());
+				//		int col = e.getColumn();
+				//		String s = (String)tblConfig.getValueAt(row, e.getColumn());
+				//		String k = (String)tblConfig.getValueAt(row, 0);
+				//		System.out.println(s);
+				//		if(!config.getString(k).equals(s))
+							btnApply.setEnabled(true);
+				//	}
 				}
 				//throw new UnsupportedOperationException("Not supported yet.");
 			}
