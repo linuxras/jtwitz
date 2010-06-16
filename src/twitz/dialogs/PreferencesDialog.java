@@ -257,6 +257,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	public void saveChanges() {
 		DefaultTableModel model = (DefaultTableModel)tblConfig.getModel();
 		Vector vData = model.getDataVector();
+		String oldSkin = "";
 		int size = vData.size();
 		Properties p = new Properties();
 		for(int i=0; i < size; i++) {
@@ -267,12 +268,15 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			if(key.equals("twitz.skin")) {
 				if(!value.equals(config.getString(key))) {
 					updateSkin = true;
+					oldSkin = config.getString(key);
 				}
 			}
 		}
 		config.setProperties(p);
-		if(updateSkin)
-			mainApp.setLAFFromSettings();
+		if(updateSkin) {
+			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz.skin"));
+			//mainApp.setLAFFromSettings();
+		}
 		updateSkin = false;
 	}
 

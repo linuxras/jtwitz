@@ -11,6 +11,10 @@
 
 package twitz;
 
+import twitz.ui.models.ContactsListModel;
+import twitz.ui.models.TweetTableModel;
+import twitz.ui.renderers.TweetTableCellRenderer;
+import twitz.ui.renderers.ContactsRenderer;
 import java.awt.Color;
 import twitz.dialogs.TwitzAboutBox;
 import java.awt.Component;
@@ -38,6 +42,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowFocusListener;
 import java.util.List;
 import java.util.Vector;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.Calendar;
+import java.util.Date;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
@@ -66,7 +74,7 @@ import twitz.dialogs.MessageDialog;
 import twitz.events.TwitzListener;
 import twitz.twitter.TwitterConstants;
 import twitz.twitter.TwitterManager;
-//import twitz.ui.TwitzTabButton;
+import twitz.testing.*;
 import org.pushingpixels.substance.api.*;
 import org.pushingpixels.substance.api.tabbed.*;
 import org.pushingpixels.substance.api.SubstanceConstants.TabCloseKind;
@@ -130,7 +138,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         recentList = new javax.swing.JTable();
         friendsPane = new javax.swing.JSplitPane();
         nameListPane = new javax.swing.JScrollPane();
-        friendsNameList = new javax.swing.JList();
+        friendsNameList = new twitz.ui.ContactsList();
         tweetsPane = new javax.swing.JScrollPane();
         friendsList = new javax.swing.JList();
         blockedPane = new javax.swing.JScrollPane();
@@ -361,11 +369,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
         nameListPane.setName("nameListPane"); // NOI18N
 
-        friendsNameList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
+        friendsNameList.setModel(new ContactsListModel());
         friendsNameList.setName("friendsNameList"); // NOI18N
         nameListPane.setViewportView(friendsNameList);
 
@@ -769,7 +773,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	}//GEN-LAST:event_txtTweetKeyTyped
 
 	public void fixTables() {
-		recentList.setRowHeight(50);
+		recentList.setRowHeight(90);
+		tblSearch.setRowHeight(50);
 	}
 
 	/**
@@ -848,30 +853,42 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		
 		//Add tab position menu
 		//editMenu.add(createTabPositionMenu());
+		chkCOT.setVisible(false);
 
 		//Set the tab location from config
 		setTabPlacement();
 
 		//setTabComponent();
+		TweetTableModel tmodel = new TweetTableModel();
+		tmodel.addColumn("");
+		recentList.setModel(tmodel);
+		
+		//TODO: Test code to be removed in production
+		for (int i=0; i < 10; i++) {
+			Vector<Status> vtest = new Vector<Status>();
+			vtest.add(new StatusTest());
+			tmodel.addRow(vtest);
+		}
 
 		DefaultTableColumnModel cModel = (DefaultTableColumnModel) recentList.getColumnModel();
-		cModel.getColumn(0).setMaxWidth(1);
-		cModel.getColumn(1).setMaxWidth(1);
-		cModel.getColumn(2).setMaxWidth(50);
-		cModel.getColumn(2).setMinWidth(50);
-		javax.swing.table.TableColumn tweetColumn = cModel.getColumn(3);
-		tweetColumn.setCellRenderer(new twitz.ui.TweetTableCellRenderer());
+	//	cModel.getColumn(0).setMaxWidth(0);
+	//	cModel.getColumn(1).setMaxWidth(0);
+	//	cModel.getColumn(2).setMaxWidth(50);
+	//	cModel.getColumn(2).setMinWidth(50);
+	//	javax.swing.table.TableColumn tweetColumn = cModel.getColumn(0);
+	//	tweetColumn.setCellRenderer(new twitz.ui.TweetTableCellRenderer());
+		recentList.setDefaultRenderer(Status.class, new TweetTableCellRenderer());
 
 		//Just here for testing
 		//TODO: remove these lines of code
-		String img = "<html><img src=\"http://localhost/~mistik1/me_3.jpg border=0\">";
-		String tcc = "<html><P>This is a tweet I hope its nice. Lets add some more text and see how it looks</P>";
-		recentList.setValueAt(1234019, 0, 0);
-		recentList.setValueAt("Twitz_ras", 0, 1);
-		recentList.setValueAt(img, 0, 2);
-		recentList.setValueAt(tcc, 0, 3);
-		DefaultTableCellRenderer render = (DefaultTableCellRenderer)recentList.getDefaultRenderer(String.class);
-		render.setVerticalTextPosition(javax.swing.JLabel.TOP);
+	//	String img = "<html><img src=\"http://localhost/~mistik1/me_3.jpg border=0\">";
+	//	String tcc = "<html><P>This is a tweet I hope its nice. Lets add some more text and see how it looks</P>";
+	//	recentList.setValueAt(1234019, 0, 0);
+	//	recentList.setValueAt("Twitz_ras", 0, 1);
+	//	recentList.setValueAt(img, 0, 2);
+	//	recentList.setValueAt(tcc, 0, 3);
+	//	DefaultTableCellRenderer render = (DefaultTableCellRenderer)recentList.getDefaultRenderer(String.class);
+	//	render.setVerticalTextPosition(javax.swing.JLabel.TOP);
 		//setVerticalTextPosition(JLabel.TOP);
 
 		if(startMode) //We closed in minimode
@@ -931,6 +948,18 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			}
 		};
 		friendsNameList.addMouseListener(mouseListener);
+		friendsNameList.setFixedCellWidth(150);
+		//DefaultListModel fnlm = (DefaultListModel)friendsNameList.getModel();
+		//remove all the default items from the list as it would cause error
+		//when we add the ContactRenderer which expects a twitter4j.User object
+		//fnlm.removeAllElements();
+		ContactsListModel fcm = new ContactsListModel();
+		fcm.add(0, new UserTest());
+		fcm.add(1, new UserTest());
+		fcm.add(2, new UserTest());
+		friendsNameList.setModel(fcm);
+		friendsNameList.setCellRenderer(new ContactsRenderer());
+
 		//friendsNameList.setComponentPopupMenu(getActionsMenu());
 		friendsList.addMouseListener(mouseListener);
 		//friendsList.setComponentPopupMenu(getActionsMenu());
@@ -1004,7 +1033,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	}//}}}
 
-	public void init() {
+	public void init() {//{{{
 		//fullTwitz();
 		//Make these tabs render with a close button
 		searchPanel.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
@@ -1103,7 +1132,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 		initTwitter();
 		setupDefaults();
-	}
+		fixTables();
+	}//}}}
 
 	public void initTwitter() {//{{{
 		tm = TwitterManager.getInstance(this);
@@ -1183,7 +1213,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 			public void menuSelected(MenuEvent e)
 			{
-				System.out.println("Menu Selected");
+				//System.out.println("Menu Selected");
 				java.awt.Component o = tabPane.getSelectedComponent();
 				Component c = actionsMenu.getMenuComponent(0);
 				if(o.getName().equals("recentPane")) {
@@ -1409,6 +1439,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		if(prefs == null) {
 			//JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
 			prefs = new PreferencesDialog(getMainFrame(), true, mainApp);
+			prefs.addPropertyChangeListener(mainApp);
 			prefs.setLocationRelativeTo(getMainFrame());
 		}
 		prefs.setVisible(true);
@@ -1662,14 +1693,31 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		twitter4j.User u = s.getUser();
 		String user = u.getScreenName();
 		java.net.URL pUrl = u.getProfileImageURL();
-		//TODO I need to incoporate the Profile image here
-		java.util.Vector vData = new java.util.Vector();
-		vData.add(s.getId());
-		vData.add(s.isRetweet());
-		vData.add(u.getScreenName());
-		vData.add(s.getText());
-		DefaultTableModel model = (DefaultTableModel) recentList.getModel();
+		Place p = s.getPlace();
+		Date d = s.getCreatedAt();
+		//Vector containing the table row data
+		java.util.Vector<Status> vData = new java.util.Vector<Status>();
+		
+		StringBuffer buf = new StringBuffer("<html><p>");
+		if(!s.getInReplyToScreenName().equals("")) {
+			buf.append("<strong>@");
+			buf.append(s.getInReplyToScreenName());
+			buf.append(" - </strong>");
+		}
+		buf.append(s.getText());
+		buf.append("</p><br><center><strong>");
+		buf.append(u.getScreenName()+"</strong><em> at ");
+		buf.append(d.toString());
+		buf.append(" from "+p.getName()+"</em></center>");
+
+	//	vData.add(s.getId());
+	//	vData.add(s.isRetweet());
+	//	vData.add("<html><img src=\""+pUrl.toString()+"\" border=0 height=50 width=50 >");
+	//	vData.add(buf.toString());
+		vData.add(s);
+		TweetTableModel model = (TweetTableModel) recentList.getModel();
 		model.addRow(vData);
+		recentMap.put(s.getId(), s);
 		//model.addElement(user+": "+s.getText());
 	}//}}}
 
@@ -1677,12 +1725,18 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		String rv = "";
 		if(tabPane.getSelectedComponent().equals(recentPane)) {
 			int row = recentList.getSelectedRow();
-			if(row != -1)
-				rv = (String)recentList.getValueAt(row, 1);
+			if(row != -1) {
+				TweetTableModel ttm = (TweetTableModel)recentList.getModel();
+				Status stat = ttm.getValueAt(row, 0);
+				rv = stat.getUser().getScreenName();
+			}
 		}
 		else if(tabPane.getSelectedComponent().equals(friendsPane)) {
 			if(friendsNameList.getSelectedIndex() != -1)
-				rv = (String)friendsNameList.getSelectedValue();
+			{
+				User u = (User)friendsNameList.getSelectedValue();
+				rv = u.getScreenName();
+			}
 		}
 		else if(tabPane.getSelectedComponent().equals(blockedPane)) {
 			if(blockedList.getSelectedIndex() != -1)
@@ -1711,16 +1765,21 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		if(tabPane.getSelectedComponent().equals(recentPane)) {
 			int row[] = recentList.getSelectedRows();
 			if(row.length >= 2) {
-				rv.add((String)recentList.getValueAt(row[0], 1));
-				rv.add((String)recentList.getValueAt(row[1], 1));
+				Status stat = (Status)recentList.getValueAt(row[0], 0);
+				rv.add(stat.getUser().getScreenName());
+				stat = (Status)recentList.getValueAt(row[1], 0);
+				rv.add(stat.getUser().getScreenName());
 				return rv;
 			}
 		}
 		else if(tabPane.getSelectedComponent().equals(friendsPane)) {
-			Object row[] = friendsNameList.getSelectedValues();
-			if(row.length >= 2) {
-				rv.add((String)row[0]);
-				rv.add((String)row[1]);
+			int[] indices = friendsNameList.getSelectedIndices();
+			if(indices.length >= 2) {
+				ContactsListModel clm = (ContactsListModel)friendsNameList.getModel();
+				User row = clm.getElementAt(indices[0]);
+				rv.add(row.getScreenName());
+				row = clm.getElementAt(indices[1]);
+				rv.add(row.getScreenName());
 				return rv;
 			}
 		}
@@ -1873,6 +1932,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 						firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 						break;
 					case TwitterConstants.SHOW_STATUS:
+						//screenName = getScreenNameFromActiveTab();
+						//aTwitter.setStatus(screenName);
 						firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 						break;
 					case TwitterConstants.UPDATE_STATUS:
@@ -1990,6 +2051,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 						if(names.size() >= 2)
 						{
 							aTwitter.existsFriendship(names.get(0), names.get(1));
+						}
+						else
+						{
+							JOptionPane.showMessageDialog(getMainFrame(), "You must select more than one User to use this feature"); //TODO: needs I18N
 						}
 						break;
 					case TwitterConstants.SHOW_FRIENDSHIP:
@@ -2553,6 +2618,46 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	//END abstract methods
 	//</editor-fold>
 
+	private class TweetTableModelOLD extends DefaultTableModel {//{{{
+		
+		public TweetTableModelOLD() {
+			super(new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },new String [] { "I", "", "", "" });
+		}
+		
+		Class[] types = new Class [] {
+		    java.lang.Long.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class
+		};
+		boolean[] canEdit = new boolean [] {
+		    false, false, false, false
+		};
+		
+		public Class getColumnClass(int columnIndex) {
+		    return types [columnIndex];
+		}
+		
+		public boolean isCellEditable(int rowIndex, int columnIndex) {
+		    return canEdit [columnIndex];
+		}
+
+		public String getToolTipText(java.awt.event.MouseEvent e) {
+			String tip = null;
+        	java.awt.Point p = e.getPoint();
+			if(e.getSource() instanceof JTable) {
+				JTable table = (JTable)e.getSource();
+				//TableModel model = table.getModel();
+				int rowIndex = table.rowAtPoint(p);
+				int colIndex = table.columnAtPoint(p);
+        		int realColumnIndex = table.convertColumnIndexToModel(colIndex);
+				tip = (String)getValueAt(rowIndex, colIndex);
+			}
+			return tip;
+		}
+	}//}}}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionPanel;
@@ -2576,7 +2681,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JList followingList;
     private javax.swing.JScrollPane followingPane;
     private javax.swing.JList friendsList;
-    private javax.swing.JList friendsNameList;
+    private twitz.ui.ContactsList friendsNameList;
     private javax.swing.JSplitPane friendsPane;
     private javax.swing.JMenuItem helpItem;
     private javax.swing.JLabel jLabel1;
@@ -2632,4 +2737,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	private Vector searchHeaders = new Vector();
 	private Vector<String> names = new Vector<String>();
+	//A Map to store all the statuses in the recentList table
+	private Map<Long, Status> recentMap = new TreeMap<Long, Status>();
+
 }

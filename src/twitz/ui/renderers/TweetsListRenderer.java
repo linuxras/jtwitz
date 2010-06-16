@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package twitz;
+package twitz.ui.renderers;
 
 import java.awt.Component;
 import javax.swing.JLabel;

@@ -4,19 +4,27 @@
 
 package twitz;
 
+import java.awt.AlphaComposite;
 import java.awt.Component;
+import java.awt.Color;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
+import java.awt.SplashScreen;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeSupport;
+import java.io.Serializable;
 import twitz.util.SettingsManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -39,7 +47,7 @@ import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 /**
  * The main class of the application.
  */
-public class TwitzApp extends SingleFrameApplication implements ActionListener, MouseListener {
+public class TwitzApp extends SingleFrameApplication implements ActionListener, MouseListener, PropertyChangeListener{
 
 	public static final String UPDATE = "Update";
 	public static final String TWEET = "Tweet";
@@ -54,31 +62,27 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	private ResourceMap resources = null;
 	//Image splash = getIcon("resources/splash.png");
 	//JFrame splashFrame = new JFrame();
+	private static final LAFUpdater themer = new LAFUpdater();
+	private SplashScreen splash; //= SplashScreen.getSplashScreen();
+	private Graphics2D gap = null; //splash.createGraphics();
 
+	static void renderSplashFrame(Graphics2D g, String comp) {
+        //final String[] comps = {"foo", "bar", "baz"};
+        g.setComposite(AlphaComposite.Clear);
+        g.fillRect(120,140,200,40);
+        g.setPaintMode();
+        g.setColor(Color.BLACK);
+        g.drawString("Loading "+comp+"...", 120, 150);
+    }
+	
 	private void buildSplash() {
-//		Point center = getDesktopCenter();
-		GridBagLayout gridbag = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();
-//		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(splash);
-//		splashFrame.setAlwaysOnTop(true);
-//		splashFrame.setUndecorated(true);
-//		splashFrame.setLayout(gridbag);
-//		splashFrame.setSize(icon.getIconWidth(), icon.getIconHeight());
-//		javax.swing.JLabel img = new javax.swing.JLabel();
-//		Rectangle bound = new Rectangle();
-//		bound.setSize(icon.getIconWidth(), icon.getIconHeight());
-//		bound.setLocation((center.x - (icon.getIconWidth() / 2)), (center.y - (icon.getIconHeight() / 2)));
-//		splashFrame.setBounds(getDesktopCenter(splashFrame));
-//		img.setIcon(icon);
-//		splashFrame.add(img);
-		//return splashFrame;
 	}
 
 	private Point getDesktopCenter() {
 		return GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
 	}
 
-	public static Rectangle getDesktopCenter(java.awt.Component comp) {
+	public static Rectangle getDesktopCenter(java.awt.Component comp) {//{{{
 		Rectangle rv = new Rectangle();
 		Point c = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
 		int w = comp.getWidth();
@@ -86,10 +90,15 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		rv.setSize(w, h);
 		rv.setLocation((c.x - (w / 2)), (c.y - (h / 2)));
 		return rv;
-	}
+	}//}}}
 
 	@Override
-	protected void configureTopLevel(JFrame top) {
+	protected void configureTopLevel(JFrame top) {//{{{
+		if(splash != null) {
+			renderSplashFrame(gap, "main components");
+			splash.update();
+		}
+
 		top.setUndecorated(config.getBoolean("twitz.undecorated"));
 		resources = getContext().getResourceMap(TwitzApp.class);
 		Point c = getDesktopCenter();
@@ -119,9 +128,10 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		top.setTitle(getContext().getResourceMap().getString("Application.title"));
 		top.setVisible(true);
 		System.out.println("Inside configureTopLevel....");
-	}
+	}//}}}
 
-    @Override protected  Component createMainComponent() {
+    @Override
+	protected  Component createMainComponent() {//{{{
 		view = new TwitzMainView(this);
 		try
 		{
@@ -134,23 +144,28 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			exit();
 		}
 		view.addPropertyChangeListener("POPUP", tray);
+		if(splash != null) {
+			renderSplashFrame(gap, "main components");
+			splash.update();
+		}
 		System.out.println("Inside createMainComponent");
 		return view;
-    }
+    }//}}}
 
     /**
      * At startup create and show the main frame of the application.
      */
 	@Override
-	protected void startup() {
+	protected void startup() {//{{{
 		getMainTopLevel().setJMenuBar(view.getMenuBar());
 		view.init();
-		view.fixTables();
 		if(hidden)
 			toggleWindowView("down");
-		//setLAFFromSettings();
+		UIManager.addPropertyChangeListener(this);
+		if(splash != null)
+			splash.close();
 		System.out.println("Inside Startup");
-	}
+	}//}}}
 
 	@Override
 	protected JMenuBar createJMenuBar() {
@@ -160,30 +175,20 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 
 	@Override
-	protected void initialize(String[] args) {
+	protected void initialize(String[] args) {//{{{
 		System.out.println("Inside initialize...");
-		//setLAFFromSettings();
-		String skin = config.getString("twitz.skin");
-		try
-		{
-			UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.Substance" + skin + "LookAndFeel");
+		splash = SplashScreen.getSplashScreen();
+		if(splash != null) {
+			gap = splash.createGraphics();
+			renderSplashFrame(gap, "initialization");
+			splash.update();
+		} else {
+			System.out.println("Splash is null");
 		}
-		catch (UnsupportedLookAndFeelException ex)
-		{
-			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		catch (Exception ex)
-		{
-			Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		System.out.println("Updating UI...");
-		for (Window win : Window.getWindows())
-		{
-			SwingUtilities.updateComponentTreeUI(win);
-		}
-		//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
+		themer.addPropertyChangeListener(this);
+		setLAFFromSettings(false, true);
 		System.out.println("Leaving initialize...");
-	}
+	}//}}}
 
 	@Override
 	protected void ready() {
@@ -191,52 +196,33 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		if(hidden)
 			toggleWindowView("down");
 	}
+	
+	/**
+	 * Set a new look and feel 
+	 * @param background Should we run on the EDT or not.
+	 * Defaults to true, the only time it should be false is when called 
+	 * from the <code>initialize</code> method at startup.
+	 */
+	public static void setLAFFromSettings(boolean background, boolean... init) {//{{{
+		if(init.length > 0 && init[0])
+		{
+			themer.run();
+			return;
+		}
 
-	public static void setLAFFromSettings() {
-		Runnable doLAF = new Runnable() {
-			public void run() {
-				String skin = config.getString("twitz.skin");
-				//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
-				String currentSkin = "";
-				LookAndFeel laf = UIManager.getLookAndFeel();
-
-				currentSkin = laf.getName().replaceAll(" ", "");
-
-				if(UIManager.getLookAndFeel() instanceof SubstanceLookAndFeel)
-					currentSkin = SubstanceLookAndFeel.getCurrentSkin().getDisplayName().replaceAll(" ", "");
-				
-				System.out.println("Current Skin: "+ currentSkin);
-				if (skin != null && !skin.equals("") && !skin.equals(currentSkin))
-				{
-					System.out.println("Setting LAF...");
-					//SubstanceLookAndFeel.setSkin(skin);
-					//SubstanceLookAndFeel.setSkin("org.pushingpixels.substance.api.skin.Substance"+skin+"LookAndFeel");
-					//System.out.println(SubstanceLookAndFeel.getCurrentSkin().getDisplayName());
-					try
-					{
-						UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.Substance" + skin + "LookAndFeel");
-					}
-					catch (UnsupportedLookAndFeelException ex)
-					{
-						Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
-					}
-					catch (Exception ex)
-					{
-						Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
-					}
-					System.out.println("Updating UI...");
-					for (Window win : Window.getWindows())
-					{
-						SwingUtilities.updateComponentTreeUI(win);
-					}
-					view.fixTables();
-					System.out.println("New Skin: "+UIManager.getLookAndFeel().getName().replaceAll(" ", ""));
-//					SwingUtilities.updateComponentTreeUI(getMainFrame());
-				}
+		if(background) {
+			SwingUtilities.invokeLater(themer);
+		} else {
+			try
+			{
+				SwingUtilities.invokeAndWait(themer);
 			}
-		};
-		SwingUtilities.invokeLater(doLAF);
-	}
+			catch(Exception e) 
+			{
+				Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, e.getMessage(), e);
+			}
+		}
+	}//}}}
 
 	public java.awt.Window getMainWindow() {
 		return window;
@@ -250,7 +236,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
         launch(TwitzApp.class, args);
     }
 
-	public Image getIcon(String path) {
+	public Image getIcon(String path) {//{{{
 
         Image icon = null;
 
@@ -267,9 +253,9 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 
         return (icon);
-    }
+    }//}}}
 
-	public void toggleWindowView(String action) {
+	public void toggleWindowView(String action) {//{{{
 		JFrame win = getMainTopLevel();
 		if(action != null)
 		{
@@ -331,9 +317,24 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				win.setState(java.awt.Frame.NORMAL);
 			}
 		}
+	}//}}}
+
+	public static void fixTables() {
+		view.fixTables();
+	}
+	
+	public void propertyChange(PropertyChangeEvent e) {
+		if(e.getPropertyName().equals("lookAndFeelChange")) {
+			setLAFFromSettings(true, true);
+		}
+		else if(e.getPropertyName().equals("skinChange")) {
+			if(view != null)
+				fixTables(); //update the view so all the tables have correct sizing
+		}
+		logger.log(Level.INFO, "PropertyChangeEvent recieved: "+e.getPropertyName());
 	}
 
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent e) {//{{{
 		String cmd = e.getActionCommand();
 		tray.hideGlassPane();
 		if(cmd.endsWith(TWEET_MINI)) {
@@ -350,7 +351,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			view.showPrefsBox();
 		}
 		//throw new UnsupportedOperationException("Not supported yet.");
-	}
+	}//}}}
 
 	public void mouseClicked(MouseEvent e)
 	{
@@ -377,4 +378,59 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	{
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
+
+	private static class LAFUpdater implements Runnable {//{{{
+
+		private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
+		public void addPropertyChangeListener( PropertyChangeListener listener )
+		{
+		    this.pcs.addPropertyChangeListener( listener );
+		}
+		
+		public void removePropertyChangeListener( PropertyChangeListener listener )
+		{
+		    this.pcs.removePropertyChangeListener( listener );
+		}
+
+
+		public void run() {
+			String skin = config.getString("twitz.skin");
+			//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
+			String currentSkin = "";
+			LookAndFeel laf = UIManager.getLookAndFeel();
+
+			currentSkin = laf.getName().replaceAll(" ", "");
+
+			//if(UIManager.getLookAndFeel() instanceof SubstanceLookAndFeel)
+			//	currentSkin = SubstanceLookAndFeel.getCurrentSkin().getDisplayName().replaceAll(" ", "");
+			
+			System.out.println("Current Skin: "+ currentSkin);
+			if (skin != null && !skin.equals("") && !skin.equals(currentSkin))//{{{
+			{
+				System.out.println("Setting LAF...");
+				try
+				{
+					UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.Substance" + skin + "LookAndFeel");
+				}
+				catch (UnsupportedLookAndFeelException ex)
+				{
+					Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+				}
+				catch (Exception ex)
+				{
+					Logger.getLogger(TwitzApp.class.getName()).log(Level.SEVERE, null, ex);
+				}
+				System.out.println("Updating UI...");
+				for (Window win : Window.getWindows())
+				{
+					SwingUtilities.updateComponentTreeUI(win);
+				}
+				String newSkin = UIManager.getLookAndFeel().getName().replaceAll(" ", "");
+				//Notify all listeners that the skin change is complete
+				this.pcs.firePropertyChange("skinChange", currentSkin, newSkin);
+				System.out.println("New Skin: "+newSkin);
+			}//}}}
+		}
+	}//}}}
 }
