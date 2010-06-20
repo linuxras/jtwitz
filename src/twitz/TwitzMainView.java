@@ -18,6 +18,7 @@ import twitz.ui.renderers.ContactsRenderer;
 import java.awt.Color;
 import twitz.dialogs.TwitzAboutBox;
 import java.awt.Component;
+import java.awt.Dimension;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.MenuEvent;
@@ -69,6 +70,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.SwingUtilities;
+import org.jdesktop.application.SingleFrameApplication;
+import org.jdesktop.application.Task;
 import twitter4j.*;
 import twitz.dialogs.MessageDialog;
 import twitz.events.TwitzListener;
@@ -78,6 +81,13 @@ import twitz.testing.*;
 import org.pushingpixels.substance.api.*;
 import org.pushingpixels.substance.api.tabbed.*;
 import org.pushingpixels.substance.api.SubstanceConstants.TabCloseKind;
+import twitz.ui.ContactsFrame;
+import twitz.ui.ContactsList;
+import twitz.ui.TweetsList;
+import twitz.ui.UserListMainPanel;
+import twitz.ui.UserListPanel;
+import twitz.ui.UsersList;
+import twitz.ui.models.UserListModel;
 
 /**
  *
@@ -88,8 +98,11 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     /** Creates new form TwitzMainView */
     public TwitzMainView(TwitzApp app) {
 		mainApp = (TwitzApp)app;
+        actionMap = TwitzApp.getContext().getActionMap(TwitzMainView.class, this);
+        resourceMap = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
 //		resource = TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
         initComponents();
+		setContactList();
 
 		//Add tab position menu
 		editMenu.add(createTabPositionMenu());
@@ -119,6 +132,12 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         helpItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         exitItem = new javax.swing.JMenuItem();
+        tweetsPane = new javax.swing.JScrollPane();
+        friendsList = new javax.swing.JList();
+        contactsPanel = new javax.swing.JPanel();
+        contactsToolbar = new javax.swing.JToolBar();
+        nameListPane = new javax.swing.JScrollPane();
+        friendsNameList = new twitz.ui.ContactsList();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
@@ -136,13 +155,12 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         tabPane = new javax.swing.JTabbedPane();
         recentPane = new javax.swing.JScrollPane();
         recentList = new javax.swing.JTable();
-        friendsPane = new javax.swing.JSplitPane();
-        nameListPane = new javax.swing.JScrollPane();
-        friendsNameList = new twitz.ui.ContactsList();
-        tweetsPane = new javax.swing.JScrollPane();
-        friendsList = new javax.swing.JList();
+        friendsPanel = new javax.swing.JSplitPane();
+        friendsPane = new javax.swing.JTabbedPane();
+        userListMainPanel1 = new twitz.ui.UserListMainPanel();
+        friendsStatusPanel = new javax.swing.JPanel();
+        statusScrollPane = new javax.swing.JScrollPane();
         blockedPane = new javax.swing.JScrollPane();
-        blockedList = new javax.swing.JList();
         followingPane = new javax.swing.JScrollPane();
         followingList = new javax.swing.JList();
         followersPane = new javax.swing.JScrollPane();
@@ -180,9 +198,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
         contextMenu.setName("contextMenu"); // NOI18N
 
-        javax.swing.ActionMap actionMap = TwitzApp.getContext().getActionMap(TwitzMainView.class, this);
         prefsItem.setAction(actionMap.get("showPrefsBox")); // NOI18N
-        org.jdesktop.application.ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
         prefsItem.setIcon(resourceMap.getIcon("prefsItem.icon")); // NOI18N
         prefsItem.setText(resourceMap.getString("prefsItem.text")); // NOI18N
         prefsItem.setName("prefsItem"); // NOI18N
@@ -207,6 +223,46 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         exitItem.setIcon(resourceMap.getIcon("exitItem.icon")); // NOI18N
         exitItem.setName("exitItem"); // NOI18N
         contextMenu.add(exitItem);
+
+        tweetsPane.setName("tweetsPane"); // NOI18N
+
+        friendsList.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        friendsList.setName("friendsList"); // NOI18N
+        tweetsPane.setViewportView(friendsList);
+
+        contactsPanel.setName("contactsPanel"); // NOI18N
+
+        contactsToolbar.setFloatable(false);
+        contactsToolbar.setRollover(true);
+        contactsToolbar.setName("contactsToolbar"); // NOI18N
+
+        nameListPane.setName("nameListPane"); // NOI18N
+
+        friendsNameList.setModel(new ContactsListModel());
+        friendsNameList.setName("friendsNameList"); // NOI18N
+        nameListPane.setViewportView(friendsNameList);
+
+        javax.swing.GroupLayout contactsPanelLayout = new javax.swing.GroupLayout(contactsPanel);
+        contactsPanel.setLayout(contactsPanelLayout);
+        contactsPanelLayout.setHorizontalGroup(
+            contactsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(contactsPanelLayout.createSequentialGroup()
+                .addGroup(contactsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(contactsToolbar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(nameListPane, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        contactsPanelLayout.setVerticalGroup(
+            contactsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(contactsPanelLayout.createSequentialGroup()
+                .addComponent(contactsToolbar, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(nameListPane, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE))
+        );
 
         menuBar.setName("menuBar"); // NOI18N
 
@@ -363,42 +419,51 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
         tabPane.addTab(resourceMap.getString("recentPane.TabConstraints.tabTitle"), resourceMap.getIcon("recentPane.TabConstraints.tabIcon"), recentPane, resourceMap.getString("recentPane.TabConstraints.tabToolTip")); // NOI18N
 
-        friendsPane.setDividerLocation(100);
-        friendsPane.setDividerSize(6);
+        friendsPanel.setDividerLocation(160);
+        friendsPanel.setDividerSize(2);
+        friendsPanel.setName("friendsPanel"); // NOI18N
+
+        friendsPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
+        friendsPane.setTabPlacement(javax.swing.JTabbedPane.LEFT);
         friendsPane.setName("friendsPane"); // NOI18N
 
-        nameListPane.setName("nameListPane"); // NOI18N
+        userListMainPanel1.setName("userListMainPanel1"); // NOI18N
 
-        friendsNameList.setModel(new ContactsListModel());
-        friendsNameList.setName("friendsNameList"); // NOI18N
-        nameListPane.setViewportView(friendsNameList);
+        javax.swing.GroupLayout userListMainPanel1Layout = new javax.swing.GroupLayout(userListMainPanel1);
+        userListMainPanel1.setLayout(userListMainPanel1Layout);
+        userListMainPanel1Layout.setHorizontalGroup(
+            userListMainPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 49, Short.MAX_VALUE)
+        );
+        userListMainPanel1Layout.setVerticalGroup(
+            userListMainPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 368, Short.MAX_VALUE)
+        );
 
-        friendsPane.setLeftComponent(nameListPane);
+        friendsPane.addTab(resourceMap.getString("userListMainPanel1.TabConstraints.tabTitle"), resourceMap.getIcon("userListMainPanel1.TabConstraints.tabIcon"), userListMainPanel1, resourceMap.getString("userListMainPanel1.TabConstraints.tabToolTip")); // NOI18N
 
-        tweetsPane.setName("tweetsPane"); // NOI18N
+        friendsPanel.setLeftComponent(friendsPane);
 
-        friendsList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        friendsList.setName("friendsList"); // NOI18N
-        tweetsPane.setViewportView(friendsList);
+        friendsStatusPanel.setName("friendsStatusPanel"); // NOI18N
 
-        friendsPane.setRightComponent(tweetsPane);
+        statusScrollPane.setName("statusScrollPane"); // NOI18N
 
-        tabPane.addTab(resourceMap.getString("friendsPane.TabConstraints.tabTitle"), resourceMap.getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, resourceMap.getString("friendsPane.TabConstraints.tabToolTip")); // NOI18N
+        javax.swing.GroupLayout friendsStatusPanelLayout = new javax.swing.GroupLayout(friendsStatusPanel);
+        friendsStatusPanel.setLayout(friendsStatusPanelLayout);
+        friendsStatusPanelLayout.setHorizontalGroup(
+            friendsStatusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(statusScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 193, Short.MAX_VALUE)
+        );
+        friendsStatusPanelLayout.setVerticalGroup(
+            friendsStatusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(statusScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 375, Short.MAX_VALUE)
+        );
+
+        friendsPanel.setRightComponent(friendsStatusPanel);
+
+        tabPane.addTab(resourceMap.getString("friendsPanel.TabConstraints.tabTitle"), resourceMap.getIcon("friendsPanel.TabConstraints.tabIcon"), friendsPanel, resourceMap.getString("friendsPanel.TabConstraints.tabToolTip")); // NOI18N
 
         blockedPane.setName("blockedPane"); // NOI18N
-
-        blockedList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        blockedList.setName("blockedList"); // NOI18N
-        blockedPane.setViewportView(blockedList);
-
         tabPane.addTab(resourceMap.getString("blockedPane.TabConstraints.tabTitle"), resourceMap.getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, resourceMap.getString("blockedPane.TabConstraints.tabToolTip")); // NOI18N
 
         followingPane.setName("followingPane"); // NOI18N
@@ -557,17 +622,17 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         searchPanel.setLayout(searchPanelLayout);
         searchPanelLayout.setHorizontalGroup(
             searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(searchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
-            .addComponent(advSearchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+            .addComponent(searchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
+            .addComponent(advSearchBar, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
             .addGroup(searchPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnPrev)
                 .addGap(98, 98, 98)
                 .addComponent(lblPage, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 88, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnNext)
                 .addContainerGap())
-            .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+            .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
         );
         searchPanelLayout.setVerticalGroup(
             searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -576,7 +641,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(advSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
+                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 270, Short.MAX_VALUE)
                 .addGap(6, 6, 6)
                 .addGroup(searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(btnNext, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -614,8 +679,11 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         txtTweet.setText(resourceMap.getString("txtTweet.text")); // NOI18N
         txtTweet.setName("txtTweet"); // NOI18N
         txtTweet.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
                 txtTweetKeyTyped(evt);
+            }
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtTweetKeyReleased(evt);
             }
         });
 
@@ -627,7 +695,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
                 .addContainerGap()
                 .addComponent(lblChars, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 312, Short.MAX_VALUE)
+                .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkCOT)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -665,11 +733,11 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         statusPanel.setLayout(statusPanelLayout);
         statusPanelLayout.setHorizontalGroup(
             statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 546, Short.MAX_VALUE)
+            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE)
             .addGroup(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(statusMessageLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 362, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 250, Short.MAX_VALUE)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(statusAnimationLabel)
@@ -695,7 +763,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tabPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 522, Short.MAX_VALUE)
+                    .addComponent(tabPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE)
                     .addComponent(actionPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -703,7 +771,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 257, Short.MAX_VALUE)
+                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(actionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -715,27 +783,27 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	private void menuItemFriendsActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemFriendsActionPerformed
 	{//GEN-HEADEREND:event_menuItemFriendsActionPerformed
 		toggleTabs(evt);
-}//GEN-LAST:event_menuItemFriendsActionPerformed
+	}//GEN-LAST:event_menuItemFriendsActionPerformed
 
 	private void menuItemBlockedActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemBlockedActionPerformed
 	{//GEN-HEADEREND:event_menuItemBlockedActionPerformed
 		toggleTabs(evt);
-}//GEN-LAST:event_menuItemBlockedActionPerformed
+	}//GEN-LAST:event_menuItemBlockedActionPerformed
 
 	private void menuItemFollowingActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemFollowingActionPerformed
 	{//GEN-HEADEREND:event_menuItemFollowingActionPerformed
 		toggleTabs(evt);
-}//GEN-LAST:event_menuItemFollowingActionPerformed
+	}//GEN-LAST:event_menuItemFollowingActionPerformed
 
 	private void menuItemFollowersActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemFollowersActionPerformed
 	{//GEN-HEADEREND:event_menuItemFollowersActionPerformed
 		toggleTabs(evt);
-}//GEN-LAST:event_menuItemFollowersActionPerformed
+	}//GEN-LAST:event_menuItemFollowersActionPerformed
 
 	private void menuItemSearchActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_menuItemSearchActionPerformed
 	{//GEN-HEADEREND:event_menuItemSearchActionPerformed
 		toggleTabs(evt);
-}//GEN-LAST:event_menuItemSearchActionPerformed
+	}//GEN-LAST:event_menuItemSearchActionPerformed
 
 	private void txtSearchKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtSearchKeyReleased
 	{//GEN-HEADEREND:event_txtSearchKeyReleased
@@ -750,22 +818,27 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				else
 					btnSearch.setEnabled(false);
 		}
-}//GEN-LAST:event_txtSearchKeyReleased
+	}//GEN-LAST:event_txtSearchKeyReleased
 
 	private void txtSinceDateActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_txtSinceDateActionPerformed
 	{//GEN-HEADEREND:event_txtSinceDateActionPerformed
 		// TODO add your handling code here:
-}//GEN-LAST:event_txtSinceDateActionPerformed
+	}//GEN-LAST:event_txtSinceDateActionPerformed
 
 	private void txtUntilDateActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_txtUntilDateActionPerformed
 	{//GEN-HEADEREND:event_txtUntilDateActionPerformed
 		// TODO add your handling code here:
-}//GEN-LAST:event_txtUntilDateActionPerformed
+	}//GEN-LAST:event_txtUntilDateActionPerformed
 
 	private void tabPaneKeyReleased(java.awt.event.KeyEvent evt)//GEN-FIRST:event_tabPaneKeyReleased
 	{//GEN-HEADEREND:event_tabPaneKeyReleased
 		keyTyped(evt);
-}//GEN-LAST:event_tabPaneKeyReleased
+	}//GEN-LAST:event_tabPaneKeyReleased
+
+	private void txtTweetKeyReleased(java.awt.event.KeyEvent evt)                                  
+	{                                         
+		keyReleased(evt);
+	}                                    
 
 	private void txtTweetKeyTyped(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyTyped
 	{//GEN-HEADEREND:event_txtTweetKeyTyped
@@ -777,13 +850,17 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		tblSearch.setRowHeight(50);
 	}
 
+	private void setContactList() {
+        
+	}
+
 	/**
 	 * This method is called on startup in the constructor.
 	 * It is used to configure the GUI with the default from the config file.
 	 */
 	public void setupDefaults() {//{{{
         // status bar initialization - message timeout, idle icon and busy animation, etc
-        ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
+        //ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
    		final Timer messageTimer;//{{{
    		final Timer busyIconTimer;
    		final Icon idleIcon;
@@ -843,7 +920,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 			public void windowGainedFocus(WindowEvent e)
 			{
-				txtTweet.requestFocus();
+				txtTweet.requestFocusInWindow();
 			}
 
 			public void windowLostFocus(WindowEvent e)
@@ -860,7 +937,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 		//setTabComponent();
 		TweetTableModel tmodel = new TweetTableModel();
-		tmodel.addColumn("");
+		tmodel.addColumn("Tweets"); //TODO needs i18n
 		recentList.setModel(tmodel);
 		
 		//TODO: Test code to be removed in production
@@ -871,32 +948,17 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		}
 
 		DefaultTableColumnModel cModel = (DefaultTableColumnModel) recentList.getColumnModel();
-	//	cModel.getColumn(0).setMaxWidth(0);
-	//	cModel.getColumn(1).setMaxWidth(0);
-	//	cModel.getColumn(2).setMaxWidth(50);
-	//	cModel.getColumn(2).setMinWidth(50);
-	//	javax.swing.table.TableColumn tweetColumn = cModel.getColumn(0);
-	//	tweetColumn.setCellRenderer(new twitz.ui.TweetTableCellRenderer());
+
 		recentList.setDefaultRenderer(Status.class, new TweetTableCellRenderer());
 
 		//Just here for testing
 		//TODO: remove these lines of code
-	//	String img = "<html><img src=\"http://localhost/~mistik1/me_3.jpg border=0\">";
-	//	String tcc = "<html><P>This is a tweet I hope its nice. Lets add some more text and see how it looks</P>";
-	//	recentList.setValueAt(1234019, 0, 0);
-	//	recentList.setValueAt("Twitz_ras", 0, 1);
-	//	recentList.setValueAt(img, 0, 2);
-	//	recentList.setValueAt(tcc, 0, 3);
-	//	DefaultTableCellRenderer render = (DefaultTableCellRenderer)recentList.getDefaultRenderer(String.class);
-	//	render.setVerticalTextPosition(javax.swing.JLabel.TOP);
-		//setVerticalTextPosition(JLabel.TOP);
-
 		if(startMode) //We closed in minimode
 			miniTwitz();
 
 		//Disable tabs that were removed by user
 		if(!config.getBoolean("tab.friends")) {
-			tabPane.remove(friendsPane);
+			tabPane.remove(friendsPanel);
 			menuItemFriends.setSelected(false);
 		}
 		if(!config.getBoolean("tab.blocked")) {
@@ -915,7 +977,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			tabPane.remove(searchPanel);
 			menuItemSearch.setSelected(false);
 		}
-		MouseListener mouseListener = new MouseAdapter() {
+		MouseListener mouseListener = new MouseAdapter() {//{{{
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
@@ -945,23 +1007,46 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 						}
 					}
 				}
+				else if(e.getButton() == MouseEvent.BUTTON1) {
+					if(e.getSource() instanceof ContactsList) {
+						ContactsList list = (ContactsList)e.getSource();
+						DefaultListModel mod = (DefaultListModel) friendsTweets.getModel();
+						mod.clear();
+						for(int i=0; i<10; i++)
+							mod.addElement(new StatusTest());
+					}
+				}
 			}
-		};
-		friendsNameList.addMouseListener(mouseListener);
-		friendsNameList.setFixedCellWidth(150);
-		//DefaultListModel fnlm = (DefaultListModel)friendsNameList.getModel();
-		//remove all the default items from the list as it would cause error
-		//when we add the ContactRenderer which expects a twitter4j.User object
-		//fnlm.removeAllElements();
-		ContactsListModel fcm = new ContactsListModel();
+		};//}}}
+		//ContactsList friends = friendsPane.getContactFrame().getContactsList();
+		friends.addMouseListener(mouseListener);
+
+		ContactsListModel fcm = friends.getModel();
 		fcm.add(0, new UserTest());
 		fcm.add(1, new UserTest());
 		fcm.add(2, new UserTest());
-		friendsNameList.setModel(fcm);
-		friendsNameList.setCellRenderer(new ContactsRenderer());
+		
+		User[] ouser = new User[]{
+			new UserTest(),
+			new UserTest(),
+			new UserTest()
+		};
+		UserListPanel pnl1 = userListMainPanel1.addUserList(ouser, "Panel 1");
+
+		User[] puser = new User[]{
+			new UserTest(),
+			new UserTest(),
+			new UserTest(),
+			new UserTest(),
+			new UserTest(),
+			new UserTest(),
+			new UserTest()
+		};
+		UserListPanel pnl2 = userListMainPanel1.addUserList(puser, "Panel 2");
+
 
 		//friendsNameList.setComponentPopupMenu(getActionsMenu());
-		friendsList.addMouseListener(mouseListener);
+		friends.addMouseListener(mouseListener);
 		//friendsList.setComponentPopupMenu(getActionsMenu());
 		recentList.addMouseListener(mouseListener);
 		//tweetsList.addMouseListener(mouseListener);
@@ -987,6 +1072,24 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	}//}}}
 
 	@Action
+	private void keyReleased(java.awt.event.KeyEvent evt) {
+		int c = txtTweet.getDocument().getLength();
+		lblChars.setText((140 - c)+"");
+		if((c > 0) && (c < 141)) {
+			btnTweet.setEnabled(true);
+			lblChars.setForeground(getResourceMap().getColor("lblChars.foreground"));
+		}
+		else if(c > 140) {
+			lblChars.setForeground(Color.RED);
+			btnTweet.setEnabled(false);
+		}
+		else
+		{
+			btnTweet.setEnabled(false);
+		}
+	}
+
+	@Action
 	private void keyTyped(java.awt.event.KeyEvent evt) {//{{{
 		switch(evt.getKeyCode()) {
 			case KeyEvent.VK_ENTER:
@@ -1002,21 +1105,21 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			case KeyEvent.VK_ESCAPE:
 				mainApp.toggleWindowView("down");
 				break;
-			default:
-				int c = txtTweet.getDocument().getLength();
-				lblChars.setText((140 - c)+"");
-				if((c > 0) && (c < 141)) {
-					btnTweet.setEnabled(true);
-					lblChars.setForeground(getResourceMap().getColor("lblChars.foreground"));
-				}
-				else if(c > 140) {
-					lblChars.setForeground(Color.RED);
-					btnTweet.setEnabled(false);
-				}
-				else
-				{
-					btnTweet.setEnabled(false);
-				}
+		//	default:
+		//		int c = txtTweet.getDocument().getLength();
+		//		lblChars.setText((140 - c)+"");
+		//		if((c > 0) && (c < 141)) {
+		//			btnTweet.setEnabled(true);
+		//			lblChars.setForeground(getResourceMap().getColor("lblChars.foreground"));
+		//		}
+		//		else if(c > 140) {
+		//			lblChars.setForeground(Color.RED);
+		//			btnTweet.setEnabled(false);
+		//		}
+		//		else
+		//		{
+		//			btnTweet.setEnabled(false);
+		//		}
 		}
 	}//}}}
 
@@ -1035,12 +1138,17 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void init() {//{{{
 		//fullTwitz();
+		//Add friends list tothe friendsPane tabbed panel
+		friendsPane.insertTab(resourceMap.getString("friends.TabConstraints.tabTitle"), resourceMap.getIcon("friends.TabConstraints.tabIcon"), friends, resourceMap.getString("friends.TabConstraints.tabToolTip"),0); // NOI18N
+		//Add the tweets list to the view
+		statusScrollPane.setViewportView(friendsTweets);
+
 		//Make these tabs render with a close button
 		searchPanel.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
 		followersPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
 		followingPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
 		blockedPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
-		friendsPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
+		friendsPanel.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
 		
 		TabCloseCallback closeCallback = new TabCloseCallback() {
 			public TabCloseKind onAreaClick(JTabbedPane tabbedPane, int tabIndex, MouseEvent mouseEvent) 
@@ -1071,7 +1179,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 					config.setProperty("tab.blocked", false + "");
 					menuItemBlocked.setSelected(false);
 				}
-				else if(value.equals("friendsPane")) {
+				else if(value.equals("friendsPanel")) {
 					config.setProperty("tab.friends", false + "");
 					menuItemFriends.setSelected(false);
 				}
@@ -1115,8 +1223,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				else if(value.equals("blockedPane")) {
 					rv = getResourceMap().getString("blockedPane.TabConstraints.tabToolTip");
 				}
-				else if(value.equals("friendsPane")) {
-					rv = getResourceMap().getString("friendsPane.TabConstraints.tabToolTip");
+				else if(value.equals("friendsPanel")) {
+					rv = getResourceMap().getString("friendsPanel.TabConstraints.tabToolTip");
 				}
 				else if(value.equals("followingPane")) {
 					rv = getResourceMap().getString("followingPane.TabConstraints.tabToolTip");
@@ -1222,8 +1330,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 					else
 						c.setEnabled(true);
 				}
-				else if(o.getName().equals("friendsPane")) {
-					if(friendsList.getSelectedIndex() == -1)
+				else if(o.getName().equals("friendsPanel")) {
+					if(friends.getSelectedIndex() == -1)
 						c.setEnabled(false);
 					else
 						c.setEnabled(true);
@@ -1449,40 +1557,6 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		return this.menuBar;
 	}
 
-//	private void setTabComponent() {//{{{
-//		for(int i=1; i < tabPane.getTabCount(); i++) {
-//			TwitzTabButton tb = new TwitzTabButton(tabPane, i);
-//			PropertyChangeListener pcl = new PropertyChangeListener() {
-//				public void propertyChange(PropertyChangeEvent evt) {
-//					String value = (String)evt.getNewValue();
-//					System.out.println(value);
-//
-//					if(value.equals("searchPanel")) {
-//						config.setProperty("tab.search", false + "");
-//						menuItemSearch.setSelected(false);
-//					}
-//					else if(value.equals("blockedPane")) {
-//						config.setProperty("tab.blocked", false + "");
-//						menuItemBlocked.setSelected(false);
-//					}
-//					else if(value.equals("friendsPane")) {
-//						config.setProperty("tab.friends", false + "");
-//						menuItemFriends.setSelected(false);
-//					}
-//					else if(value.equals("followingPane")) {
-//						config.setProperty("tab.following", false + "");
-//						menuItemFollowing.setSelected(false);
-//					}
-//					else if(value.equals("followersPane")) {
-//						config.setProperty("tab.followers", false + "");
-//						menuItemFollowers.setSelected(false);
-//					}
-//				}
-//			};
-//			tb.addPropertyChangeListener("Tab_Closed", pcl);
-//			tabPane.setTabComponentAt(i, tb);
-//		}
-//	}//}}}
 
 	public void toggleTabs(java.awt.event.ActionEvent evt) {//{{{
 		if (evt.getSource() instanceof javax.swing.JCheckBoxMenuItem)
@@ -1494,13 +1568,13 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				config.setProperty("tab.friends", item.isSelected() + "");
 				if (item.isSelected())
 				{
-					tabPane.insertTab(getResourceMap().getString("friendsPane.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPane.TabConstraints.tabIcon"), friendsPane, getResourceMap().getString("friendsPane.TabConstraints.tabTooltip"), 1);
-					tabPane.setSelectedComponent(friendsPane);
+					tabPane.insertTab(getResourceMap().getString("friendsPanel.TabConstraints.tabTitle"), getResourceMap().getIcon("friendsPanel.TabConstraints.tabIcon"), friendsPanel, getResourceMap().getString("friendsPanel.TabConstraints.tabTooltip"), 1);
+					tabPane.setSelectedComponent(friendsPanel);
 					//setTabComponent();
 				}
 				else
 				{
-					tabPane.remove(friendsPane);
+					tabPane.remove(friendsPanel);
 				}
 			}
 			else if (evt.getActionCommand().equals("Blocked"))
@@ -1562,11 +1636,6 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		}
 	}//}}}
 
-//	@Action public void sendAsyncTweet() {
-//		//aTwitter.updateStatus(txtTweet.getText());
-//		sendTweetClicked().execute();
-//	}
-
 	private void setTabPlacement() {//{{{
 		//JTabbedPane.TOP JTabbedPane.BOTTOM JTabbedPane.LEFT JTabbedPane.RIGHT
 		if(config.getString("tab.position").equals("north")) {
@@ -1583,7 +1652,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		}
 	}//}}}
 
-	private ResourceMap getResourceMap() {
+	public static ResourceMap getResourceMap() {
 		return TwitzApp.getContext().getResourceMap(TwitzMainView.class);
 	}
 
@@ -1637,6 +1706,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	 * Display only a miniature version of Twitz
 	 */
 	public void miniTwitz() {//{{{
+		oldHeight = getMainFrame().getHeight();
 		tabPane.setVisible(false);
 		//getMainFrame().getStatusBar().setVisible(false);
 		menuBar.setVisible(false);
@@ -1654,7 +1724,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		tabPane.setVisible(true);
 		//getMainFrame().getStatusBar().setVisible(true);
 		menuBar.setVisible(true);
-		getMainFrame().setSize(getMainFrame().getWidth(), 400);
+		getMainFrame().setSize(getMainFrame().getWidth(), oldHeight);
 		fixLocation();
 		btnMini.setIcon(getResourceMap().getIcon("btnMini.icon"));
 		minimode = false;
@@ -1731,16 +1801,32 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				rv = stat.getUser().getScreenName();
 			}
 		}
-		else if(tabPane.getSelectedComponent().equals(friendsPane)) {
-			if(friendsNameList.getSelectedIndex() != -1)
-			{
-				User u = (User)friendsNameList.getSelectedValue();
-				rv = u.getScreenName();
+		else if(tabPane.getSelectedComponent().equals(friendsPanel)) {
+			if(friendsPane.getSelectedComponent().equals(friends)){
+				User u = friends.getSelectedValue();
+				return u.getScreenName();
+			}
+			else {
+				int comps = userListMainPanel1.getComponentCount();
+				for(int i=0; i < comps; i++) {
+					Component c = userListMainPanel1.getComponent(i);
+					if(userListMainPanel1.getComponent(i) instanceof UserListPanel) {
+						UserListPanel ulp = (UserListPanel)userListMainPanel1.getComponent(i);
+						if(ulp.isFocusOwner()) {
+							if(ulp.getContactsList().getSelectedIndex() != -1) {
+								User u = ulp.getContactsList().getSelectedValue();
+								return u.getScreenName();
+							}
+						}
+					}
+				}
 			}
 		}
 		else if(tabPane.getSelectedComponent().equals(blockedPane)) {
-			if(blockedList.getSelectedIndex() != -1)
-				rv = (String)blockedList.getSelectedValue();
+			if(blockedList.getSelectedIndex() != -1) {
+				User u = (User)blockedList.getSelectedValue();
+				rv = u.getScreenName();
+			}
 		}
 		else if(tabPane.getSelectedComponent().equals(followingPane)) {
 			if(followingList.getSelectedIndex() != -1)
@@ -1772,24 +1858,25 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				return rv;
 			}
 		}
-		else if(tabPane.getSelectedComponent().equals(friendsPane)) {
-			int[] indices = friendsNameList.getSelectedIndices();
-			if(indices.length >= 2) {
-				ContactsListModel clm = (ContactsListModel)friendsNameList.getModel();
-				User row = clm.getElementAt(indices[0]);
-				rv.add(row.getScreenName());
-				row = clm.getElementAt(indices[1]);
-				rv.add(row.getScreenName());
-				return rv;
+		else if(tabPane.getSelectedComponent().equals(friendsPanel)) {
+			//return this.getSelectedUserNames(friendsList);
+			if(friendsPane.getSelectedComponent().equals(friends)){
+				return this.getSelectedUserNames(friends);
+			}
+			else {
+				int comps = userListMainPanel1.getComponentCount();
+				for(int i=0; i < comps; i++) {
+					Component c = userListMainPanel1.getComponent(i);
+					if(userListMainPanel1.getComponent(i) instanceof UserListPanel) {
+						UserListPanel ulp = (UserListPanel)userListMainPanel1.getComponent(i);
+						if(ulp.isFocusOwner())
+							return this.getSelectedUserNames(ulp.getContactsList());
+					}
+				}
 			}
 		}
 		else if(tabPane.getSelectedComponent().equals(blockedPane)) {
-			Object row[] = blockedList.getSelectedValues();
-			if(row.length >= 2) {
-				rv.add((String)row[0]);
-				rv.add((String)row[1]);
-				return rv;
-			}
+			return this.getSelectedUserNames(blockedList);
 		}
 		else if(tabPane.getSelectedComponent().equals(followingPane)) {
 			Object row[] = followingList.getSelectedValues();
@@ -1818,6 +1905,30 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		return rv;
 	}//}}}
 
+	private Vector<String> getSelectedUserNames(ContactsList list) {
+		Vector<String> rv = new Vector<String>();
+		int[] indices = list.getSelectedIndices();
+		if (indices.length >= 2)
+		{
+			ContactsListModel clm = (ContactsListModel) list.getModel();
+			User row = clm.getElementAt(indices[0]);
+			rv.add(row.getScreenName());
+			row = clm.getElementAt(indices[1]);
+			rv.add(row.getScreenName());
+		}
+		return rv;
+	}
+
+	//Updates the contact list in a background thread
+	public void updateContactList() {
+		aTwitter.getFriendsStatuses();
+	}
+//
+//	class UpdateContactListTask extends Task {
+//		public UpdateContactList(SingleFrameApplication app) {
+//			//EDT
+//		}
+//	}
 	//TwitterListener abstract methods
 	// <editor-fold defaultstate="collapsed" desc="Abstract Methods">
 
@@ -2318,6 +2429,19 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotFriendsStatuses(PagableResponseList<User> users)
 	{
+		//Now we update the friendsNameList
+		ContactsListModel clm = friendsNameList.getModel();
+		//Clear the contact list here as only one page at a time should show
+		clm.clear();
+		for(User user : users) {
+			clm.addElement(user);
+		}
+		if(users.hasNext()) {
+			//update the next button
+		}
+		if(users.hasPrevious()) {
+			//update any buttons and such
+		}
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
@@ -2663,7 +2787,6 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JPanel actionPanel;
     private javax.swing.JMenu actionsMenu;
     private javax.swing.JToolBar advSearchBar;
-    private javax.swing.JList blockedList;
     private javax.swing.JScrollPane blockedPane;
     private javax.swing.JButton btnExitSearch;
     private javax.swing.JButton btnMini;
@@ -2673,6 +2796,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JButton btnTweet;
     private javax.swing.JCheckBox chkCOT;
     private javax.swing.JComboBox cmbRpp;
+    private javax.swing.JPanel contactsPanel;
+    private javax.swing.JToolBar contactsToolbar;
     private javax.swing.JPopupMenu contextMenu;
     private javax.swing.JMenu editMenu;
     private javax.swing.JMenuItem exitItem;
@@ -2682,7 +2807,9 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JScrollPane followingPane;
     private javax.swing.JList friendsList;
     private twitz.ui.ContactsList friendsNameList;
-    private javax.swing.JSplitPane friendsPane;
+    private javax.swing.JTabbedPane friendsPane;
+    private javax.swing.JSplitPane friendsPanel;
+    private javax.swing.JPanel friendsStatusPanel;
     private javax.swing.JMenuItem helpItem;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -2712,6 +2839,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JLabel statusAnimationLabel;
     private javax.swing.JLabel statusMessageLabel;
     private javax.swing.JPanel statusPanel;
+    private javax.swing.JScrollPane statusScrollPane;
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JTable tblSearch;
     private javax.swing.JScrollPane tweetsPane;
@@ -2719,11 +2847,16 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private org.jdesktop.swingx.JXDatePicker txtSinceDate;
     private javax.swing.JTextField txtTweet;
     private org.jdesktop.swingx.JXDatePicker txtUntilDate;
+    private twitz.ui.UserListMainPanel userListMainPanel1;
     // End of variables declaration//GEN-END:variables
 
-	private SettingsManager config = SettingsManager.getInstance();
+	private static SettingsManager config = SettingsManager.getInstance();
 	private boolean startMode = config.getBoolean("minimode");
 	int busyIconIndex = 0;
+	private int oldHeight = 400;
+	private ContactsList blockedList = new ContactsList();
+	private ContactsList friends = new ContactsList();
+	private TweetsList friendsTweets = new TweetsList();
 
     private JDialog aboutBox;
 	private PreferencesDialog prefs;
@@ -2732,6 +2865,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	private TwitzApp mainApp;
 	private twitter4j.AsyncTwitter aTwitter;
 	private ResourceMap resource;// = org.jdesktop.application.Application.getInstance(twitz.TwitzApp.class).getContext().getResourceMap(twitz.twitter.TwitterManager.class);
+    private org.jdesktop.application.ResourceMap resourceMap;
+    private javax.swing.ActionMap actionMap;
 
 	private Logger logger = Logger.getLogger(TwitzMainView.class.getName());
 

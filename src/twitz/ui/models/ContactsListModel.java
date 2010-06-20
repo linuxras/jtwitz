@@ -149,7 +149,7 @@ public class ContactsListModel extends DefaultListModel {
      * {@inheritDoc}
      */
 	@Override
-    public Object elementAt(int index) {
+    public User elementAt(int index) {
 		return users.elementAt(index);
     }
 
@@ -165,7 +165,7 @@ public class ContactsListModel extends DefaultListModel {
      * {@inheritDoc}
      */
 	@Override
-    public Object lastElement() {
+    public User lastElement() {
 		return users.lastElement();
     }
 

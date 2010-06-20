@@ -5,10 +5,12 @@
 
 package twitz.ui;
 
+import java.util.Vector;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import twitter4j.User;
 import twitz.ui.models.ContactsListModel;
+import twitz.ui.renderers.ContactsRenderer;
 
 /**
  *
@@ -16,14 +18,56 @@ import twitz.ui.models.ContactsListModel;
  */
 public class ContactsList extends JList{
 
-	private ContactsListModel model;
+	private final ContactsListModel model = new ContactsListModel();
 
 	public ContactsList() {
-		super(new ContactsListModel());
+		this(new ContactsListModel());
 	}
-
 	public ContactsList(ContactsListModel model) {
 		super(model);
+		this.setCellRenderer(new ContactsRenderer());
+	}
+
+	public User addUser(User u) {
+		ContactsListModel dm = (ContactsListModel)getModel();
+		dm.addElement(u);
+		return u;
+	}
+
+	public User[] addUser(User[] u) {
+		ContactsListModel dm = (ContactsListModel)getModel();
+		for(User usr : u) {
+			dm.addElement(usr);
+		}
+		return u;
+	}
+
+	public Vector<User> addUser(Vector<User> u) {
+		ContactsListModel dm = (ContactsListModel)getModel();
+		for(User usr : u) {
+			dm.addElement(u);
+		}
+		return u;
+	}
+
+	public User removeUser(User u) {
+		ContactsListModel dm = (ContactsListModel)getModel();
+		if(dm.contains(u)) {
+			dm.removeElement(u);
+			return u;
+		}
+		else
+			return null;
+	}
+
+	public User removeUser(int u) {
+		ContactsListModel dm = (ContactsListModel)getModel();
+		if(u < dm.getSize()) {
+			User usr = dm.elementAt(u);
+			return usr;
+		}
+		else
+			return null;
 	}
 
 	public void setSelectedValue(User aUser, boolean scrollToUser) {
@@ -82,5 +126,12 @@ public class ContactsList extends JList{
         return rv;
     }
 
+	@Override
+	public ContactsListModel getModel() {
+		if(super.getModel() instanceof ContactsListModel) {
+			return (ContactsListModel)super.getModel();
+		}
+		return new ContactsListModel();
+	}
 
 }
