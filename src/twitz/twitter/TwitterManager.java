@@ -19,6 +19,7 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
+import twitz.events.TwitzEventType;
 import twitz.util.SettingsManager;
 
 /**
@@ -29,12 +30,13 @@ public class TwitterManager extends DefaultTwitzEventModel/*implements TwitterLi
 
 	SettingsManager config = SettingsManager.getInstance();
 	private Twitter twitter = new TwitterFactory().getInstance();
-	private twitz.TwitzMainView view;
+	private static twitz.TwitzMainView view;
 	private AsyncTwitter atwitter;
 	private Logger logger = Logger.getLogger(TwitterManager.class.getName());
 	private static TwitterManager instance;
 	private ResourceMap resource;
 
+	@SuppressWarnings("static-access")
 	private TwitterManager(twitz.TwitzMainView v) {
 		this.view = v;
 		this.atwitter = new AsyncTwitterFactory(view).getInstance(config.getString("twitter.id"),config.getString("twitter.password"));
@@ -49,6 +51,17 @@ public class TwitterManager extends DefaultTwitzEventModel/*implements TwitterLi
 	public synchronized static TwitterManager getInstance(twitz.TwitzMainView v) {
 		if(instance == null)
 			instance = new TwitterManager(v);
+		return instance;
+	}
+
+	/**
+	 * This is a convenience method. You must NOT call this before the application has be
+	 * fully initialized
+	 * @return A TwitterManager singleton
+	 */
+	public synchronized static TwitterManager getInstance() {
+		if(instance == null || view == null)
+			throw new IllegalStateException("Application has not been properly initialized");
 		return instance;
 	}
 
@@ -99,7 +112,7 @@ public class TwitterManager extends DefaultTwitzEventModel/*implements TwitterLi
 //		}
 		if(stat != null) {
 			//TODO Update pertinent list with this new data. I would like to fire an event here
-			this.fireTwitzEvent(new TwitzEvent(stat, twitter, TwitzEvent.UPDATE, new java.util.Date().getTime()));
+			this.fireTwitzEvent(new TwitzEvent(stat, TwitzEventType.UPDATE_STATUS, new java.util.Date().getTime()));
 		}
 	}
 

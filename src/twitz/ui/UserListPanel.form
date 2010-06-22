@@ -94,6 +94,39 @@
             <Property name="name" type="java.lang.String" value="listName" noResource="true"/>
           </Properties>
         </Component>
+        <Component class="javax.swing.JToolBar$Separator" name="jSeparator2">
+          <Properties>
+            <Property name="name" type="java.lang.String" value="jSeparator2" noResource="true"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="btnUserAdd">
+          <Properties>
+            <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
+              <action class="twitz.ui.UserListPanel" id="addListUser" methodName="addListUser"/>
+            </Property>
+            <Property name="icon" type="javax.swing.Icon" resourceKey="btnUserAdd.icon"/>
+            <Property name="text" type="java.lang.String" resourceKey="btnUserAdd.text"/>
+            <Property name="toolTipText" type="java.lang.String" resourceKey="btnUserAdd.toolTipText"/>
+            <Property name="focusable" type="boolean" value="false"/>
+            <Property name="horizontalTextPosition" type="int" value="4"/>
+            <Property name="iconTextGap" type="int" value="0"/>
+            <Property name="name" type="java.lang.String" value="btnUserAdd" noResource="true"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="btnUserDelete">
+          <Properties>
+            <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
+              <action class="twitz.ui.UserListPanel" id="deleteListUser" methodName="deleteListUser"/>
+            </Property>
+            <Property name="icon" type="javax.swing.Icon" resourceKey="btnUserDelete.icon"/>
+            <Property name="toolTipText" type="java.lang.String" resourceKey="btnUserDelete.toolTipText"/>
+            <Property name="focusable" type="boolean" value="false"/>
+            <Property name="hideActionText" type="boolean" value="true"/>
+            <Property name="horizontalTextPosition" type="int" value="4"/>
+            <Property name="iconTextGap" type="int" value="0"/>
+            <Property name="name" type="java.lang.String" value="btnUserDelete" noResource="true"/>
+          </Properties>
+        </Component>
       </SubComponents>
     </Container>
   </SubComponents>

@@ -54,11 +54,11 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	public static final String TWEET_MINI = "TweetMini";
 
 	private java.awt.Window window = null;
-	private static SettingsManager config = SettingsManager.getInstance();
+	private static SettingsManager config;// = SettingsManager.getInstance();
 	Logger logger = Logger.getLogger(TwitzApp.class.getName());
 	TwitzTrayIcon tray = null;
 	private static TwitzMainView view;
-	private boolean hidden = config.getBoolean("minimize.startup");
+	private boolean hidden;// = config.getBoolean("minimize.startup");
 	private ResourceMap resources = null;
 	//Image splash = getIcon("resources/splash.png");
 	//JFrame splashFrame = new JFrame();
@@ -132,7 +132,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
     @Override
 	protected  Component createMainComponent() {//{{{
-		view = new TwitzMainView(this);
+		view = TwitzMainView.getInstance(this);
 		try
 		{
 			tray = new TwitzTrayIcon(this, view);
@@ -185,6 +185,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		} else {
 			System.out.println("Splash is null");
 		}
+		config = SettingsManager.getInstance();
+		hidden = config.getBoolean("minimize.startup");
 		themer.addPropertyChangeListener(this);
 		setLAFFromSettings(false, true);
 		System.out.println("Leaving initialize...");
@@ -323,7 +325,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		view.fixTables();
 	}
 	
-	public void propertyChange(PropertyChangeEvent e) {
+	public void propertyChange(PropertyChangeEvent e) {//{{{
 		if(e.getPropertyName().equals("lookAndFeelChange")) {
 			setLAFFromSettings(true, true);
 		}
@@ -332,7 +334,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				fixTables(); //update the view so all the tables have correct sizing
 		}
 		logger.log(Level.INFO, "PropertyChangeEvent recieved: "+e.getPropertyName());
-	}
+	}//}}}
 
 	public void actionPerformed(ActionEvent e) {//{{{
 		String cmd = e.getActionCommand();

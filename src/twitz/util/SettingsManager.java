@@ -10,11 +10,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.String;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jdesktop.application.ResourceMap;
+import twitz.TwitzApp;
 
 /**
  *
@@ -22,11 +25,22 @@ import java.util.logging.Logger;
  */
 public class SettingsManager extends Properties{
 
-	String configFile = System.getenv("HOME")+"/.twitz/user_prefs.ini";
+	//this needs to be moved to where it can be checked for SecurityException
+	//String configFile = System.getProperty("user.home")+"/.Twitz/user_prefs.ini";
+	String configFile = "user_prefs.ini";
+	File config;
 	Logger logger = Logger.getLogger(SettingsManager.class.getName());
 	private static SettingsManager instance;
 
+	public enum OS {
+		WINDOWS,
+		OSX,
+		UNIX
+	};
+
 	private SettingsManager() {
+		File f = getConfigDirectory();
+		config = new File(f, configFile);
 		if(!loadSettings())
 		{
 			setDefaults();
@@ -40,6 +54,7 @@ public class SettingsManager extends Properties{
 	 */
 	public SettingsManager(String cfg) {
 		this.configFile = cfg;
+		config = new File(configFile);
 		loadSettings();
 	}
 
@@ -69,7 +84,7 @@ public class SettingsManager extends Properties{
 		setProperty("twitz.undecorated", "false");
 		setProperty("twitz.undecorated.cfgdesc", "Start Undecorated");
 		setProperty("twitz.undecorated.cfgtype", "Boolean");
-		setProperty("twitz.skin", "Twilight");
+		setProperty("twitz.skin", "MistAqua");
 		setProperty("twitz.skin.cfgdesc", "Twitz Theme");
 		setProperty("twitz.skin.cfgtype", "Theme");
 		//This is a null entry AKA an internally managed property
@@ -105,7 +120,7 @@ public class SettingsManager extends Properties{
 	private boolean loadSettings() {
 		try
 		{
-			loadFromXML(new FileInputStream(configFile));
+			loadFromXML(new FileInputStream(config));
 		}
 		catch (IOException ex)
 		{
@@ -115,38 +130,40 @@ public class SettingsManager extends Properties{
 		return true;
 	}
 
-	private void saveSettings() {
+	private boolean saveSettings() {
+		boolean rv = true;
 		try
 		{
-			storeToXML(new FileOutputStream(configFile), "DO NOT EDIT MANUALLY");
+			storeToXML(new FileOutputStream(config), "DO NOT EDIT MANUALLY");
 		}
 		catch (FileNotFoundException ex)
 		{
 			//Logger.getLogger(JAlarmView.class.getName()).log(Level.SEVERE, null, ex);
-			if(createSettingsFile(configFile))
+			rv = false;
+			if(createSettingsFile())
 				saveSettings();
 		}
 		catch (IOException ex)
 		{
+			rv = false;
 			logger.log(Level.SEVERE, ex.getMessage());
 		}
+		return rv;
 	}
 
 	private void checkDirs() {
-		File f = new File(configFile);
-		String d = f.getParent();
-		f = new File(d);
+		String d = config.getParent();
+		File f = new File(d);
 		if(!f.exists())
-			f.mkdir();
+			f.mkdirs();
 	}
 
-	private boolean createSettingsFile(String file) {
+	private boolean createSettingsFile() {
 		checkDirs();
 		boolean rc = false;
 		try
 		{
-			File settingsFile = new File(file);
-			rc = settingsFile.createNewFile();
+			rc = config.createNewFile();
 		}
 		catch(IOException e)
 		{
@@ -154,6 +171,102 @@ public class SettingsManager extends Properties{
 			rc = false;
 		}
 		return rc;
+	}
+
+	/**
+	 * This method uses privilaged  access to calculate the current operating system
+	 * @return An Enum representing the OS
+	 */
+	private OS getOS() {
+		PrivilegedAction<String> doOSLookup = new PrivilegedAction<String>() {
+			public String run() {
+				return System.getProperty("user.home");
+			}
+		};
+
+		//I'n a linux guy i'll default to UNIX
+		OS rv = OS.UNIX;
+		//Do the lookup
+		String os = AccessController.doPrivileged(doOSLookup);
+        if (os != null) {
+            if (os.toLowerCase().startsWith("mac os x")) {
+                rv = OS.OSX;
+            } else if (os.contains("Windows")) {
+                rv = OS.WINDOWS;
+            }
+        }
+		return rv;
+	}
+
+	/**
+	 * This method is borrowed from org.jdesktop.application.LocalStorage
+	 * @return
+	 */
+	private File getConfigDirectory() {
+		ResourceMap resource = TwitzApp.getContext().getResourceMap();
+		String appId = resource.getString("Application.id");
+		String vendorId = resource.getString("Application.venderId");
+		if(appId == null) {
+			appId = TwitzApp.getContext().getApplicationClass().getSimpleName();
+		}
+		if (vendorId == null)
+		{
+			vendorId = "UnknownApplicationVendor";
+		}
+
+		File directory = null;
+		String userHome = null;
+		try
+		{
+			userHome = System.getProperty("user.home");
+		}
+		catch (SecurityException ignore)
+		{
+		}
+		if (userHome != null)
+		{
+			OS osId = getOS();
+			if (osId == OS.WINDOWS)
+			{
+				File appDataDir = null;
+				try
+				{
+					String appDataEV = System.getenv("APPDATA");
+					if ((appDataEV != null) && (appDataEV.length() > 0))
+					{
+						appDataDir = new File(appDataEV);
+					}
+				}
+				catch (SecurityException ignore)
+				{
+				}
+				if ((appDataDir != null) && appDataDir.isDirectory())
+				{
+					// ${APPDATA}\{vendorId}\${applicationId}
+					String path = vendorId + "\\" + appId + "\\";
+					directory = new File(appDataDir, path);
+				}
+				else
+				{
+					// ${userHome}\Application Data\${vendorId}\${applicationId}
+					String path = "Application Data\\" + vendorId + "\\" + appId + "\\";
+					directory = new File(userHome, path);
+				}
+			}
+			else if (osId == OS.OSX)
+			{
+				// ${userHome}/Library/Application Support/${applicationId}
+				String path = "Library/Application Support/" + appId + "/";
+				directory = new File(userHome, path);
+			}
+			else
+			{
+				// ${userHome}/.${applicationId}/
+				String path = "." + appId + "/";
+				directory = new File(userHome, path);
+			}
+		}
+		return directory;
 	}
 
 	public Enumeration<Object> getKeys() {

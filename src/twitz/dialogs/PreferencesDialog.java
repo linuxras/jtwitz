@@ -12,7 +12,6 @@
 package twitz.dialogs;
 
 import java.awt.event.WindowAdapter;
-import twitz.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.ArrayList;
@@ -28,6 +27,8 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import org.jdesktop.application.Action;
+import twitz.*;
+import twitz.twitter.TwitterManager;
 import twitz.util.SettingsManager;
 
 /**
@@ -168,24 +169,6 @@ public class PreferencesDialog extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-    * @param args the command line arguments
-    */
-//    public static void main(String args[]) {
-//        java.awt.EventQueue.invokeLater(new Runnable() {
-//            public void run() {
-//                PreferencesDialog dialog = new PreferencesDialog(new javax.swing.JFrame(), true);
-//                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-//					@Override
-//                    public void windowClosing(java.awt.event.WindowEvent e) {
-//                        System.exit(0);
-//                    }
-//                });
-//                dialog.setVisible(true);
-//            }
-//        });
-//    }
-
 	private TableRowSorter getTableRowSorter(DefaultTableModel model) {
 		model.addTableModelListener(new TableModelListener() {
 
@@ -269,6 +252,18 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				if(!value.equals(config.getString(key))) {
 					updateSkin = true;
 					oldSkin = config.getString(key);
+				}
+			}
+			if(key.equals("twitter.id") || key.equals("twitter.password")) {
+				if(!value.equals(config.getString(key))) {
+					//Tell TwitterManager to update itself.
+					try
+					{
+						TwitterManager tm = TwitterManager.getInstance();
+						tm.login();
+						//Any calls made to TwitterManager after this will be using the new login info.
+					}
+					catch(Exception ignore) {}
 				}
 			}
 		}

@@ -5,15 +5,18 @@
 
 package twitz.events;
 
+import java.util.Map;
+
 /**
  *
  * @author mistik1
  */
 public class TwitzEvent extends java.util.EventObject{
 
-	private twitter4j.Twitter stat = null;
 	private long timestamp = -1;
 	private int type = -1;
+	private TwitzEventType etype;
+	private Map storage;
 
 	//Constants to define change type
 	public static final int LOGIN = 1;
@@ -25,6 +28,20 @@ public class TwitzEvent extends java.util.EventObject{
 	public static final int ADD_BLOCK = 7;
 	public static final int REMOVE_BLOCK = 8;
 	public static final int REPORT_SPAM = 9;
+	public static final int UPDATE_FRIENDS_TWEETS_LIST = 10;
+
+	public static enum EventType {
+		LOGIN,
+		UPDATE,
+		ADD_FRIEND,
+		MSG_SENT,
+		MSG_RECIEVED,
+		DELETE_FRIEND,
+		ADD_BLOCK,
+		REMOVE_BLOCK,
+		REPORT_SPAM,
+		UPDATE_FRIENDS_TWEETS_LIST
+	};
 	//public static final int
 	//public static enum TYPES{LOGIN, UPDATE, ADD_FRIEND, MSG_SENT, MSG_RECIEVED};
 
@@ -32,37 +49,37 @@ public class TwitzEvent extends java.util.EventObject{
 	 * TwitzEvent object all twitter related events in the Twitz Application should fire one of these
 	 * @param source - The object that caused this event.
 	 * @param t - The twitter4j.Twitter instance used when even was generated.
-	 * @param e - Event Type #see Constants for support types .
+	 * @param e - Event Type .
 	 * @param ts - Timestamp of the moment this event occurred.
+	 * @param orders A Map or array of Maps containing caller information and other info of what to do.
 	 */
-	public TwitzEvent(Object source, twitter4j.Twitter t, int e, long ts) {
+	public TwitzEvent(Object source, TwitzEventType e, long ts, Map... orders) {
 		super(source);
-		this.stat = t;
-		this.type = e;
+		this.etype = e;
 		this.timestamp = ts;
+		if(orders.length > 0)
+			this.storage = orders[1];
 	}
 
 	/**
-	 * Returns the twitter4j.Twitter object
-	 * @return
-	 */
-	public twitter4j.Twitter getTwiter() {
-		return this.stat;
-	}
-
-	/**
-	 * Returns the timestamp of the event
-	 * @return
+	 *
+	 * @return the timestamp of the event
 	 */
 	public long getTimeStamp() {
 		return this.timestamp;
 	}
 
 	/**
-	 * Returns the event type.
-	 * @return
+	 * @return the event type Enum.
 	 */
-	public int getEventType() {
-		return this.type;
+	public TwitzEventType getEventType() {
+		return this.etype;
+	}
+
+	/**
+	 * @return the event Map or null if none was given by the event creator.
+	 */
+	public Map getEventMap() {
+		return storage;
 	}
 }
