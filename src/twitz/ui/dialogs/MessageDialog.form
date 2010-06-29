@@ -69,7 +69,7 @@
     <Component class="javax.swing.JButton" name="btnClose">
       <Properties>
         <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
-          <action class="twitz.dialogs.MessageDialog" id="closeDialog" methodName="closeDialog"/>
+          <action class="twitz.ui.dialogs.MessageDialog" id="closeDialog" methodName="closeDialog"/>
         </Property>
         <Property name="icon" type="javax.swing.Icon" resourceKey="btnClose.icon"/>
         <Property name="text" type="java.lang.String" resourceKey="btnClose.text"/>

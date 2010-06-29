@@ -7,9 +7,11 @@
 <!-- the Compile on Save feature is turned off for the project. -->
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
-<project name="Twitz" default="default" basedir=".">
+<project name="Twitz" default="default" xmlns:j2seproject1="http://www.netbeans.org/ns/j2se-project/1" xmlns:j2seproject3="http://www.netbeans.org/ns/j2se-project/3" xmlns:jaxrpc="http://www.netbeans.org/ns/j2se-project/jax-rpc" basedir=".">
+
     <description>Builds, tests, and runs the project Twitz.</description>
     <import file="nbproject/build-impl.xml"/>
+	<property file="build.properties"/>
     <!--
 
     There exist several targets which are by default empty and which can be 
@@ -71,4 +73,41 @@
     nbproject/build-impl.xml file. 
 
     -->
+	<target depends="init,deps-jar,-pre-pre-compile,-pre-compile,-compile-depend" if="have.sources" name="-do-compile">
+        <j2seproject3:javac/>
+        <copy todir="${build.classes.dir}">
+			<!--
+				Add the filter.includes to the excludes list
+				so we dont have to process them twice
+			-->
+            <fileset dir="${src.dir}" excludes="${build.classes.excludes},${excludes}, ${filter.includes}" includes="${includes}"/>
+		</copy>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="${build.classes.excludes},${excludes},${image.excludes}" includes="${filter.includes}"/>
+				<filterchain>
+			        <replacetokens>
+					     <token key="LOGLEVEL" value="${loglevel}"/>
+					     <token key="LOG.APPENDERS" value="${log.appenders}"/>
+					     <token key="VERSION" value="${version}"/>
+					     <token key="CODENAME" value="${codename}"/>
+					     <token key="HOMEPAGE" value="${homepage}"/>
+					</replacetokens>
+				</filterchain>
+        </copy>
+    </target>
+
+	<!--
+	<target name="-post-compile">
+		 <copy todir="${build.classes.dir}" overwrite="${overwrite}">
+            <fileset dir="${src.dir}" includes="log4j.properties"/>
+		       <filterchain>
+			        <replacetokens>
+					     <token key="LOGLEVEL" value="${loglevel}"/>
+					     <token key="LOG.APPENDERS" value="${log.appenders}"/>
+					     <token key="version" value="${version}"/>
+					</replacetokens>
+			   </filterchain>
+          </copy>
+    </target>
+	-->
 </project>

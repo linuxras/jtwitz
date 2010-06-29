@@ -9,9 +9,11 @@
  * Created on Jun 2, 2010, 12:34:18 AM
  */
 
-package twitz.dialogs;
+package twitz.ui.dialogs;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.net.URL;
 import javax.swing.Icon;
 import org.jdesktop.application.Action;
 
@@ -45,12 +47,10 @@ public class MessageDialog extends javax.swing.JDialog {
         imageLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-		org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(MessageDialog.class);
         setTitle(resourceMap.getString("Form.title")); // NOI18N
         setMinimumSize(new java.awt.Dimension(520, 314));
         setName("Form"); // NOI18N
 
-        javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(MessageDialog.class, this);
         btnClose.setAction(actionMap.get("closeDialog")); // NOI18N
         btnClose.setIcon(resourceMap.getIcon("btnClose.icon")); // NOI18N
         btnClose.setText(resourceMap.getString("btnClose.text")); // NOI18N
@@ -130,6 +130,10 @@ public class MessageDialog extends javax.swing.JDialog {
 		messagePane.setText(msg);
 	}
 
+	public void setMessage(URL msg) throws IOException {
+		messagePane.setPage(msg);
+	}
+
 	public String getMessage() {
 		return messagePane.getText();
 	}
@@ -160,5 +164,7 @@ public class MessageDialog extends javax.swing.JDialog {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JEditorPane messagePane;
     // End of variables declaration//GEN-END:variables
+    org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(MessageDialog.class);
+    javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(MessageDialog.class, this);
 
 }

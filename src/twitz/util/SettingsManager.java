@@ -32,55 +32,77 @@ public class SettingsManager extends Properties{
 	Logger logger = Logger.getLogger(SettingsManager.class.getName());
 	private static SettingsManager instance;
 
-	public enum OS {
+	public static enum OS {
 		WINDOWS,
 		OSX,
 		UNIX
 	};
 
-	private SettingsManager() {
+	private SettingsManager() {//{{{
 		File f = getConfigDirectory();
 		config = new File(f, configFile);
 		if(!loadSettings())
 		{
 			setDefaults();
 		}
-	}
+	}//}}}
 
 	/**
 	 * Use this Constructor to build a general use SettingsManager that can be used to
 	 * manage any java .properties file
 	 * @param cfg - config file to manage
 	 */
-	public SettingsManager(String cfg) {
+	public SettingsManager(String cfg) {//{{{
 		this.configFile = cfg;
 		config = new File(configFile);
 		loadSettings();
-	}
+	}//}}}
 
 	/**
 	 * Default way to get a SettingsManager instance
 	 * @return SettingsManager singleton
 	 */
-	public static synchronized SettingsManager getInstance() {
+	public static synchronized SettingsManager getInstance() {//{{{
 		if(instance == null)
 			instance = new SettingsManager();
 		return instance;
-	}
+	}//}}}
 
-	private void setDefaults() {
+	private void setDefaults() {//{{{
 		setProperty("twitter.id", "changeme");
 		setProperty("twitter.id.cfgdesc", "Twitter ID");
 		setProperty("twitter.id.cfgtype", "String");
 		setProperty("twitter.password", "changeme");
 		setProperty("twitter.password.cfgdesc", "Twitter Password");
 		setProperty("twitter.password.cfgtype", "Password");
-		setProperty("minimize.startup", "false");
-		setProperty("minimize.startup.cfgdesc", "Minimize on Startup");
-		setProperty("minimize.startup.cfgtype", "Boolean");
 		setProperty("twitter.picture", "");
 		setProperty("twitter.picture.cfgdesc", "Twitter Profile Image");
 		setProperty("twitter.picture.cfgtype", "File");
+		//Proxy settings
+		setProperty("twitter.use_proxy", "false");
+		setProperty("twitter.use_proxy.cfgdesc", "Twitter Proxy?");
+		setProperty("twitter.use_proxy.cfgtype", "Boolean");
+		//Port (Must have a value if use_proxy is enalbed)
+		setProperty("twitter.proxy_port", "");
+		setProperty("twitter.proxy_port.cfgdesc", "Twitter Proxy Port");
+		setProperty("twitter.proxy_port.cfgtype", "String");
+		//Host (Must have a value if use_proxy is enalbed)
+		setProperty("twitter.proxy_host", "");
+		setProperty("twitter.proxy_host.cfgdesc", "Twitter Proxy Host");
+		setProperty("twitter.proxy_host.cfgtype", "Password");
+		//User (Can be blank)
+		setProperty("twitter.proxy_user", "");
+		setProperty("twitter.proxy_user.cfgdesc", "Twitter Proxy User");
+		setProperty("twitter.proxy_user.cfgtype", "String");
+		//Password (Can be blank)
+		setProperty("twitter.proxy_password", "");
+		setProperty("twitter.proxy_password.cfgdesc", "Twitter Proxy Password");
+		setProperty("twitter.proxy_password.cfgtype", "Password");
+		//Minimize settings
+		setProperty("minimize.startup", "false");
+		setProperty("minimize.startup.cfgdesc", "Minimize on Startup");
+		setProperty("minimize.startup.cfgtype", "Boolean");
+		//Decoration settings
 		setProperty("twitz.undecorated", "false");
 		setProperty("twitz.undecorated.cfgdesc", "Start Undecorated");
 		setProperty("twitz.undecorated.cfgtype", "Boolean");
@@ -91,6 +113,9 @@ public class SettingsManager extends Properties{
 		//This keeps the mini/full state of the program between restarts
 		setProperty("minimode", "false");
 		setProperty("minimode.cfgtype", "NULL");
+		//Internal Size settings
+		setProperty("twitz.last.height", "640");
+		setProperty("twitz.last.height.cfgtype", "NULL");
 		//Tab positions
 		setProperty("tab.position", "north");
 		setProperty("tab.position.cfgtype", "NULL");
@@ -115,9 +140,9 @@ public class SettingsManager extends Properties{
 		setProperty("tab.search.cfgdesc", "Enable Search Tab");
 		setProperty("tab.search.cfgtype", "Boolean");
 		saveSettings();
-	}
+	}//}}}
 
-	private boolean loadSettings() {
+	private boolean loadSettings() {//{{{
 		try
 		{
 			loadFromXML(new FileInputStream(config));
@@ -128,9 +153,9 @@ public class SettingsManager extends Properties{
 			return false;
 		}
 		return true;
-	}
+	}//}}}
 
-	private boolean saveSettings() {
+	private boolean saveSettings() {//{{{
 		boolean rv = true;
 		try
 		{
@@ -149,16 +174,16 @@ public class SettingsManager extends Properties{
 			logger.log(Level.SEVERE, ex.getMessage());
 		}
 		return rv;
-	}
+	}//}}}
 
-	private void checkDirs() {
+	private void checkDirs() {//{{{
 		String d = config.getParent();
 		File f = new File(d);
 		if(!f.exists())
 			f.mkdirs();
-	}
+	}//}}}
 
-	private boolean createSettingsFile() {
+	private boolean createSettingsFile() {//{{{
 		checkDirs();
 		boolean rc = false;
 		try
@@ -171,13 +196,13 @@ public class SettingsManager extends Properties{
 			rc = false;
 		}
 		return rc;
-	}
+	}//}}}
 
 	/**
 	 * This method uses privilaged  access to calculate the current operating system
 	 * @return An Enum representing the OS
 	 */
-	private OS getOS() {
+	private static OS getOS() {//{{{
 		PrivilegedAction<String> doOSLookup = new PrivilegedAction<String>() {
 			public String run() {
 				return System.getProperty("user.home");
@@ -196,13 +221,13 @@ public class SettingsManager extends Properties{
             }
         }
 		return rv;
-	}
+	}//}}}
 
 	/**
 	 * This method is borrowed from org.jdesktop.application.LocalStorage
 	 * @return
 	 */
-	private File getConfigDirectory() {
+	public static File getConfigDirectory() {//{{{
 		ResourceMap resource = TwitzApp.getContext().getResourceMap();
 		String appId = resource.getString("Application.id");
 		String vendorId = resource.getString("Application.venderId");
@@ -267,11 +292,11 @@ public class SettingsManager extends Properties{
 			}
 		}
 		return directory;
-	}
+	}//}}}
 
-	public Enumeration<Object> getKeys() {
+	public Enumeration<Object> getKeys() {//{{{
 		return keys();
-	}
+	}//}}}
 
 	/**
 	 * @param param The key to search the configuration for.
@@ -293,7 +318,7 @@ public class SettingsManager extends Properties{
      * @return the String value of the resource named <tt>param</tt>
      * @see String#format(String, Object...)
      */
-	public String getString(String param, Object... args) {
+	public String getString(String param, Object... args) {//{{{
 		if(args.length == 0) {
 			return getProperty(param);
 		}
@@ -301,7 +326,7 @@ public class SettingsManager extends Properties{
 			String str = getProperty(param);
 			return (str == null) ? null : String.format(str, args);
 		}
-	}
+	}//}}}
 
 	/**
 	 *
@@ -311,7 +336,7 @@ public class SettingsManager extends Properties{
 	 * @return the String value of the resource named <tt>param</tt> or <tt>defaultParam</tt>
 	 * @see #getString(java.lang.String, java.lang.Object...)
 	 */
-	public String getString(String param, String defaultParam, Object... args) {
+	public String getString(String param, String defaultParam, Object... args) {//{{{
 		if(args.length == 0) {
 			return getProperty(param, defaultParam);
 		}
@@ -319,11 +344,11 @@ public class SettingsManager extends Properties{
 			String str = getProperty(param, defaultParam);
 			return (str == null) ? null : String.format(str, args);
 		}
-	}
-	public String[] getStringArray(String param, String separator) {
+	}//}}}
+	public String[] getStringArray(String param, String separator) {//{{{
 		return getProperty(param).split(separator);
-	}
-	public int getInteger(String param) {
+	}//}}}
+	public int getInteger(String param) {//{{{
 		logger.log(Level.CONFIG, param);
 		logger.log(Level.CONFIG, getProperty(param));
 		try
@@ -333,8 +358,8 @@ public class SettingsManager extends Properties{
 		catch(NumberFormatException ex) {
 			return -1;
 		}
-	}
-	public int getInteger(String param, int defaultParam) {
+	}//}}}
+	public int getInteger(String param, int defaultParam) {//{{{
 		try
 		{
 			return Integer.parseInt(getProperty(param));
@@ -343,8 +368,8 @@ public class SettingsManager extends Properties{
 		{
 			return defaultParam;
 		}
-	}
-	public long getLong(String param) {
+	}//}}}
+	public long getLong(String param) {//{{{
 		try
 		{
 			return Long.parseLong(getProperty(param));
@@ -353,8 +378,8 @@ public class SettingsManager extends Properties{
 		{
 			return -1;
 		}
-	}
-	public long getLong(String param, long defaultParam) {
+	}//}}}
+	public long getLong(String param, long defaultParam) {//{{{
 		try
 		{
 			return Long.parseLong(getProperty(param));
@@ -363,32 +388,32 @@ public class SettingsManager extends Properties{
 		{
 			return defaultParam;
 		}
-	}
+	}//}}}
 
-	public boolean getBoolean(String param) {
+	public boolean getBoolean(String param) {//{{{
 		return Boolean.parseBoolean(getProperty(param));
-	}
+	}//}}}
 
-	public boolean getBoolean(String param, boolean defaultParam) {
+	public boolean getBoolean(String param, boolean defaultParam) {//{{{
 		if(getProperty(param) != null && !getProperty(param).equals(""))
 			return Boolean.parseBoolean(getProperty(param));
 		else
 			return defaultParam;
-	}
+	}//}}}
 
 
 	@Override
-	public Object setProperty(String property, String value) {
+	public Object setProperty(String property, String value) {//{{{
 		Object rv = super.setProperty(property, value);
 		saveSettings();
 		return rv;
-	}
-	public void setProperties(Properties list) {
+	}//}}}
+	public void setProperties(Properties list) {//{{{
 		Enumeration e = list.propertyNames();
 		while (e.hasMoreElements()) {
 			String key = (String)e.nextElement();
 			setProperty(key, list.getProperty(key));
 		}
 		saveSettings();
-	}
+	}//}}}
 }

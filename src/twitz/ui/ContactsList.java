@@ -5,10 +5,22 @@
 
 package twitz.ui;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import twitter4j.User;
+import twitz.events.DefaultTwitzEventModel;
+import twitz.events.TwitzEvent;
+import twitz.events.TwitzEventModel;
+import twitz.events.TwitzEventType;
+import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.renderers.ContactsRenderer;
 
@@ -16,9 +28,12 @@ import twitz.ui.renderers.ContactsRenderer;
  *
  * @author mistik1
  */
-public class ContactsList extends JList{
+public class ContactsList extends JList implements ActionListener, TwitzEventModel{
 
 	private final ContactsListModel model = new ContactsListModel();
+	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
+	private static Logger logger = Logger.getLogger(ContactsList.class.getName());
+	private boolean inUserList = false;
 
 	public ContactsList() {
 		this(new ContactsListModel());
@@ -134,4 +149,34 @@ public class ContactsList extends JList{
 		return new ContactsListModel();
 	}
 
+	//TwitzEventModel
+	public void addTwitzListener(TwitzListener o) {
+		dtem.addTwitzListener(o);
+	}
+
+	public void removeTwitzListener(TwitzListener o) {
+		dtem.removeTwitzListener(o);
+	}
+
+	public void fireTwitzEvent(TwitzEvent e) {
+		dtem.fireTwitzEvent(e);
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("caller", this);
+		map.put("async", true);
+		User[] selections = getSelectedValues();
+		map.put("selections", selections);
+		logger.log(Level.INFO, "Firing TwitzEvent");
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
+	}
+
+	public boolean isUserList() {
+		return inUserList;
+	}
+
+	public void setInUserList(boolean val) {
+		inUserList = val;
+	}
 }

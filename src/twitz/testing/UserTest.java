@@ -20,7 +20,14 @@ import twitter4j.User;
  */
 public class UserTest implements User{
 
-	public UserTest() {}
+	private String screenName = "Twitz_ras";
+	public UserTest() {
+		this("Twitz_ras");
+	}
+
+	public UserTest(String screenName) {
+		this.screenName = screenName;
+	}
 	
 	public int getId()
 	{
@@ -36,7 +43,7 @@ public class UserTest implements User{
 
 	public String getScreenName()
 	{
-		return "Twitz_ras";
+		return screenName;
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
@@ -89,7 +96,8 @@ public class UserTest implements User{
 
 	public Status getStatus()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return new StatusTest();
+		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public Date getStatusCreatedAt()

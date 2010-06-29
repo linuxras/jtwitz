@@ -3,8 +3,9 @@
  * and open the template in the editor.
  */
 
-package twitz;
+package twitz.ui.editors;
 
+import twitz.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -34,6 +35,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 
 	public BrowseCellEditor(/*twitz.util.SettingsManager c*/) {
 		//config = c;
+		initComponents();
 		cmbSkins.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e)
@@ -42,7 +44,6 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 				//throw new UnsupportedOperationException("Not supported yet.");
 			}
 		});
-		initComponents();
 	}
 
 	private void initComponents() {//{{{
@@ -55,7 +56,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
         //panel.setMinimumSize(new java.awt.Dimension(54, 12));
         panel.setName("Form"); // NOI18N
 
-        org.jdesktop.application.ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(BrowseCellEditor.class);
+        resourceMap = TwitzApp.getContext().getResourceMap(BrowseCellEditor.class);
         txtPath.setText(resourceMap.getString("txtPath.text")); // NOI18N
         txtPath.setName("txtPath"); // NOI18N
         txtPath.addActionListener(new java.awt.event.ActionListener() {
@@ -114,6 +115,12 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
                 .addComponent(btnBrowse)
                 .addComponent(txtPath, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
+		int skinCount = resourceMap.getInteger("Substance.skins.count");
+		skins = new String[skinCount];
+		for(int i=0; i < skinCount; i++) {
+			skins[i] = resourceMap.getString("Substance.skin["+ i +"]");
+		}
+		cmbSkins = new javax.swing.JComboBox(skins);
     }//}}}
 
 	private void txtPathActionPerformed(java.awt.event.ActionEvent evt)
@@ -201,14 +208,17 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		}
 		else if(type.equalsIgnoreCase("password")) {
 			if(cellVal.equals(configVal)) {
-				txtString.setText(configVal);
+				passEditor.setText(configVal);
+//				txtString.setText(configVal);
 			}
 			else
 			{
-				txtString.setText(cellVal);
+				passEditor.setText(cellVal);
+//				txtString.setText(cellVal);
 			}
-			currentEditor = "Text";
-			return txtString;
+			currentEditor = "Password";
+			//return txtString;
+			return passEditor;
 		}
 		if(cellVal.equals(configVal)) {
 			txtString.setText(configVal);
@@ -233,6 +243,13 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		}
 		else if (currentEditor.equals("Theme")) {
 			rv = (String)cmbSkins.getSelectedItem();
+		}
+		else if(currentEditor.equalsIgnoreCase("Password")) {
+			char[] pass = passEditor.getPassword();
+			StringBuffer buf = new StringBuffer();
+			for(int i=0; i < pass.length; i++)
+				buf.append(pass[i]);
+			rv = buf.toString();
 		}
 		else {
 			rv = txtString.getText();
@@ -289,20 +306,22 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	private javax.swing.JTextField txtString = new javax.swing.JTextField();
 	private javax.swing.JPanel panel = new javax.swing.JPanel();
 	private javax.swing.JCheckBox chkEditor = new javax.swing.JCheckBox();
-	private String[] skins =
-	{
-		"Autumn", "BusinessBlackSteel", "BusinessBlueSteel", "Business", 
-		"ChallengerDeep", "CremeCoffee", "Creme", "DustCoffee", "Dust",
-		"EmeraldDusk", "Gemini", "GraphiteAqua", "GraphiteGlass", "Graphite", 
-		"Magellan", "MistAqua", "MistSilver", "Moderate", "NebulaBrickWall",
-		"Nebula", "OfficeBlue2007", "OfficeSilver2007", "Raven", "Sahara", "Twilight"
-	};
-	private javax.swing.JComboBox cmbSkins = new javax.swing.JComboBox(skins);
+	private javax.swing.JPasswordField passEditor = new javax.swing.JPasswordField();
+	private String[] skins;// = new String[]();
+//	{
+//		"Autumn", "BusinessBlackSteel", "BusinessBlueSteel", "Business",
+//		"ChallengerDeep", "CremeCoffee", "Creme", "DustCoffee", "Dust",
+//		"EmeraldDusk", "Gemini", "GraphiteAqua", "GraphiteGlass", "Graphite",
+//		"Magellan", "MistAqua", "MistSilver", "Moderate", "NebulaBrickWall",
+//		"Nebula", "OfficeBlue2007", "OfficeSilver2007", "Raven", "Sahara", "Twilight"
+//	};
+	private javax.swing.JComboBox cmbSkins;// = new javax.swing.JComboBox(skins);
 	//private javax.swing.JComboBox cmbSkins = new SubstanceSkinComboSelector();
 	private String boolModel[] = {"true", "false"};
 	private javax.swing.JSpinner boolEditor = new javax.swing.JSpinner(new javax.swing.SpinnerListModel(boolModel));
 	private twitz.util.SettingsManager config = twitz.util.SettingsManager.getInstance();
 	private String currentEditor = null;
+	org.jdesktop.application.ResourceMap resourceMap;
     // End of variables declaration
 
 	class ImageFileFilter extends FileFilter

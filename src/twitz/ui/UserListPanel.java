@@ -15,6 +15,7 @@ import java.awt.Dimension;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -22,15 +23,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 import javax.swing.border.Border;
 import javax.swing.BorderFactory;
-import javax.swing.ListSelectionModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
@@ -49,20 +48,15 @@ import twitter4j.*;
  *
  * @author mistik1
  */
-public class UserListPanel extends javax.swing.JPanel implements MouseListener, FocusListener, TwitzEventModel {
-
-	org.jdesktop.application.ResourceMap resourceMap;
-	javax.swing.ActionMap actionMap;
-
+public class UserListPanel extends javax.swing.JPanel implements MouseListener, FocusListener, 
+		TwitzEventModel, ActionListener
+{
     /** Creates new form UserListPanel */
     public UserListPanel() {
 		resourceMap = TwitzApp.getContext().getResourceMap(UserListPanel.class);
 		actionMap = TwitzApp.getContext().getActionMap(UserListPanel.class, this);
         initComponents();
 		initDefaults();
-		setFocusable(true);
-		addMouseListener(this);
-		
     }
 
     /** This method is called from within the constructor to
@@ -116,6 +110,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
         toolbar.add(jSeparator1);
 
         listName.setText(resourceMap.getString("listName.text")); // NOI18N
+        listName.setToolTipText(listName.getText());
         listName.setName("listName"); // NOI18N
         toolbar.add(listName);
 
@@ -221,7 +216,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 			public void contentsChanged(ListDataEvent e)
 			{
-				System.out.println("Inside contentsChanged");
+				//System.out.println("Inside contentsChanged");
 			}
 
 			private Dimension calcSize(ListDataEvent e) {
@@ -235,7 +230,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 				else if(e.getType() == ListDataEvent.INTERVAL_REMOVED) {
 					dim = new Dimension(50, newHeight >= MIN_HEIGHT ? newHeight : MIN_HEIGHT);
 				}
-				logger.log(Level.INFO, "New Dimension for panel: "+dim.toString());
+				//logger.log(Level.INFO, "New Dimension for panel: "+dim.toString());
 				return dim;
 			}
 		});//}}}
@@ -253,12 +248,16 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		toolbar.addMouseListener(toolbarListener);
 		listName.addMouseListener(toolbarListener);
 		contactsList1.addMouseListener(this);
-		addTwitzListener(TwitzMainView.getInstance());
+		//addTwitzListener(TwitzMainView.getInstance());
+		setFocusable(true);
+		addMouseListener(this);
 		addFocusListener(this);
 		//Store the default border set by the user.
 		defaultBorder = getBorder();
 		selectedBorder = BorderFactory.createLoweredBevelBorder();
         contactsList1.setFocusable(false);
+		jSeparator2.setPreferredSize(new Dimension(1000,20));
+		listName.setMaximumSize(new Dimension(40,listName.getPreferredSize().height));
 	}//}}}
 
 	public ContactsList getContactsList() {
@@ -267,6 +266,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	public void setTitle(String title) {
 		listName.setText(title);
+		listName.setToolTipText(title);
 	}
 
 	public String getTitle() {
@@ -299,21 +299,13 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 				int index = list.locationToIndex(p);
 				if (index != -1)
 				{ //Show menu only if list is not empty
-					list.setSelectedIndex(index);
-					TwitzMainView.getInstance().getActionsMenu(list).show(list, p.x, p.y);
+					if(list.getSelectedIndex() == -1)
+						list.setSelectedIndex(index);
+					//Make the caller this panel as we can add the selected list to the panel
+					//that  will make the action listener of the menu items this panel as well
+					TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
 				}
 
-			}
-			else if (e.getSource() instanceof javax.swing.JTable)
-			{
-				javax.swing.JTable table = (javax.swing.JTable) e.getSource();
-				int index = table.rowAtPoint(p);
-				if(index != -1)
-				{
-					ListSelectionModel lsm = table.getSelectionModel();
-					lsm.setLeadSelectionIndex(index);
-					TwitzMainView.getInstance().getActionsMenu(table).show(table, p.x, p.y);
-				}
 			}
 		}
 		else if(e.getButton() == MouseEvent.BUTTON1) {
@@ -334,12 +326,14 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	//FocusListener
 	public void focusGained(FocusEvent e) {
-		System.out.println("Panel selected: "+getTitle());
+		if(logdebug)
+			logger.debug("Panel selected: "+getTitle());
 		setBorder(selectedBorder);
 	}
 
 	public void focusLost(FocusEvent e) {
-		System.out.println("Panel unselected: "+getTitle());
+		if(logdebug)
+			logger.debug("Panel unselected: "+getTitle());
 		setBorder(defaultBorder);
 	}
 
@@ -359,10 +353,12 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	public void actionPerformed(ActionEvent e) {
 		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("caller", getContactsList());
+		map.put("caller", this);
 		map.put("async", true);
 		User[] selections = getContactsList().getSelectedValues();
 		map.put("selections", selections);
+		if(logdebug)
+			logger.debug("Firing TwitzEvent");
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
 	}
 
@@ -383,7 +379,13 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	boolean collapsed = false;
 	int boxHeight = 350;
-	final Logger logger = Logger.getLogger(this.getClass().getName());
+	//final Logger logger = Logger.getLogger(this.getClass().getName());
+	org.jdesktop.application.ResourceMap resourceMap;
+	javax.swing.ActionMap actionMap;
+	final static Logger logger = Logger.getLogger(UserListPanel.class.getName());
+	boolean logdebug = logger.isDebugEnabled();
+	boolean loginfo = logger.isInfoEnabled();
+
 	public static final int MAX_HEIGHT = 300;
 	public static final int MIN_HEIGHT = 50;
 

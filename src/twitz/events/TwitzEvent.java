@@ -58,7 +58,7 @@ public class TwitzEvent extends java.util.EventObject{
 		this.etype = e;
 		this.timestamp = ts;
 		if(orders.length > 0)
-			this.storage = orders[1];
+			this.storage = orders[0];
 	}
 
 	/**

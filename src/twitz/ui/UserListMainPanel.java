@@ -6,12 +6,20 @@
 package twitz.ui;
 
 import java.awt.Component;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.Vector;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.GroupLayout.ParallelGroup;
 import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import twitter4j.User;
+import twitz.TwitzMainView;
 
 
 /**
@@ -22,6 +30,8 @@ public class UserListMainPanel extends JPanel {
 	javax.swing.GroupLayout layout;
 	ParallelGroup vgroup;
 	SequentialGroup hgroup;
+	//Vector<UserListPanel> panels = new Vector<UserListPanel>();
+	Map<String,UserListPanel> userlists = Collections.synchronizedMap(new TreeMap<String, UserListPanel>());
 	
 	public UserListMainPanel()
 	{
@@ -69,27 +79,66 @@ public class UserListMainPanel extends JPanel {
 		layout.setVerticalGroup(pg1);
 	}//}}}
 
-	public void addPanel(Component comp) {
+	public void addPanel(UserListPanel comp) {
 
 //      vgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
 //		hgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
 
 		vgroup.addComponent(comp, 0, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE);
 		hgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
+//		if(!userlists.isEmpty()){
+//			Set<String> set = userlists.keySet();
+//			Iterator iter = set.iterator();
+//			UserListPanel[] components = new UserListPanel[set.size()+1];
+//			int count = 0;
+//			while(iter.hasNext()) {
+//				components[count] = userlists.get(iter.next());
+//				count++;
+//			}
+//			components[count] = comp;
+//			layout.linkSize(SwingConstants.HORIZONTAL, components[components.length-1], comp);
+//		}
+	}
+
+	public boolean removeUserList(String listname) {
+		boolean rv = true;
+		UserListPanel panel = userlists.get(listname);
+		if(panel != null) {
+			getLayout().removeLayoutComponent(panel);
+			userlists.remove(panel);
+		}
+		else
+			rv = false;
+		return rv;
+	}
+
+	public void removeAllUserList() {
+		Set<String> set = userlists.keySet();
+		Iterator iter = set.iterator();
+		while(iter.hasNext()) {
+			UserListPanel panel = userlists.get(iter.next());
+			getLayout().removeLayoutComponent(panel);
+		}
+		userlists.clear();
 	}
 
 	public UserListPanel addUserList(User[] users, String listName) {
 		UserListPanel panel = new UserListPanel();
 		panel.addUser(users);
 		panel.setTitle(listName);
+		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
+		panel.addTwitzListener(TwitzMainView.getInstance());
 		addPanel(panel);
-		return panel;
+		return userlists.put(listName, panel);
+		
 	}
 
 	public UserListPanel addUserList(String listName) {
 		UserListPanel panel = new UserListPanel();
 		panel.setTitle(listName);
+		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
+		panel.addTwitzListener(TwitzMainView.getInstance());
 		addPanel(panel);
-		return panel;
+		return userlists.put(listName, panel);
 	}
 }

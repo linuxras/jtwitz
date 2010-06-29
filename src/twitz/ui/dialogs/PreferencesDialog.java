@@ -9,8 +9,9 @@
  * Created on May 16, 2010, 12:07:59 AM
  */
 
-package twitz.dialogs;
+package twitz.ui.dialogs;
 
+import twitz.ui.editors.BrowseCellEditor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -29,6 +30,7 @@ import javax.swing.table.TableRowSorter;
 import org.jdesktop.application.Action;
 import twitz.*;
 import twitz.twitter.TwitterManager;
+import twitz.ui.renderers.PreferencesTableCellRenderer;
 import twitz.util.SettingsManager;
 
 /**
@@ -201,6 +203,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	}
 
 	public void loadTable() {
+		tblConfig.setDefaultRenderer(String.class, new PreferencesTableCellRenderer());
 		Vector vConfig = new Vector();
 		Enumeration en = config.getKeys();
 		while(en.hasMoreElements()) {
@@ -212,10 +215,12 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			if (!config.getString(key + ".cfgtype").equals("NULL"))
 			{
 				Vector row = new Vector();
+				String value = config.getString(key);
 				row.add(key);
 				row.add(config.getString(key + ".cfgdesc"));
-				row.add(config.getString(key));
+				row.add(value);
 				vConfig.add(row);
+				undo.setProperty(key, value);
 			}
 		}
 		DefaultTableModel model = (DefaultTableModel)tblConfig.getModel();
@@ -226,6 +231,12 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	@Action
 	public void cancelEdit()
 	{
+		String oldSkin = config.getString("twitz.skin");
+		config.setProperties(undo);
+		if(updateSkin) {
+			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz.skin"));
+		}
+		updateSkin = false;
 		dispose();
 	}
 
@@ -272,7 +283,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz.skin"));
 			//mainApp.setLAFFromSettings();
 		}
-		updateSkin = false;
+		//updateSkin = false;
 	}
 
 	@Action
@@ -293,4 +304,5 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	private TableRowSorter sorter;
 	private TwitzApp mainApp;
 	private boolean updateSkin = false;
+	protected Properties undo = new Properties();
 }
