@@ -13,6 +13,11 @@ package twitz.ui;
 
 import twitz.ui.dialogs.LocationListDialog;
 import org.jdesktop.application.Action;
+import twitter4j.Location;
+import twitter4j.ResponseList;
+import twitter4j.Trend;
+import twitter4j.Trends;
+import twitz.ui.models.TrendsListModel;
 
 /**
  *
@@ -23,7 +28,7 @@ public class TrendsPanel extends javax.swing.JPanel {
     /** Creates new form TrendsPanel */
     public TrendsPanel() {
 		resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.ui.TrendsPanel.class);
-		//actionMap = twitz.TwitzApp.getContext().getActionMap(TrendsPanel.class, this);
+		actionMap = twitz.TwitzApp.getContext().getActionMap(twitz.ui.TrendsPanel.class, this);
         initComponents();
     }
 
@@ -49,6 +54,10 @@ public class TrendsPanel extends javax.swing.JPanel {
         btnPickTrend = new javax.swing.JButton();
         trendsScrollPane = new javax.swing.JScrollPane();
         trendsList = new javax.swing.JList();
+        pagingToolbar = new javax.swing.JToolBar();
+        btnPrev = new javax.swing.JButton();
+        jSeparator2 = new javax.swing.JToolBar.Separator();
+        btnNext = new javax.swing.JButton();
 
         btnCurrent.setIcon(resourceMap.getIcon("btnCurrent.icon")); // NOI18N
         btnCurrent.setToolTipText(resourceMap.getString("btnCurrent.toolTipText")); // NOI18N
@@ -137,6 +146,34 @@ public class TrendsPanel extends javax.swing.JPanel {
         trendsScrollPane.setViewportView(trendsList);
 
         add(trendsScrollPane, java.awt.BorderLayout.CENTER);
+
+        pagingToolbar.setFloatable(false);
+        pagingToolbar.setRollover(true);
+        pagingToolbar.setMaximumSize(new java.awt.Dimension(70, 22));
+        pagingToolbar.setName("pagingToolbar"); // NOI18N
+        pagingToolbar.setPreferredSize(new java.awt.Dimension(100, 22));
+
+        btnPrev.setIcon(resourceMap.getIcon("btnPrev.icon")); // NOI18N
+        btnPrev.setText(resourceMap.getString("btnPrev.text")); // NOI18N
+        btnPrev.setFocusable(false);
+        btnPrev.setName("btnPrev"); // NOI18N
+        btnPrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        pagingToolbar.add(btnPrev);
+
+        jSeparator2.setMaximumSize(new java.awt.Dimension(1000, 10));
+        jSeparator2.setName("jSeparator2"); // NOI18N
+        pagingToolbar.add(jSeparator2);
+
+        btnNext.setIcon(resourceMap.getIcon("btnNext.icon")); // NOI18N
+        btnNext.setText(resourceMap.getString("btnNext.text")); // NOI18N
+        btnNext.setFocusable(false);
+        btnNext.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
+        btnNext.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        btnNext.setName("btnNext"); // NOI18N
+        btnNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        pagingToolbar.add(btnNext);
+
+        add(pagingToolbar, java.awt.BorderLayout.PAGE_END);
     }// </editor-fold>//GEN-END:initComponents
 //}}}
 
@@ -148,22 +185,53 @@ public class TrendsPanel extends javax.swing.JPanel {
 	private void showLocationBox(java.awt.event.MouseEvent evt)//GEN-FIRST:event_showLocationBox
 	{//GEN-HEADEREND:event_showLocationBox
 		if(locations == null) {
-			twitz.TwitzMainView view = twitz.TwitzMainView.getInstance();
-			locations = new LocationListDialog(view.getMainFrame());
+			buildLocationBox();
 		}
 		locations.popupBox(evt.getXOnScreen(), evt.getYOnScreen());
 	}//GEN-LAST:event_showLocationBox
 
+	private void buildLocationBox() {
+		if(locations == null) {
+			twitz.TwitzMainView view = twitz.TwitzMainView.getInstance();
+			locations = new LocationListDialog(view.getMainFrame(), this);
+			locations.addTwitzListener(view);
+		}
+	}
+
+	public void setTrends(Trends trends) {
+		Trend[] tr = trends.getTrends();
+		TrendsListModel tlm = (TrendsListModel) trendsList.getModel();
+		tlm.clear();
+		for(Trend t: tr)
+		{
+			tlm.addTrend(t);
+		}
+	}
+
+	/**
+	 * This method is just a wrapper that calls a method of the same
+	 * name in the LocationListDialog to update the country and city lists.
+	 * @param locals A <code>ResponseList</code> of <code>Location</code> objects
+	 */
+	public void setLocations(ResponseList<Location> locals) {
+		if(locations == null)
+			buildLocationBox();
+		locations.setLocations(locals);
+	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCurrent;
     private javax.swing.JButton btnDay;
+    private javax.swing.JButton btnNext;
     private javax.swing.JButton btnPickTrend;
+    private javax.swing.JButton btnPrev;
     private javax.swing.JButton btnWeek;
     private javax.swing.JComboBox cmbLocations;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JToolBar.Separator jSeparator1;
+    private javax.swing.JToolBar.Separator jSeparator2;
     private javax.swing.JLabel lblLocation;
+    private javax.swing.JToolBar pagingToolbar;
     private org.jdesktop.swingx.JXDatePicker trendsDate;
     private javax.swing.ButtonGroup trendsGroup;
     private javax.swing.JList trendsList;
@@ -171,7 +239,7 @@ public class TrendsPanel extends javax.swing.JPanel {
     private javax.swing.JToolBar trendsToolbar;
     // End of variables declaration//GEN-END:variables
 
-//	javax.swing.ActionMap actionMap;// = twitz.TwitzApp.getContext().getActionMap(LocationListDialog.class, this);
+	javax.swing.ActionMap actionMap;// = twitz.TwitzApp.getContext().getActionMap(LocationListDialog.class, this);
 	org.jdesktop.application.ResourceMap resourceMap;
 	LocationListDialog locations;
 }

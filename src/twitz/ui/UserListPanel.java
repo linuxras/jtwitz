@@ -19,6 +19,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -31,6 +32,11 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
+import twitter4j.PagableResponseList;
+import twitter4j.Paging;
+import twitter4j.Status;
+import twitter4j.User;
+import twitter4j.UserList;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
 import twitz.events.DefaultTwitzEventModel;
@@ -40,9 +46,7 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.renderers.ContactsRenderer;
-import twitz.twitter.TwitterManager;
-import twitz.testing.*;
-import twitter4j.*;
+
 
 /**
  *
@@ -157,9 +161,14 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	@Action
 	public void deleteListUser() {
 		Map map = Collections.synchronizedMap(new TreeMap());
-		User[] users = getContactsList().getSelectedValues();
-		map.put("users", users);
-		map.put("listname", getTitle());
+		map.put("async", true);
+		map.put("caller", this);
+		ArrayList args = new ArrayList();
+		User toBeDeleted = contactsList1.getSelectedValue();
+		args.add(list.getId());
+		args.add(toBeDeleted.getId());
+		map.put("arguments", args);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DELETE_LIST_MEMBER, new java.util.Date().getTime(), map));
 		firePropertyChange("deleteListUser", map, null);
 	}
 
@@ -195,7 +204,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 			public void valueChanged(ListSelectionEvent e)
 			{
-				btnUserDelete.setEnabled(true);
+				btnUserDelete.setEnabled(!((ContactsList)e.getSource()).isSelectionEmpty());
 			}
 		};//}}}
 		contactsList1.addListSelectionListener(lsl);
@@ -285,6 +294,27 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		contactsList1.addUser(user);
 	}
 
+	public void setUserList(UserList userList)
+	{
+		this.list = userList;
+	}
+
+	public UserList getUserList()
+	{
+		return list;
+	}
+
+	public void updateList(PagableResponseList<User> users)
+	{
+		ContactsListModel clm = contactsList1.getModel();
+		clm.clear();
+		for(User u : users)
+			clm.addElement(u);
+		
+		prevPage = users.getPreviousCursor();
+		nextPage = users.getNextCursor();
+		//TODO add next/prev buttons to manage paging
+	}
 
 	//MouseListener
 	public void mouseClicked(MouseEvent e) {//{{{
@@ -295,12 +325,12 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 			java.awt.Point p = e.getPoint();
 			if (e.getSource() instanceof ContactsList)
 			{
-				ContactsList list = (ContactsList) e.getSource();
-				int index = list.locationToIndex(p);
+				ContactsList clist = (ContactsList) e.getSource();
+				int index = clist.locationToIndex(p);
 				if (index != -1)
 				{ //Show menu only if list is not empty
-					if(list.getSelectedIndex() == -1)
-						list.setSelectedIndex(index);
+					if(clist.getSelectedIndex() == -1)
+						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
 					TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
@@ -310,15 +340,31 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		}
 		else if(e.getButton() == MouseEvent.BUTTON1) {
 			if(e.getSource() instanceof ContactsList) {
-				ContactsList list = (ContactsList)e.getSource();
+				ContactsList clist = (ContactsList)e.getSource();
+				//TODO: This should fire an event to get userlist statuses and not user status
 				//twitter4j.Twitter t = TwitterManager.getInstance(TwitzMainView.getInstance()).getTwitterInstance();
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.UPDATE_FRIENDS_TWEETS_LIST, new java.util.Date().getTime()));
+				requestListStatus();
 			}
 			if(!isFocusOwner())
 				requestFocusInWindow();
 		}
 	}//}}}
 	
+	private void requestListStatus()
+	{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", this);
+		ArrayList args = new ArrayList();
+		args.add(list.getUser().getScreenName());
+		args.add(list.getId());
+		Paging pager = new Paging();
+		pager.setPage(1); //FIXME: need to properly support the paging with a next/prev 
+		args.add(pager);
+		map.put("arguments", args);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LIST_STATUSES, new java.util.Date().getTime(), map));
+	}
+
 	public void mousePressed(MouseEvent e) { }
 	public void mouseReleased(MouseEvent e)	{ }
 	public void mouseEntered(MouseEvent e) { }
@@ -382,9 +428,13 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	//final Logger logger = Logger.getLogger(this.getClass().getName());
 	org.jdesktop.application.ResourceMap resourceMap;
 	javax.swing.ActionMap actionMap;
+	private UserList list;
 	final static Logger logger = Logger.getLogger(UserListPanel.class.getName());
 	boolean logdebug = logger.isDebugEnabled();
 	boolean loginfo = logger.isInfoEnabled();
+
+	private long prevPage = -1;
+	private long nextPage = -1;
 
 	public static final int MAX_HEIGHT = 300;
 	public static final int MIN_HEIGHT = 50;

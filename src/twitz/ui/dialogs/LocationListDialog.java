@@ -17,19 +17,27 @@ import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.swing.JDialog;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
+import twitter4j.Location;
+import twitter4j.ResponseList;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
+import twitz.testing.LocationTest;
+import twitz.ui.models.LocationListModel;
 
 /**
  *
@@ -38,8 +46,9 @@ import twitz.events.TwitzListener;
 public class LocationListDialog extends JDialog implements TwitzEventModel {
 
     /** Creates new form LocationListDialog */
-    public LocationListDialog(Frame caller) {
-		super(caller, true);
+    public LocationListDialog(Frame topLevel, JPanel caller) {
+		super(topLevel, true);
+		this.topLevel = topLevel;
 		this.caller = caller;
         initComponents();
 		initDefaults();
@@ -47,42 +56,47 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 
 	private void initDefaults()
 	{
-		ListSelectionListener listener = new ListSelectionListener() {
+		ListSelectionListener countryListener = new ListSelectionListener() {
 
 			public void valueChanged(ListSelectionEvent e)
 			{
 				JList list = (JList)e.getSource();
-				Map map = new TreeMap();
-				map.put("async", true);
-				map.put("caller", this);
-				ArrayList args = new ArrayList();
-				//Get the woid from the location in this list. maybe need a custom model here
-				args.add(1);
-				map.put("arguments", args);
-				TwitzEvent te = new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new Date().getTime(), map);
-				fireTwitzEvent(te);
-				//closeBox();
-				//throw new UnsupportedOperationException("Not supported yet.");
+				if(list.getSelectedIndex() != -1 && list.isFocusOwner()) {
+					logger.debug("Country selection made, clearing cities");
+					//citiesList.setSelectedIndex(-1);
+					citiesList.clearSelection();
+				}
+			}
+		};
+		ListSelectionListener cityListener = new ListSelectionListener() {
+
+			public void valueChanged(ListSelectionEvent e)
+			{
+				JList list = (JList)e.getSource();
+				if(list.getSelectedIndex() != -1 && list.isFocusOwner()) {
+					logger.debug("City selection made clearing countries");
+					//countriesList.setSelectedIndex(-1);
+					countriesList.clearSelection();
+				}
 			}
 		};
 		countriesList.setPrototypeCellValue("01234567891234567890");
-		countriesList.addListSelectionListener(listener);
+		countriesList.addListSelectionListener(countryListener);
 		citiesList.setPrototypeCellValue("01234567891234567890");
-		citiesList.addListSelectionListener(listener);
+		citiesList.addListSelectionListener(cityListener);
 		this.setUndecorated(true);
 		this.addWindowFocusListener(new WindowFocusListener(){
 
 			public void windowGainedFocus(WindowEvent e)
 			{
 				fixLocation();
-				//throw new UnsupportedOperationException("Not supported yet.");
 			}
 
 			public void windowLostFocus(WindowEvent e)
 			{
-				//throw new UnsupportedOperationException("Not supported yet.");
 			}
 		});
+		addSampleData();
 	}
 
     /** This method is called from within the constructor to
@@ -183,10 +197,84 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
         getContentPane().add(buttonPanel, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 	//}}}
-	
+
+	private void addSampleData()
+	{
+		//LocationTest(String countryName, String countryCode,
+		//	String placeName, int placeCode, int woeid)
+		String country[] = {"Worldwide","United States", "Germany", "Italy", "United Kingdom", "Mexico", "Brazil", "Canada", "Ireland"};
+		String cc[] = {"WW","US", "GE", "IT", "UK", "ME", "BR", "CA", "IR"};
+		String city[] = { "Atlanta", "Baltimore", "Boston", "Chicago", "Dallas-Ft. Worth",
+			"Houston", "London", "Los Angeles", "New York City", "Philadelphia",
+			"San Antonio", "San Francisco", "Seattle", "Sao Paulo", "Washinton D.C."};
+		String ccc[] = { cc[1], cc[1], cc[1], cc[1], cc[1], cc[1], cc[4], cc[1], cc[1], cc[1],
+			cc[1], cc[1], cc[1], cc[6], cc[1]};
+		String ccl[] = { country[1], country[1], country[1], country[1], country[1], country[1],
+			country[4], country[1], country[1], country[1], country[1], country[1], country[1],
+			country[6], country[1]};
+		LocationListModel cm = new LocationListModel();
+		for(int i=0; i<country.length; i++)
+		{
+			cm.addLocation(new LocationTest(country[i], cc[i], "", 0, (i+1)));
+		}
+		LocationListModel lm = new LocationListModel();
+		for(int i=0; i<city.length; i++)
+		{
+			lm.addLocation(new LocationTest(ccl[i], ccc[i], city[i], i, (i+14)));
+		}
+		countriesList.setModel(cm);
+		citiesList.setModel(lm);
+	}
+
+	public void setLocations(ResponseList<Location> locals) {
+		LocationListModel countryModel = new LocationListModel();
+		LocationListModel cityModel = new LocationListModel();
+		countries.clear();
+		cities.clear();
+		for(Location l : locals)
+		{
+			if(!countries.contains(l.getCountryName()))
+			{
+				countryModel.addLocation(l);
+				countries.add(l.getCountryName());
+			}
+			if(!cities.contains(l.getPlaceName()))
+			{
+				cityModel.addLocation(l);
+				cities.add(l.getPlaceName());
+			}
+		}
+		countriesList.setModel(countryModel);
+		citiesList.setModel(cityModel);
+	}
+
 	@Action
 	public void closeBox()
 	{
+		if(citiesList.getSelectedIndex() == -1 && countriesList.getSelectedIndex() == -1)
+		{
+			this.setVisible(false);
+			return;
+		}
+		Map map = new TreeMap();
+		map.put("async", true);
+		map.put("caller", this);
+		ArrayList args = new ArrayList();
+		if(countriesList.getSelectedIndex() != -1)
+		{
+			//Get the woeid from the location in this list. maybe need a custom model here
+			Location selected = (Location)countriesList.getSelectedValue();
+			args.add(selected.getWoeid());
+		}
+		if(citiesList.getSelectedIndex() != -1)
+		{
+			//Get the woeid from the location in this list. maybe need a custom model here
+			Location selected = (Location)citiesList.getSelectedValue();
+			args.add(selected.getWoeid());
+		}
+		map.put("arguments", args);
+		TwitzEvent te = new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new Date().getTime(), map);
+		fireTwitzEvent(te);
 		this.setVisible(false);
 	}
 
@@ -273,8 +361,13 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(LocationListDialog.class, this);
 	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(LocationListDialog.class);
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
-	Frame caller;
+	Frame topLevel;
+	JPanel caller;
 	boolean dismissOnClick = true;
 	private enum Direction { LEFT, RIGHT, UP, DOWN };
+	final Logger logger = Logger.getLogger(this.getClass().getName());
+	boolean logdebug = logger.isDebugEnabled();
+	private List<String> countries = Collections.synchronizedList(new ArrayList<String>());
+	private List<String> cities = Collections.synchronizedList(new ArrayList<String>());
 
 }

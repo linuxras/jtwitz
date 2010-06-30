@@ -30,6 +30,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -184,6 +185,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         btnRefresh = new javax.swing.JButton();
         timelinePane = new javax.swing.JScrollPane();
         timelineList = new twitz.ui.TweetsList();
+        pagingToolbar = new javax.swing.JToolBar();
+        btnTimelinePrev = new javax.swing.JButton();
+        jSeparator4 = new javax.swing.JToolBar.Separator();
+        btnTimelineNext = new javax.swing.JButton();
         friendsPanel = new javax.swing.JSplitPane();
         friendsPane = new javax.swing.JTabbedPane();
         userListPane = new javax.swing.JScrollPane();
@@ -459,6 +464,36 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
         tlPanel.add(timelinePane, java.awt.BorderLayout.CENTER);
 
+        pagingToolbar.setFloatable(false);
+        pagingToolbar.setRollover(true);
+        pagingToolbar.setName("pagingToolbar"); // NOI18N
+        pagingToolbar.setPreferredSize(new java.awt.Dimension(128, 22));
+
+        btnTimelinePrev.setIcon(resourceMap.getIcon("icon.arrow_left")); // NOI18N
+        btnTimelinePrev.setText(resourceMap.getString("btnTimelinePrev.text")); // NOI18N
+        btnTimelinePrev.setToolTipText(resourceMap.getString("btnTimelinePrev.toolTipText")); // NOI18N
+        btnTimelinePrev.setFocusable(false);
+        btnTimelinePrev.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        btnTimelinePrev.setName("btnTimelinePrev"); // NOI18N
+        btnTimelinePrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        pagingToolbar.add(btnTimelinePrev);
+
+        jSeparator4.setName("jSeparator4"); // NOI18N
+        jSeparator4.setPreferredSize(new java.awt.Dimension(1000, 10));
+        pagingToolbar.add(jSeparator4);
+
+        btnTimelineNext.setIcon(resourceMap.getIcon("icon.arrow_right")); // NOI18N
+        btnTimelineNext.setText(resourceMap.getString("btnTimelineNext.text")); // NOI18N
+        btnTimelineNext.setToolTipText(resourceMap.getString("btnTimelineNext.toolTipText")); // NOI18N
+        btnTimelineNext.setFocusable(false);
+        btnTimelineNext.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
+        btnTimelineNext.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        btnTimelineNext.setName("btnTimelineNext"); // NOI18N
+        btnTimelineNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        pagingToolbar.add(btnTimelineNext);
+
+        tlPanel.add(pagingToolbar, java.awt.BorderLayout.PAGE_END);
+
         timelineTrendsPane.setRightComponent(tlPanel);
 
         recentPane.add(timelineTrendsPane, java.awt.BorderLayout.CENTER);
@@ -488,7 +523,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         );
         userListMainPanel1Layout.setVerticalGroup(
             userListMainPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGap(0, 467, Short.MAX_VALUE)
         );
 
         userListPane.setViewportView(userListMainPanel1);
@@ -509,7 +544,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
         );
         friendsStatusPanelLayout.setVerticalGroup(
             friendsStatusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE)
+            .addComponent(statusScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE)
         );
 
         friendsPanel.setRightComponent(friendsStatusPanel);
@@ -694,7 +729,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(advSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
+                .addComponent(searchPane, javax.swing.GroupLayout.DEFAULT_SIZE, 372, Short.MAX_VALUE)
                 .addGap(6, 6, 6)
                 .addGroup(searchPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(btnNext, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -824,7 +859,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)
+                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(actionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -3069,6 +3104,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void createdUserList(UserList userList)
 	{
+		this.userListMainPanel1.addUserList(userList);
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
@@ -3087,15 +3123,21 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
-	public void destroyedUserList(UserList userList)
+	public void destroyedUserList(UserList userList) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		this.userListMainPanel1.removeUserList(userList.getName());
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+	} //}}}
 
-	public void gotUserListStatuses(ResponseList<Status> statuses)
+	public void gotUserListStatuses(ResponseList<Status> statuses) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		TweetsListModel tlm = friendsTweets.getModel();
+		tlm.clear();
+		for(Status s : statuses)
+		{
+			tlm.addStatus(s);
+		}
+	} //}}}
 
 	public void gotUserListMemberships(PagableResponseList<UserList> userLists)
 	{
@@ -3107,10 +3149,15 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
-	public void gotUserListMembers(PagableResponseList<User> users)
+	public void gotUserListMembers(PagableResponseList<User> users) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		Object o = que.peek();
+		if(o instanceof UserListPanel)
+		{
+			UserListPanel ulp = (UserListPanel) que.poll();
+			ulp.updateList(users);
+		}
+	} //}}}
 
 	public void addedUserListMember(UserList userList)
 	{
@@ -3234,20 +3281,20 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
-	public void updatedProfileImage(User user)
+	public void updatedProfileImage(User user) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Completed updating profile image","2"});
+	}//}}}
 
 	public void updatedProfileBackgroundImage(User user)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
-	public void updatedProfile(User user)
+	public void updatedProfile(User user) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Profile update completed","2"});
+	}//}}}
 
 	public void gotFavorites(ResponseList<Status> statuses)
 	{
@@ -3264,15 +3311,15 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
-	public void enabledNotification(User user)
+	public void enabledNotification(User user) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Enabled notifications for "+user.getScreenName(),"2"});
+	} //}}}
 
-	public void disabledNotification(User user)
+	public void disabledNotification(User user) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Disabled Notifications for "+user.getScreenName(),"2"});
+	} //}}}
 
 	public void createdBlock(User user)//{{{
 	{
@@ -3308,15 +3355,15 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
 	}
 
-	public void gotAvailableTrends(ResponseList<Location> locations)
+	public void gotAvailableTrends(ResponseList<Location> locations) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		trendPanel.setLocations(locations);
+	} //}}}
 
-	public void gotLocationTrends(Trends trends)
+	public void gotLocationTrends(Trends trends) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
-	}
+		trendPanel.setTrends(trends);
+	} //}}}
 
 	public void gotNearByPlaces(ResponseList<Place> places)
 	{
@@ -3392,6 +3439,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JButton btnPrev;
     private javax.swing.JButton btnRefresh;
     private javax.swing.JButton btnSearch;
+    private javax.swing.JButton btnTimelineNext;
+    private javax.swing.JButton btnTimelinePrev;
     private javax.swing.JButton btnTweet;
     private javax.swing.JCheckBox chkCOT;
     private javax.swing.JComboBox cmbRpp;
@@ -3413,6 +3462,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
     private javax.swing.JToolBar.Separator jSeparator3;
+    private javax.swing.JToolBar.Separator jSeparator4;
     private javax.swing.JLabel lblChars;
     private javax.swing.JLabel lblPage;
     private javax.swing.JMenuItem logsMenuItem;
@@ -3424,6 +3474,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
     private javax.swing.JCheckBoxMenuItem menuItemSearch;
     private javax.swing.JMenu menuTabs;
     private javax.swing.JMenuItem miniItem;
+    private javax.swing.JToolBar pagingToolbar;
     private javax.swing.JMenuItem prefsItem;
     private javax.swing.JMenuItem prefsMenuItem;
     private javax.swing.JProgressBar progressBar;
@@ -3481,6 +3532,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	private Vector searchHeaders = new Vector();
 	private Vector<String> names = new Vector<String>();
+	/**
+	 * This que is used to track which part of the application is requesting an action
+	 */
+	private ArrayDeque que = new ArrayDeque();
 	//A Map to store all the statuses in the recentList table
 	private Map<Long, Status> recentMap = new TreeMap<Long, Status>();
 	private static TwitzMainView instance;

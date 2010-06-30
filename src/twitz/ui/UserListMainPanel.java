@@ -19,6 +19,7 @@ import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import twitter4j.User;
+import twitter4j.UserList;
 import twitz.TwitzMainView;
 
 
@@ -30,8 +31,8 @@ public class UserListMainPanel extends JPanel {
 	javax.swing.GroupLayout layout;
 	ParallelGroup vgroup;
 	SequentialGroup hgroup;
-	//Vector<UserListPanel> panels = new Vector<UserListPanel>();
-	Map<String,UserListPanel> userlists = Collections.synchronizedMap(new TreeMap<String, UserListPanel>());
+	Map<String, UserListPanel> panels = Collections.synchronizedMap(new TreeMap<String, UserListPanel>());
+	Map<String,UserList> userlists = Collections.synchronizedMap(new TreeMap<String, UserList>());
 	
 	public UserListMainPanel()
 	{
@@ -79,7 +80,7 @@ public class UserListMainPanel extends JPanel {
 		layout.setVerticalGroup(pg1);
 	}//}}}
 
-	public void addPanel(UserListPanel comp) {
+	public void addPanel(Component comp) {
 
 //      vgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
 //		hgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
@@ -102,10 +103,12 @@ public class UserListMainPanel extends JPanel {
 
 	public boolean removeUserList(String listname) {
 		boolean rv = true;
-		UserListPanel panel = userlists.get(listname);
+		UserListPanel panel = panels.get(listname);
 		if(panel != null) {
 			getLayout().removeLayoutComponent(panel);
-			userlists.remove(panel);
+			panels.remove(panel);
+			UserList list = userlists.get(listname);
+			userlists.remove(list);
 		}
 		else
 			rv = false;
@@ -116,12 +119,19 @@ public class UserListMainPanel extends JPanel {
 		Set<String> set = userlists.keySet();
 		Iterator iter = set.iterator();
 		while(iter.hasNext()) {
-			UserListPanel panel = userlists.get(iter.next());
-			getLayout().removeLayoutComponent(panel);
+			UserList list = userlists.get(iter.next());
+			getLayout().removeLayoutComponent(panels.get(list.getName()));
 		}
+		panels.clear();
 		userlists.clear();
 	}
 
+	/**
+	 * @deprecated This method is used only for development testing Do NOT use in production
+	 * @param users
+	 * @param listName
+	 * @return
+	 */
 	public UserListPanel addUserList(User[] users, String listName) {
 		UserListPanel panel = new UserListPanel();
 		panel.addUser(users);
@@ -129,16 +139,33 @@ public class UserListMainPanel extends JPanel {
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 		panel.addTwitzListener(TwitzMainView.getInstance());
 		addPanel(panel);
-		return userlists.put(listName, panel);
+		return panels.put(listName, panel);
 		
 	}
 
+	/**
+	 * @deprecated This method is used only for development testing Do NOT use in production
+	 * @param listName
+	 * @return
+	 */
 	public UserListPanel addUserList(String listName) {
 		UserListPanel panel = new UserListPanel();
 		panel.setTitle(listName);
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 		panel.addTwitzListener(TwitzMainView.getInstance());
 		addPanel(panel);
-		return userlists.put(listName, panel);
+		return panels.put(listName, panel);
+	}
+
+	public UserListPanel addUserList(UserList list)
+	{
+		UserListPanel panel = new UserListPanel();
+		panel.setTitle(list.getName());
+		panel.setUserList(list);
+		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
+		panel.addTwitzListener(TwitzMainView.getInstance());
+		addPanel(panel);
+		userlists.put(list.getName(), list);
+		return panels.put(list.getName(), panel);
 	}
 }

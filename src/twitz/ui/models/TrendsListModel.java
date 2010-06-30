@@ -32,13 +32,13 @@ public class TrendsListModel extends AbstractListModel {
 		return trends.elementAt(index);
 	}
 
-	public void addLocation(Trend l) {
+	public void addTrend(Trend l) {
 		int index = getSize();
 		trends.addElement(l);
 		fireIntervalAdded(this, index, index);
 	}
 
-	public void insertLocation(Trend l, int index)
+	public void insertTrend(Trend l, int index)
 	{
 		if(index < getSize())
 		{
@@ -47,16 +47,16 @@ public class TrendsListModel extends AbstractListModel {
 		}
 	}
 	
-	public void removeLocation(Trend l)
+	public void removeTrend(Trend l)
 	{
 		int index = trends.indexOf(l);
 		if(index != -1)
 		{
-			removeLocation(index);
+			removeTrend(index);
 		}
 	}
 
-	public void removeLocation(int index)
+	public void removeTrend(int index)
 	{
 		if(index < getSize()) {
 			trends.removeElementAt(index);
