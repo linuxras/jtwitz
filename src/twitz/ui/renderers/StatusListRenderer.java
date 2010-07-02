@@ -10,6 +10,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.SoftBevelBorder;
 import org.jdesktop.application.ResourceMap;
 import twitter4j.User;
 import twitz.testing.*;
@@ -20,9 +24,9 @@ import twitter4j.Status;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
 
-public class TweetsRenderer extends SubstanceDefaultListCellRenderer {
+public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	
-	public TweetsRenderer()
+	public StatusListRenderer()
 	{
 		super();
 		this.putClientProperty(SubstanceLookAndFeel.COLORIZATION_FACTOR, 1.0);
@@ -61,16 +65,40 @@ public class TweetsRenderer extends SubstanceDefaultListCellRenderer {
 			buf.append(" - </font></strong>");
 		}
 		buf.append(s.getText());
-		buf.append("<hr><center><strong>");
-		buf.append(u.getScreenName()+"</strong><br/><em>");
-		buf.append(d.toString());
-		buf.append("<br/>"+p.getName()+"</em></center></p>");
+		buf.append("</p>");
+		StringBuffer tbuf = new StringBuffer();
+		tbuf.append("<p><center><strong>");
+		tbuf.append(u.getScreenName()+"</strong><br/><em>");
+		tbuf.append(d.toString());
+		tbuf.append("<br/>"+p.getName()+"</em></center></p>");
 
 		setIcon(icon);
+		setToolTipText("<html>"+tableWrap(tbuf.toString(), 200));
 		//setToolTipText("<html>"+tableWrap(buf.toString(), 250));
-		setText("<html>"+tableWrap(buf.toString(), list.getWidth()-50));
+		int width = list.getWidth()-50;
+		//System.out.println("List width: "+width);
+		if(list.getParent() != null)
+		{
+			width = list.getParent().getWidth()-85;
+			//System.out.println("Parent found using width: "+width);
+		}
+		setText("<html>"+tableWrap(buf.toString(), width));
 
 		setVerticalAlignment(TOP);
+		setHorizontalAlignment(CENTER);
+		Border margin = new EmptyBorder(10,10,10,10);
+
+		Border inraised = new SoftBevelBorder(SoftBevelBorder.RAISED);
+		Border inlowered = new SoftBevelBorder(SoftBevelBorder.LOWERED);
+		Border raised = new CompoundBorder(margin, inraised);
+		Border lowered = new CompoundBorder(margin, inlowered);
+		if(isSelected) {
+			setBorder(lowered);
+		}
+		else
+		{
+			setBorder(raised);
+		}
 		return this;
 	}
 

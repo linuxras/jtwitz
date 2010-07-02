@@ -96,7 +96,8 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 			{
 			}
 		});
-		addSampleData();
+		if(!twitz.TwitzMainView.getInstance().isConnected())
+			addSampleData();
 	}
 
     /** This method is called from within the constructor to

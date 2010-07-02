@@ -25,25 +25,25 @@ import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
-import twitz.ui.models.TweetsListModel;
-import twitz.ui.renderers.TweetsRenderer;
+import twitz.ui.models.StatusListModel;
+import twitz.ui.renderers.StatusListRenderer;
 
 /**
  *
  * @author mistik1
  */
-public class TweetsList extends JList implements MouseListener, ActionListener, TwitzEventModel{
+public class StatusList extends JList implements MouseListener, ActionListener, TwitzEventModel{
 
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
-	private TweetsListModel model = new TweetsListModel();;
+	private StatusListModel model = new StatusListModel();;
 
-	public TweetsList() {
-		this(new TweetsListModel());
+	public StatusList() {
+		this(new StatusListModel());
 	}
 
-	public TweetsList(ListModel model) {
+	public StatusList(ListModel model) {
 		super(model);
-		super.setCellRenderer(new TweetsRenderer());
+		super.setCellRenderer(new StatusListRenderer());
 	}
 
 	/**
@@ -59,15 +59,15 @@ public class TweetsList extends JList implements MouseListener, ActionListener, 
 	 */
 	@Override
 	public void setModel(ListModel model) {
-		if(model instanceof TweetsListModel)
+		if(model instanceof StatusListModel)
 		{
 			super.setModel(model);
 		}
 	}
 
 	@Override
-	public TweetsListModel getModel() {
-		return (TweetsListModel)super.getModel();
+	public StatusListModel getModel() {
+		return (StatusListModel)super.getModel();
 	}
 
 	public void setSelectedValue(Status aUser, boolean scrollToStatus) {
@@ -75,7 +75,7 @@ public class TweetsList extends JList implements MouseListener, ActionListener, 
             setSelectedIndex(-1);
         else if(!aUser.equals(getSelectedValue())) {
             int i,c;
-            TweetsListModel dm = (TweetsListModel)getModel();
+            StatusListModel dm = (StatusListModel)getModel();
             for(i=0,c=dm.getSize();i<c;i++) {
                 if(aUser.equals(dm.getElementAt(i))){
                     setSelectedIndex(i);
@@ -97,7 +97,7 @@ public class TweetsList extends JList implements MouseListener, ActionListener, 
 			return null;
 		}
 		else {
-			TweetsListModel dm = (TweetsListModel)getModel();
+			StatusListModel dm = (StatusListModel)getModel();
 			return (Status)dm.getElementAt(i);
 		}
     }
@@ -105,7 +105,7 @@ public class TweetsList extends JList implements MouseListener, ActionListener, 
 	@Override
 	public Status[] getSelectedValues() {
         ListSelectionModel sm = getSelectionModel();
-        TweetsListModel dm = (TweetsListModel) getModel();
+        StatusListModel dm = (StatusListModel) getModel();
 
         int iMin = sm.getMinSelectionIndex();
         int iMax = sm.getMaxSelectionIndex();
@@ -146,9 +146,9 @@ public class TweetsList extends JList implements MouseListener, ActionListener, 
 //			if(!isFocusOwner())
 //				requestFocusInWindow();
 			java.awt.Point p = e.getPoint();
-			if (e.getSource() instanceof TweetsList)
+			if (e.getSource() instanceof StatusList)
 			{
-				TweetsList list = (TweetsList) e.getSource();
+				StatusList list = (StatusList) e.getSource();
 				int index = list.locationToIndex(p);
 				if (index != -1)
 				{ //Show menu only if list is not empty

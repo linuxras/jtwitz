@@ -16,10 +16,14 @@ import java.awt.Window;
 import java.awt.SplashScreen;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
@@ -190,7 +194,26 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	@Override
 	protected void startup() {//{{{
 		getMainTopLevel().setJMenuBar(view.getMenuBar());
-		view.init();
+		ComponentListener sizeListener = new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				if(!view.isMiniMode())
+					config.setProperty("twitz.last.height", getMainTopLevel().getHeight()+"");
+			}
+		};
+		getMainTopLevel().addComponentListener(sizeListener);
+
+		getMainTopLevel().addWindowFocusListener(new WindowFocusListener() {
+
+			public void windowGainedFocus(WindowEvent e)
+			{
+				view.getTweetField().requestFocusInWindow();
+			}
+
+			public void windowLostFocus(WindowEvent e)
+			{
+			}
+		});
+		view.initTwitter();
 		if(hidden)
 			toggleWindowView("down");
 		UIManager.addPropertyChangeListener(this);
@@ -473,7 +496,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			String currentSkin = "";
 			LookAndFeel laf = UIManager.getLookAndFeel();
 
-			currentSkin = laf.getName().replaceAll(" ", "");
+			currentSkin = laf.getName().replaceAll(" ", "").replace("Substance", "");
 
 			//if(UIManager.getLookAndFeel() instanceof SubstanceLookAndFeel)
 			//	currentSkin = SubstanceLookAndFeel.getCurrentSkin().getDisplayName().replaceAll(" ", "");
@@ -505,7 +528,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				//Notify all listeners that the skin change is complete
 				this.pcs.firePropertyChange("skinChange", currentSkin, newSkin);
 				if(logdebug)
-					logger.debug("New Skin: "+newSkin);
+					logger.debug("New Skin: "+newSkin.replace("Substance", ""));
 			}//}}}
 		}
 	}//}}}

@@ -1,6 +1,7 @@
 package twitz.ui.renderers;
 
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
@@ -27,7 +28,7 @@ public class ContactsRenderer extends SubstanceDefaultListCellRenderer {
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean hasFocus)
 	{
 		super.getListCellRendererComponent(list, value, index, isSelected, hasFocus);
-		UserTest u = (UserTest)value;
+		User u = (User)value;
 		java.net.URL imgURI = u.getProfileImageURL();
 		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(imgURI);
 		int status = icon.getImageLoadStatus();
@@ -50,6 +51,7 @@ public class ContactsRenderer extends SubstanceDefaultListCellRenderer {
 		setIcon(icon);
 		setToolTipText(buf.toString());
 		setVerticalAlignment(TOP);
+		setFont(new Font("Arial", Font.BOLD, 10));
 		return this;
 	}
 }

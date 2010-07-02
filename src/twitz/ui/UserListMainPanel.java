@@ -139,7 +139,8 @@ public class UserListMainPanel extends JPanel {
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 		panel.addTwitzListener(TwitzMainView.getInstance());
 		addPanel(panel);
-		return panels.put(listName, panel);
+		panels.put(listName, panel);
+		return panel;
 		
 	}
 
@@ -154,7 +155,8 @@ public class UserListMainPanel extends JPanel {
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 		panel.addTwitzListener(TwitzMainView.getInstance());
 		addPanel(panel);
-		return panels.put(listName, panel);
+		panels.put(listName, panel);
+		return panel;
 	}
 
 	public UserListPanel addUserList(UserList list)
@@ -166,6 +168,7 @@ public class UserListMainPanel extends JPanel {
 		panel.addTwitzListener(TwitzMainView.getInstance());
 		addPanel(panel);
 		userlists.put(list.getName(), list);
-		return panels.put(list.getName(), panel);
+		panels.put(list.getName(), panel);
+		return panel;
 	}
 }

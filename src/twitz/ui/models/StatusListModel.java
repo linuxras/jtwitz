@@ -14,11 +14,11 @@ import twitter4j.Status;
  *
  * @author mistik1
  */
-public class TweetsListModel extends AbstractListModel {
+public class StatusListModel extends AbstractListModel {
 
 	Vector<Status> status = new Vector<Status>();
 
-	public TweetsListModel() {
+	public StatusListModel() {
 
 	}
 

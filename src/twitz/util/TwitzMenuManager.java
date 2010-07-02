@@ -16,7 +16,7 @@ import org.jdesktop.application.ResourceMap;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
 import twitz.ui.ContactsList;
-import twitz.ui.TweetsList;
+import twitz.ui.StatusList;
 import twitz.ui.UserListPanel;
 
 /**
@@ -58,7 +58,7 @@ public class TwitzMenuManager implements PropertyChangeListener{
 //SHOW_STATUS
 //SHOW_USER
 		ContactsList cl = null;
-		TweetsList tl = null;
+		StatusList tl = null;
 		UserListPanel ulp = null;
 
 		boolean selected = true;
@@ -80,8 +80,8 @@ public class TwitzMenuManager implements PropertyChangeListener{
 			if(l.getSelectedIndex() == -1)
 				selected = false;
 		}
-		else if(caller instanceof TweetsList) {
-			tl = (TweetsList)caller;
+		else if(caller instanceof StatusList) {
+			tl = (StatusList)caller;
 			if(tl.getSelectedIndex() == -1)
 				selected = false;
 		}

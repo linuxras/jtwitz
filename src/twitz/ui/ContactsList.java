@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import twitter4j.User;
+import twitter4j.UserList;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
@@ -34,6 +35,10 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private static Logger logger = Logger.getLogger(ContactsList.class.getName());
 	private boolean inUserList = false;
+	/**
+	 * This is the Userlist object, this is only valid if inUserList is <em>true</em>
+	 */
+	private UserList userlist = null;
 
 	public ContactsList() {
 		this(new ContactsListModel());
@@ -65,7 +70,7 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 		return u;
 	}
 
-	public User removeUser(User u) {
+	public User removeUser(User u) {//{{{
 		ContactsListModel dm = (ContactsListModel)getModel();
 		if(dm.contains(u)) {
 			dm.removeElement(u);
@@ -73,9 +78,9 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 		}
 		else
 			return null;
-	}
+	}//}}}
 
-	public User removeUser(int u) {
+	public User removeUser(int u) {//{{{
 		ContactsListModel dm = (ContactsListModel)getModel();
 		if(u < dm.getSize()) {
 			User usr = dm.elementAt(u);
@@ -83,9 +88,9 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 		}
 		else
 			return null;
-	}
+	}//}}}
 
-	public void setSelectedValue(User aUser, boolean scrollToUser) {
+	public void setSelectedValue(User aUser, boolean scrollToUser) {//{{{
         if(aUser == null)
             setSelectedIndex(-1);
         else if(!aUser.equals(getSelectedValue())) {
@@ -103,10 +108,10 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
             setSelectedIndex(-1);
         }
         //repaint();
-    }
+    }//}}}
 
 	@Override
-	public User getSelectedValue() {
+	public User getSelectedValue() {//{{{
         int i = getMinSelectionIndex();
         if (i == -1) {
 			return null;
@@ -115,10 +120,10 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 			ContactsListModel dm = (ContactsListModel)getModel();
 			return dm.getElementAt(i);
 		}
-    }
+    }//}}}
 
 	@Override
-	public User[] getSelectedValues() {
+	public User[] getSelectedValues() {//{{{
         ListSelectionModel sm = getSelectionModel();
         ContactsListModel dm = (ContactsListModel) getModel();
 
@@ -139,15 +144,15 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
         User[] rv = new User[n];
         System.arraycopy(rvTmp, 0, rv, 0, n);
         return rv;
-    }
+    }//}}}
 
 	@Override
-	public ContactsListModel getModel() {
+	public ContactsListModel getModel() {//{{{
 		if(super.getModel() instanceof ContactsListModel) {
 			return (ContactsListModel)super.getModel();
 		}
 		return new ContactsListModel();
-	}
+	}//}}}
 
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {
@@ -178,5 +183,21 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 
 	public void setInUserList(boolean val) {
 		inUserList = val;
+	}
+
+	public void setUserList(UserList list)
+	{
+		if(list != null)
+		{
+			this.userlist = list;
+			setInUserList(true);
+		}
+		else
+			setInUserList(false);
+	}
+
+	public UserList getUserList()
+	{
+		return this.userlist;
 	}
 }

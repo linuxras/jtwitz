@@ -54,10 +54,6 @@ public class TrendsPanel extends javax.swing.JPanel {
         btnPickTrend = new javax.swing.JButton();
         trendsScrollPane = new javax.swing.JScrollPane();
         trendsList = new javax.swing.JList();
-        pagingToolbar = new javax.swing.JToolBar();
-        btnPrev = new javax.swing.JButton();
-        jSeparator2 = new javax.swing.JToolBar.Separator();
-        btnNext = new javax.swing.JButton();
 
         btnCurrent.setIcon(resourceMap.getIcon("btnCurrent.icon")); // NOI18N
         btnCurrent.setToolTipText(resourceMap.getString("btnCurrent.toolTipText")); // NOI18N
@@ -146,34 +142,6 @@ public class TrendsPanel extends javax.swing.JPanel {
         trendsScrollPane.setViewportView(trendsList);
 
         add(trendsScrollPane, java.awt.BorderLayout.CENTER);
-
-        pagingToolbar.setFloatable(false);
-        pagingToolbar.setRollover(true);
-        pagingToolbar.setMaximumSize(new java.awt.Dimension(70, 22));
-        pagingToolbar.setName("pagingToolbar"); // NOI18N
-        pagingToolbar.setPreferredSize(new java.awt.Dimension(100, 22));
-
-        btnPrev.setIcon(resourceMap.getIcon("btnPrev.icon")); // NOI18N
-        btnPrev.setText(resourceMap.getString("btnPrev.text")); // NOI18N
-        btnPrev.setFocusable(false);
-        btnPrev.setName("btnPrev"); // NOI18N
-        btnPrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        pagingToolbar.add(btnPrev);
-
-        jSeparator2.setMaximumSize(new java.awt.Dimension(1000, 10));
-        jSeparator2.setName("jSeparator2"); // NOI18N
-        pagingToolbar.add(jSeparator2);
-
-        btnNext.setIcon(resourceMap.getIcon("btnNext.icon")); // NOI18N
-        btnNext.setText(resourceMap.getString("btnNext.text")); // NOI18N
-        btnNext.setFocusable(false);
-        btnNext.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
-        btnNext.setMargin(new java.awt.Insets(2, 2, 2, 2));
-        btnNext.setName("btnNext"); // NOI18N
-        btnNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        pagingToolbar.add(btnNext);
-
-        add(pagingToolbar, java.awt.BorderLayout.PAGE_END);
     }// </editor-fold>//GEN-END:initComponents
 //}}}
 
@@ -222,16 +190,12 @@ public class TrendsPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCurrent;
     private javax.swing.JButton btnDay;
-    private javax.swing.JButton btnNext;
     private javax.swing.JButton btnPickTrend;
-    private javax.swing.JButton btnPrev;
     private javax.swing.JButton btnWeek;
     private javax.swing.JComboBox cmbLocations;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JToolBar.Separator jSeparator1;
-    private javax.swing.JToolBar.Separator jSeparator2;
     private javax.swing.JLabel lblLocation;
-    private javax.swing.JToolBar pagingToolbar;
     private org.jdesktop.swingx.JXDatePicker trendsDate;
     private javax.swing.ButtonGroup trendsGroup;
     private javax.swing.JList trendsList;
@@ -239,7 +203,7 @@ public class TrendsPanel extends javax.swing.JPanel {
     private javax.swing.JToolBar trendsToolbar;
     // End of variables declaration//GEN-END:variables
 
-	javax.swing.ActionMap actionMap;// = twitz.TwitzApp.getContext().getActionMap(LocationListDialog.class, this);
+	javax.swing.ActionMap actionMap;
 	org.jdesktop.application.ResourceMap resourceMap;
 	LocationListDialog locations;
 }
