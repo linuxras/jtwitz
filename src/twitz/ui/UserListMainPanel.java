@@ -163,9 +163,12 @@ public class UserListMainPanel extends JPanel {
 	{
 		UserListPanel panel = new UserListPanel();
 		panel.setTitle(list.getName());
-		panel.setUserList(list);
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
+		//We add it first here because setUserList causes a TwitzEvent to be fired to get the list users
 		panel.addTwitzListener(TwitzMainView.getInstance());
+		
+		panel.setUserList(list);
+		
 		addPanel(panel);
 		userlists.put(list.getName(), list);
 		panels.put(list.getName(), panel);

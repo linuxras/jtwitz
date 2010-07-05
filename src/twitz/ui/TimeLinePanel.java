@@ -27,6 +27,7 @@ public class TimeLinePanel extends javax.swing.JPanel {
 		 resourceMap = twitz.TwitzApp.getContext().getResourceMap(TimeLinePanel.class);
 		 actionMap = twitz.TwitzApp.getContext().getActionMap(TimeLinePanel.class, this);
         initComponents();
+		initDefaults();
     }
 
     /** This method is called from within the constructor to
@@ -114,6 +115,11 @@ public class TimeLinePanel extends javax.swing.JPanel {
 
         add(statusScrollPane, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
+
+	private void initDefaults()
+	{
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
+	}
 
 	public void setStatusList(StatusList list)
 	{

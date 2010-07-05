@@ -49,26 +49,9 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		this.mainApp = app;
         initComponents();
 		loadTable();
-		DefaultTableColumnModel cModel = (DefaultTableColumnModel)tblConfig.getColumnModel();
-		cModel.getColumn(0).setMaxWidth(10);
-		DefaultTableModel mModel = (DefaultTableModel)tblConfig.getModel();
-		sorter = this.getTableRowSorter(mModel);
-		tblConfig.setRowSorter(sorter);
-		tblConfig.setModel(mModel);
-		sorter.sort();
-		//cModel.getColumn(1).setMaxWidth(400);
-		//tblConfig.setRowHeight(30);
-		//setBounds(TwitzApp.getDesktopCenter(this));
-		WindowListener wl = new WindowAdapter() {
-
-			public void windowActivated(WindowEvent e)
-			{
-				btnApply.setEnabled(false);
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-
-		};
-		this.addWindowListener(wl);
+		
+		initDefaults();
+		
     }
 
     /** This method is called from within the constructor to
@@ -171,6 +154,29 @@ public class PreferencesDialog extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+	private void initDefaults()
+	{
+		DefaultTableColumnModel cModel = (DefaultTableColumnModel)tblConfig.getColumnModel();
+		cModel.getColumn(0).setMaxWidth(10);
+		DefaultTableModel mModel = (DefaultTableModel)tblConfig.getModel();
+		sorter = this.getTableRowSorter(mModel);
+		tblConfig.setRowSorter(sorter);
+		tblConfig.setModel(mModel);
+		sorter.sort();
+
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(jScrollPane1);
+
+		WindowListener wl = new WindowAdapter() {
+
+			public void windowActivated(WindowEvent e)
+			{
+				btnApply.setEnabled(false);
+			}
+
+		};
+		this.addWindowListener(wl);
+	}
+
 	private TableRowSorter getTableRowSorter(DefaultTableModel model) {
 		model.addTableModelListener(new TableModelListener() {
 
@@ -178,6 +184,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			{
 				int t = e.getType();
 				if(t == TableModelEvent.INSERT || t == TableModelEvent.UPDATE ) {
+				//TODO:Fix this code, I need to do this check the make the apply button work properly
 				//	if(e.getColumn() != TableModelEvent.ALL_COLUMNS) {
 				//		int row = tblConfig.convertRowIndexToModel(e.getFirstRow());
 				//		int col = e.getColumn();
@@ -273,6 +280,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 						TwitterManager tm = TwitterManager.getInstance();
 						tm.login();
 						//Any calls made to TwitterManager after this will be using the new login info.
+						//TODO: need to call Twitter.verifyCredentials() here
 					}
 					catch(Exception ignore) {}
 				}

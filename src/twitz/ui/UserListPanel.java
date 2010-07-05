@@ -267,6 +267,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		jSeparator2.setPreferredSize(new Dimension(1000,20));
 		listName.setMaximumSize(new Dimension(40,listName.getPreferredSize().height));
 		listName.setFont(new Font("Arial", Font.BOLD, 10));
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(listPane);
 	}//}}}
 
 	@Action
@@ -387,7 +388,22 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	public void setUserList(UserList userList)
 	{
-		this.list = userList;
+		if(userList != null)
+		{
+			this.list = userList;
+			if(twitz.TwitzMainView.getInstance().isConnected())//if this is false we are in offline testing mode
+			{
+				Map map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				ArrayList args = new ArrayList();
+				args.add(list.getUser().getScreenName());
+				args.add(list.getId());
+				args.add(-1);
+				map.put("arguments", args);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.LIST_MEMBERS, new java.util.Date().getTime(), map));
+			}
+		}
 	}
 
 	public UserList getUserList()

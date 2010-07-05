@@ -27,8 +27,9 @@ public class MessageDialog extends javax.swing.JDialog {
     public MessageDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-		messagePane.setBackground(Color.BLACK);
-		messagePane.setForeground(Color.WHITE);
+		initDefaults();
+		//messagePane.setBackground(Color.BLACK);
+		//messagePane.setForeground(Color.WHITE);
 		//this.setBounds(twitz.TwitzApp.getDesktopCenter(this));
     }
 
@@ -102,6 +103,11 @@ public class MessageDialog extends javax.swing.JDialog {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+	private void initDefaults()
+	{
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(jScrollPane1);
+	}
 
     /**
     * @param args the command line arguments

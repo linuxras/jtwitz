@@ -98,6 +98,8 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		});
 		if(!twitz.TwitzMainView.getInstance().isConnected())
 			addSampleData();
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(cityScrollPane);
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(countryScrollPane);
 	}
 
     /** This method is called from within the constructor to
@@ -198,6 +200,7 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
         getContentPane().add(buttonPanel, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 	//}}}
+	
 
 	private void addSampleData()
 	{
@@ -261,22 +264,31 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		map.put("async", true);
 		map.put("caller", this);
 		ArrayList args = new ArrayList();
+		Location selected = null;
 		if(countriesList.getSelectedIndex() != -1)
 		{
 			//Get the woeid from the location in this list. maybe need a custom model here
-			Location selected = (Location)countriesList.getSelectedValue();
-			args.add(selected.getWoeid());
+			selected = (Location)countriesList.getSelectedValue();
+			firePropertyChange("locationsChanged", oldLocation, selected.getCountryName());
+			oldLocation = selected.getCountryName();
+			//args.add(selected.getWoeid());
 		}
 		if(citiesList.getSelectedIndex() != -1)
 		{
 			//Get the woeid from the location in this list. maybe need a custom model here
-			Location selected = (Location)citiesList.getSelectedValue();
-			args.add(selected.getWoeid());
+			selected = (Location)citiesList.getSelectedValue();
+			firePropertyChange("locationsChanged", oldLocation, selected.getPlaceName());
+			oldLocation = selected.getPlaceName();
 		}
-		map.put("arguments", args);
-		TwitzEvent te = new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new Date().getTime(), map);
-		fireTwitzEvent(te);
-		this.setVisible(false);
+		if(selected != null) {
+			args.add(selected.getWoeid());
+			map.put("arguments", args);
+			
+			TwitzEvent te = new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new Date().getTime(), map);
+			fireTwitzEvent(te);
+		}
+		//oldLocation = selected.getName();
+		this.dispose();
 	}
 
 	public void setDismssOnClick(boolean b) {
@@ -297,39 +309,6 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 	{
 		twitz.TwitzApp.fixLocation(this);
 	}
-
-	private void fixLocationBake() {//{{{
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		Rectangle frame = getBounds();
-		Rectangle desktop = ge.getMaximumWindowBounds();
-		System.out.println("Width of desktop: " + desktop.toString());
-		System.out.println("Width of frame: " + frame.toString());
-		//int x = (desk.width - frame.width);
-		Direction move = null;
-		boolean up = false;
-		boolean down = false;
-		boolean left = false;
-		boolean right = false;
-		//Check if we intersect with the Desktop rectangle before we process
-		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
-			int x = frame.x;//(desktop.width - frame.width);
-			int y = frame.y;//(desktop.height - frame.height) - 32;
-			if((frame.x+frame.width) > desktop.width)
-				left = true;
-			if(desktop.x > frame.x) //Frame top should be less than desktop
-				right = true;
-			if(desktop.y > frame.y)
-				down = true;
-			if((frame.y+frame.height) > desktop.height) //Frame bottom should be less than desktop
-				up = true;
-			if(left) x = (desktop.width - frame.width);
-			if(right) x = desktop.x;
-			if(down) y = desktop.y;
-			if(up) y = (desktop.height - frame.height) - 32;//-32 is to make up for most OS toolbars
-			//System.out.println("X: " + x + " Y: " + y);
-			setLocation(x, y);
-		}
-	}//}}}
 
 	public void addTwitzListener(TwitzListener o)
 	{
@@ -368,6 +347,7 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 	private enum Direction { LEFT, RIGHT, UP, DOWN };
 	final Logger logger = Logger.getLogger(this.getClass().getName());
 	boolean logdebug = logger.isDebugEnabled();
+	private String oldLocation = "WorldWide";
 	private List<String> countries = Collections.synchronizedList(new ArrayList<String>());
 	private List<String> cities = Collections.synchronizedList(new ArrayList<String>());
 

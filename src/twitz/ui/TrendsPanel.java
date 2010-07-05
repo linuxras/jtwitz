@@ -11,6 +11,8 @@
 
 package twitz.ui;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 import twitz.ui.dialogs.LocationListDialog;
 import org.jdesktop.application.Action;
 import twitter4j.Location;
@@ -23,13 +25,14 @@ import twitz.ui.models.TrendsListModel;
  *
  * @author mistik1
  */
-public class TrendsPanel extends javax.swing.JPanel {
+public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeListener{
 
     /** Creates new form TrendsPanel */
     public TrendsPanel() {
 		resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.ui.TrendsPanel.class);
 		actionMap = twitz.TwitzApp.getContext().getActionMap(twitz.ui.TrendsPanel.class, this);
         initComponents();
+		lblLocation.setText("Worldwide");
     }
 
     /** This method is called from within the constructor to
@@ -156,6 +159,7 @@ public class TrendsPanel extends javax.swing.JPanel {
 			buildLocationBox();
 		}
 		locations.popupBox(evt.getXOnScreen(), evt.getYOnScreen());
+		//setLocationText(locations.);
 	}//GEN-LAST:event_showLocationBox
 
 	private void buildLocationBox() {
@@ -163,7 +167,13 @@ public class TrendsPanel extends javax.swing.JPanel {
 			twitz.TwitzMainView view = twitz.TwitzMainView.getInstance();
 			locations = new LocationListDialog(view.getMainFrame(), this);
 			locations.addTwitzListener(view);
+			locations.addPropertyChangeListener(this);
 		}
+	}
+
+	public void setLocationText(String text)
+	{
+		this.lblLocation.setText(text);
 	}
 
 	public void setTrends(Trends trends) {
@@ -185,6 +195,15 @@ public class TrendsPanel extends javax.swing.JPanel {
 		if(locations == null)
 			buildLocationBox();
 		locations.setLocations(locals);
+	}
+
+	public void propertyChange(PropertyChangeEvent evt)
+	{
+		System.out.println("got property change from locations"+evt.getPropertyName());
+		//if(evt.getPropertyName().equals("locationsChanged"))
+		//{
+			lblLocation.setText((String)evt.getNewValue());
+		//}
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

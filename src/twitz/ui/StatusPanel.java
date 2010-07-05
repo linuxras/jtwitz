@@ -38,6 +38,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 		super();
 		resourceMap = twitz.TwitzApp.getContext().getResourceMap(StatusPanel.class);
         initComponents();
+		initDefaults();
     }
 
     /** This method is called from within the constructor to
@@ -62,6 +63,11 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 
         add(statusScrollPane, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
+
+	private void initDefaults()
+	{
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
+	}
 
 	public void setUserList(UserList list)
 	{

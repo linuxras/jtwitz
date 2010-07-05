@@ -48,7 +48,7 @@ import twitz.util.SettingsManager;
 /**
  * The main class of the application.
  */
-public class TwitzApp extends SingleFrameApplication implements ActionListener, MouseListener, PropertyChangeListener{
+public class TwitzApp extends SingleFrameApplication implements ActionListener, PropertyChangeListener{
 
 	public static final String UPDATE = "Update";
 	public static final String TWEET = "Tweet";
@@ -161,12 +161,14 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		top.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		top.setTitle(getContext().getResourceMap().getString("Application.title"));
 		top.setVisible(true);
+		
 		if(logdebug)
 			logger.debug("Inside configureTopLevel....");
 	}//}}}
 
     @Override
 	protected  Component createMainComponent() {//{{{
+		
 		view = TwitzMainView.getInstance(this);
 		try
 		{
@@ -213,6 +215,16 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			{
 			}
 		});
+		if(config.getBoolean("minimode")) //We closed in minimode
+		{
+			view.fullTwitz(); //Go full first so all the layout gets done before we shrink
+			//wait for layout
+			try
+			{
+				Thread.sleep(30);
+			}catch(Exception ignore){}
+			view.miniTwitz(true);
+		}
 		view.initTwitter();
 		if(hidden)
 			toggleWindowView("down");
@@ -256,24 +268,23 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		if(logdebug)
 			logger.debug("Leaving initialize...");
 	}//}}}
-
-	@Override
-	protected void ready() {
-		System.out.println("Inside ready()");
-		if(hidden)
-			toggleWindowView("down");
-	}
 	
 	private final static Logger getLogger() {
 		return logger;
 	}
+
+	public static void setLAFFromSettings(boolean background)
+	{
+		setLAFFromSettings(background, false);
+	}
+
 	/**
 	 * Set a new look and feel 
 	 * @param background Should we run on the EDT or not.
 	 * Defaults to true, the only time it should be false is when called 
 	 * from the <code>initialize</code> method at startup.
 	 */
-	public static void setLAFFromSettings(boolean background, boolean... init) {//{{{
+	private static void setLAFFromSettings(boolean background, boolean... init) {//{{{
 		if(init.length > 0 && init[0])
 		{
 			themer.run();
@@ -398,7 +409,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	
 	public void propertyChange(PropertyChangeEvent e) {//{{{
 		if(e.getPropertyName().equals("lookAndFeelChange")) {
-			setLAFFromSettings(true, true);
+			setLAFFromSettings(true);
 		}
 		else if(e.getPropertyName().equals("skinChange")) {
 			if(view != null)
@@ -410,10 +421,9 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 	public void actionPerformed(ActionEvent e) {//{{{
 		String cmd = e.getActionCommand();
-		tray.hideGlassPane();
 		if(cmd.endsWith(TWEET_MINI)) {
-			view.miniTwitz(false);
 			toggleWindowView("up");
+			view.miniTwitz(false);
 		}
 		else if(cmd.equals("Exit")) {
 			exit(e);
@@ -424,35 +434,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		else if(cmd.equals("PrefsDlg")) {
 			view.showPrefsBox();
 		}
-		//throw new UnsupportedOperationException("Not supported yet.");
 	}//}}}
 
-	public void mouseClicked(MouseEvent e)
-	{
-		this.toggleWindowView("toggle");
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mousePressed(MouseEvent e)
-	{
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mouseReleased(MouseEvent e)
-	{
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mouseEntered(MouseEvent e)
-	{
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	public void mouseExited(MouseEvent e)
-	{
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
-	
 	public String getEnv() {
 		StringBuffer buf = new StringBuffer();
 		java.util.Properties p = null;
@@ -524,6 +507,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				{
 					SwingUtilities.updateComponentTreeUI(win);
 				}
+			//	UIManager.put("ScrollBar.width",3);
 				String newSkin = UIManager.getLookAndFeel().getName().replaceAll(" ", "");
 				//Notify all listeners that the skin change is complete
 				this.pcs.firePropertyChange("skinChange", currentSkin, newSkin);

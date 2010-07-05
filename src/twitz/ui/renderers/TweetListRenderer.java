@@ -4,30 +4,26 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.MediaTracker;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.ListCellRenderer;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.SoftBevelBorder;
 import org.jdesktop.application.ResourceMap;
-import twitz.testing.*;
 import org.pushingpixels.substance.api.*;
 import org.pushingpixels.substance.api.renderers.*;
-import twitter4j.Place;
-import twitter4j.Status;
-import twitter4j.User;
+import twitter4j.Tweet;
 import twitter4j.util.TimeSpanUtil;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
 
-public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
+public class TweetListRenderer extends SubstanceDefaultListCellRenderer {
 	
-	public StatusListRenderer()
+	public TweetListRenderer()
 	{
 		super();
 		this.putClientProperty(SubstanceLookAndFeel.COLORIZATION_FACTOR, 1.0);
@@ -37,41 +33,64 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean hasFocus)
 	{
 		super.getListCellRendererComponent(list, value, index, isSelected, hasFocus);
-		Status s = (Status)value;
-		User u = s.getUser();
-		Place p = s.getPlace();
+		Tweet s = (Tweet)value;
+		//User u = s.getUser();
+		//Place p = s.getPlace();
 		Date d = s.getCreatedAt();
 
 		setFont(new Font("Arial", Font.BOLD, 10)); //TODO: put this in the resourceMap so its not hard coded
-		URL imgURI = u.getProfileImageURL();
-		ImageIcon icon = new ImageIcon(imgURI);
-		int status = icon.getImageLoadStatus();
-		Image img = null;
-		if(status == MediaTracker.ERRORED) {
+		URL imgURI = null;
+		try
+		{
+			imgURI = new URL(s.getProfileImageUrl());
+		}
+		catch (MalformedURLException ex)
+		{
+			//ignore
+		}
+
+		ImageIcon icon = null;
+		if(imgURI != null)
+		{
+			icon = new ImageIcon(imgURI);
+			int status = icon.getImageLoadStatus();
+			Image img = null;
+			if (status == MediaTracker.ERRORED)
+			{
+				ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
+				icon = res.getImageIcon("icon.comments");
+				img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+			}
+			else
+			{
+				img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+			}
+			icon = new ImageIcon(img);
+		}
+		else
+		{
+			Image img = null;
 			ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
 			icon = res.getImageIcon("icon.comments");
 			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+			icon = new ImageIcon(img);
 		}
-		else {
-			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
-		}
-		icon = new ImageIcon(img);
 		//getScaledInstance(int width, int height, int hints)
 		setVerticalAlignment(TOP);
 
 		StringBuffer buf = new StringBuffer("<p>");
-		if(!s.getInReplyToScreenName().equals("")) {
+		if(!s.getToUser().equals("")) {
 			buf.append("<strong><font color=\"blue\">@");
-			buf.append(s.getInReplyToScreenName());
+			buf.append(s.getToUser());
 			buf.append(" - </font></strong>");
 		}
 		buf.append(s.getText());
 		buf.append("</p>");
 		StringBuffer tbuf = new StringBuffer();
 		tbuf.append("<p><center><strong>");
-		tbuf.append(u.getScreenName()+"</strong><br/><em>");
+		tbuf.append(s.getFromUser()+"</strong><br/><em>");
 		tbuf.append(TimeSpanUtil.toTimeSpanString(d));
-		tbuf.append("<br/>"+p.getName()+"</em></center></p>");
+		tbuf.append("</em></center></p>");
 
 		setIcon(icon);
 		setToolTipText("<html>"+tableWrap(tbuf.toString(), 200));
