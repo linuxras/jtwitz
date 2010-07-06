@@ -421,7 +421,6 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 			{
 				tlm.addTweet(t);
 			}
-			searchPane.setViewportView(tweetList);
 		}
 	}
 
@@ -438,7 +437,6 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 			{
 				contactsList.addUser(u);
 			}
-			searchPane.setViewportView(contactsList);
 		}
 	}
 
