@@ -899,12 +899,29 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 					}
 				}
 				else if(e.getButton() == MouseEvent.BUTTON1) {
+					//logger.debug(e.getSource());
 					if(e.getSource() instanceof ContactsList) {
+						//friendsStatusPanel
 						ContactsList list = (ContactsList)e.getSource();
-						StatusListModel mod = (StatusListModel) friendsTweets.getModel();
-						mod.clear();
-						for(int i=0; i<10; i++)
-							mod.addStatus(new StatusTest());
+						User u = list.getSelectedValue();
+						if(!isConnected())
+						{
+							StatusListModel mod = (StatusListModel) friendsStatusPanel.getStatusList().getModel();
+							mod.clear();
+							for(int i=0; i<10; i++)
+								mod.addStatus(new StatusTest());
+						}
+						else
+						{
+							Map map = Collections.synchronizedMap(new TreeMap());
+							map.put("caller", list);
+							map.put("async", true);
+							ArrayList args = new ArrayList();
+							args.add(u.getScreenName());
+							map.put("arguments", args);
+							TwitzEvent te = new TwitzEvent(list, TwitzEventType.USER_TIMELINE, new java.util.Date().getTime(), map);
+							eventOccurred(te);
+						}
 					}
 				}
 			}

@@ -61,7 +61,6 @@ public class MessageDialog extends javax.swing.JDialog {
 
         messagePane.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED, resourceMap.getColor("messagePane.border.highlightOuterColor"), resourceMap.getColor("messagePane.border.highlightInnerColor"), resourceMap.getColor("messagePane.border.shadowOuterColor"), resourceMap.getColor("messagePane.border.shadowInnerColor"))); // NOI18N
         messagePane.setEditable(false);
-        messagePane.setForeground(resourceMap.getColor("messagePane.foreground")); // NOI18N
         messagePane.setName("messagePane"); // NOI18N
         jScrollPane1.setViewportView(messagePane);
 

@@ -36,7 +36,8 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
 	org.jdesktop.application.ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(TwitzTrayIcon.class);
 	org.jdesktop.application.ResourceMap viewResource = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
 	private TwitzMainView mainView;
-	Logger logger = Logger.getLogger(TwitzTrayIcon.class.getName());
+	private Logger logger = Logger.getLogger(TwitzTrayIcon.class.getName());
+	private boolean menuVisible = false;
 
 
 	public TwitzTrayIcon(TwitzApp app, TwitzMainView view) throws Exception
@@ -84,6 +85,12 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
 			item.addActionListener(mainApp);
 			item.setIcon(viewResource.getIcon("icon.door_out"));
 			popup.add(item);
+
+			popup.addPopupMenuListener(new PopupMenuListener(){
+				public void popupMenuCanceled(PopupMenuEvent e) {menuVisible = false;}
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
+				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {menuVisible = true;}
+			});
 		}
 		catch(Exception e){
 			return false;
@@ -132,14 +139,23 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
 
 			popup.setInvoker(popup);
 			popup.setLocation(p.x, p.y - 100);
+			menuVisible = true;
 			popup.setVisible(true);
 
 		}
 		else
 		{
 			logger.debug("Got click is popup showing: "+ isMenuShowing());
-			if(!isMenuShowing())
+			if(menuVisible)
+			{
+				//Just set the variable false here nothing else
+				//since clicking has already made the popup go away
+				menuVisible = false;
+			}
+			else
+			{
 				mainApp.toggleWindowView("toggle");
+			}
 		}
 	}
 }

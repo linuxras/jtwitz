@@ -199,11 +199,11 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 
 	public void propertyChange(PropertyChangeEvent evt)
 	{
-		System.out.println("got property change from locations"+evt.getPropertyName());
-		//if(evt.getPropertyName().equals("locationsChanged"))
-		//{
+		System.out.println("got property change for: "+evt.getPropertyName());
+		if(evt.getPropertyName().equals("locationsChanged"))
+		{
 			lblLocation.setText((String)evt.getNewValue());
-		//}
+		}
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

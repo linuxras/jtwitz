@@ -452,8 +452,9 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 				ContactsList clist = (ContactsList)e.getSource();
 				//TODO: This should fire an event to get userlist statuses and not user status
 				//twitter4j.Twitter t = TwitterManager.getInstance(TwitzMainView.getInstance()).getTwitterInstance();
-				requestListStatus();
+				
 			}
+			requestListStatus();
 			if(!isFocusOwner())
 				requestFocusInWindow();
 		}
