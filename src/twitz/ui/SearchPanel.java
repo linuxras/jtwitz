@@ -61,6 +61,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 				}
 			}
 		});
+		cmbRpp.setSelectedIndex(3); //Default to 20 result per page
 	}
 
     /** This method is called from within the constructor to
@@ -408,6 +409,9 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	{
 		if(results != null)
 		{
+			lblPage.setText("Page "+currentPage);
+			btnPrev.setEnabled((currentPage > 1));
+			btnNext.setEnabled((currentPage < 1500));
 			List<Tweet> tweets = results.getTweets();
 			double completedIn = results.getCompletedIn();
 		//do something with tweets.
@@ -424,6 +428,9 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	{
 		if(results != null)
 		{
+			lblPage.setText("Page "+currentPage);
+			btnPrev.setEnabled((currentPage > 1));
+			btnNext.setEnabled((currentPage < 1500));
 			ContactsListModel clm = contactsList.getModel();
 			clm.clear();
 			for(User u : results)
