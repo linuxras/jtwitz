@@ -13,6 +13,12 @@ package twitz.ui;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import java.util.TreeMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
 import twitz.ui.dialogs.LocationListDialog;
 import org.jdesktop.application.Action;
 import twitter4j.Location;
@@ -20,19 +26,24 @@ import twitter4j.ResponseList;
 import twitter4j.Trend;
 import twitter4j.Trends;
 import twitz.ui.models.TrendsListModel;
+import twitz.events.DefaultTwitzEventModel;
+import twitz.events.TwitzEvent;
+import twitz.events.TwitzEventType;
+import twitz.events.TwitzEventModel;
+import twitz.events.TwitzListener;
 
 /**
  *
  * @author mistik1
  */
-public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeListener{
+public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeListener, TwitzEventModel {
 
     /** Creates new form TrendsPanel */
     public TrendsPanel() {
 		resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.ui.TrendsPanel.class);
 		actionMap = twitz.TwitzApp.getContext().getActionMap(twitz.ui.TrendsPanel.class, this);
         initComponents();
-		lblLocation.setText("Worldwide");
+		initDefaults();
     }
 
     /** This method is called from within the constructor to
@@ -162,6 +173,32 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 		//setLocationText(locations.);
 	}//GEN-LAST:event_showLocationBox
 
+	private void initDefaults()
+	{
+		lblLocation.setText("Worldwide");
+		lblLocation.setToolTipText("Worldwide");
+		ListSelectionListener lsl = new ListSelectionListener(){//{{{
+
+			public void valueChanged(ListSelectionEvent e)
+			{
+				javax.swing.JList list = (javax.swing.JList)e.getSource();
+				Trend trend = (Trend)list.getSelectedValue();
+				callSearchOnTrend(trend);
+			}
+		};//}}}
+	}
+
+	private void callSearchOnTrend(Trend trend)
+	{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", this);
+		ArrayList args = new ArrayList();
+		args.add(trend.getName());
+		map.put("arguments", args);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.TREND_SEARCH, new java.util.Date().getTime(), map));
+	}
+
 	private void buildLocationBox() {
 		if(locations == null) {
 			twitz.TwitzMainView view = twitz.TwitzMainView.getInstance();
@@ -203,7 +240,21 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 		if(evt.getPropertyName().equals("locationsChanged"))
 		{
 			lblLocation.setText((String)evt.getNewValue());
+			lblLocation.setToolTipText((String)evt.getNewValue());
 		}
+	}
+
+	//TwitzEventModel
+	public void addTwitzListener(TwitzListener o) {
+		dtem.addTwitzListener(o);
+	}
+
+	public void removeTwitzListener(TwitzListener o) {
+		dtem.removeTwitzListener(o);
+	}
+	
+	public void fireTwitzEvent(TwitzEvent e) {
+		dtem.fireTwitzEvent(e);
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -222,6 +273,7 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
     private javax.swing.JToolBar trendsToolbar;
     // End of variables declaration//GEN-END:variables
 
+	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	javax.swing.ActionMap actionMap;
 	org.jdesktop.application.ResourceMap resourceMap;
 	LocationListDialog locations;

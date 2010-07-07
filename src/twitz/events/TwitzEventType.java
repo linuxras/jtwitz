@@ -87,5 +87,6 @@ public enum TwitzEventType {
 	GEO_DETAILS,
 	TEST,
 	UPDATE_FRIENDS_TWEETS_LIST,
-	LOGIN
+	LOGIN,
+	TREND_SEARCH
 }

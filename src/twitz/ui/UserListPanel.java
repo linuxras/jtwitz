@@ -183,7 +183,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	//}}}
 
 	//Private methods
-	private void requestListStatus()
+	private void requestListStatus()//{{{
 	{
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
@@ -196,7 +196,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		args.add(pager);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LIST_STATUSES, new java.util.Date().getTime(), map));
-	}
+	}//}}}
 
 	private void initDefaults() {//{{{
 		ListSelectionListener lsl = new ListSelectionListener(){//{{{
@@ -268,6 +268,9 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		listName.setMaximumSize(new Dimension(40,listName.getPreferredSize().height));
 		listName.setFont(new Font("Arial", Font.BOLD, 10));
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(listPane);
+
+		btnPrev.setEnabled(false);
+		btnNext.setEnabled(false);
 	}//}}}
 
 	@Action
@@ -284,7 +287,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	}
 
 	@Action
-	public void deleteListUser() {
+	public void deleteListUser() {//{{{
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
 		map.put("caller", this);
@@ -295,7 +298,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DELETE_LIST_MEMBER, new java.util.Date().getTime(), map));
 		firePropertyChange("deleteListUser", map, null);
-	}
+	}//}}}
 
 	@Action
 	public void getNext()

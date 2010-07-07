@@ -235,12 +235,15 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		LocationListModel cityModel = new LocationListModel();
 		countries.clear();
 		cities.clear();
+		//Twitter.com does not provide Worldwide as a Location 
+		countryModel.addLocation(new LocationTest("Worldwide", "WW", "", 0, 1));
+		countries.add("Worldwide");
 		for(Location l : locals)
 		{
 			if(l.getWoeid() == 1)
 			{
-				countryModel.addLocation(l);
-				countries.add(l.getPlaceName());
+		//		countryModel.addLocation(l);
+		//		countries.add(l.getPlaceName());
 				continue; //woeid of 1 is Worldwide and should not be in cities list.
 			}
 			if(!countries.contains(l.getCountryName()))
