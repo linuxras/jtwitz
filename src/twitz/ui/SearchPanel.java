@@ -410,6 +410,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		if(results != null)
 		{
 			lblPage.setText("Page "+currentPage);
+			searchPane.setViewportView(tweetList);
 			btnPrev.setEnabled((currentPage > 1));
 			btnNext.setEnabled((currentPage < 1500));
 			List<Tweet> tweets = results.getTweets();
@@ -429,6 +430,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		if(results != null)
 		{
 			lblPage.setText("Page "+currentPage);
+			searchPane.setViewportView(contactsList);
 			btnPrev.setEnabled((currentPage > 1));
 			btnNext.setEnabled((currentPage < 1500));
 			ContactsListModel clm = contactsList.getModel();
