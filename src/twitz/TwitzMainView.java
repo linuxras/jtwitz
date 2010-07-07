@@ -960,7 +960,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		trendPanel.addTwitzListener(this);
 
 		blockedList.addTwitzListener(this);
-
+		//Disable the menuitems no long in use
+		menuItemBlocked.setEnabled(false);
+		menuItemFollowers.setEnabled(false);
+		menuItemFollowing.setEnabled(false);
 	}//}}}
 
 	public void initTwitter() {//{{{
@@ -2201,7 +2204,14 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			case TREND_SEARCH:
 				if(args != null && args.size() == 1)
 				{
-					tabPane.setSelectedComponent(searchPanel);
+					if(tabPane.indexOfComponent(searchPanel) == -1)
+					{
+						toggleTabs(new java.awt.event.ActionEvent(this, 2344, "Search"));
+					}
+					else
+					{
+						tabPane.setSelectedComponent(searchPanel);
+					}
 					searchPanel.setSearchText((String)args.get(0));
 					searchPanel.setCurrentPage(1);
 					searchPanel.doSearch();

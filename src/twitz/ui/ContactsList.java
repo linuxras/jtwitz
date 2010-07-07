@@ -11,8 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import twitter4j.User;
@@ -34,6 +33,7 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 	private final ContactsListModel model = new ContactsListModel();
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private static Logger logger = Logger.getLogger(ContactsList.class.getName());
+	private boolean logdebug = logger.isDebugEnabled();
 	private boolean inUserList = false;
 	/**
 	 * This is the Userlist object, this is only valid if inUserList is <em>true</em>
@@ -173,7 +173,8 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 		map.put("async", true);
 		User[] selections = getSelectedValues();
 		map.put("selections", selections);
-		logger.log(Level.INFO, "Firing TwitzEvent");
+		if(logdebug)
+			logger.debug("Firing TwitzEvent");
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
 	}
 

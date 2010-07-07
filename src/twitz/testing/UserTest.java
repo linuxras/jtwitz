@@ -8,8 +8,7 @@ package twitz.testing;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 import twitter4j.RateLimitStatus;
 import twitter4j.Status;
 import twitter4j.User;
@@ -21,6 +20,8 @@ import twitter4j.User;
 public class UserTest implements User{
 
 	private String screenName = "Twitz_ras";
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+
 	public UserTest() {
 		this("Twitz_ras");
 	}
@@ -73,7 +74,7 @@ public class UserTest implements User{
 		}
 		catch (MalformedURLException ex)
 		{
-			Logger.getLogger(UserTest.class.getName()).log(Level.SEVERE, null, ex);
+			logger.error(ex);
 		}
 		return img;
 		//throw new UnsupportedOperationException("Not supported yet.");

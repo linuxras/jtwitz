@@ -14,8 +14,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Enumeration;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.ResourceMap;
 import twitz.TwitzApp;
 
@@ -124,17 +123,17 @@ public class SettingsManager extends Properties{
 		setProperty("tab.friends.cfgdesc", "Enable Friends Tab");
 		setProperty("tab.friends.cfgtype", "Boolean");
 		//Blocked Tab settings
-		setProperty("tab.blocked", "true");
+		setProperty("tab.blocked", "false");
 		setProperty("tab.blocked.cfgdesc", "Enable Blocked Tab");
-		setProperty("tab.blocked.cfgtype", "Boolean");
+		setProperty("tab.blocked.cfgtype", "NULL");//"Boolean");
 		//Following tab settings
-		setProperty("tab.following", "true");
+		setProperty("tab.following", "false");
 		setProperty("tab.following.cfgdesc", "Enable Following Tab");
-		setProperty("tab.following.cfgtype", "Boolean");
+		setProperty("tab.following.cfgtype", "NULL");//"Boolean");
 		//Followers tab settings
-		setProperty("tab.followers", "true");
+		setProperty("tab.followers", "false");
 		setProperty("tab.followers.cfgdesc", "Enable Followers Tab");
-		setProperty("tab.followers.cfgtype", "Boolean");
+		setProperty("tab.followers.cfgtype", "NULL");//"Boolean");
 		//Search tab settings
 		setProperty("tab.search", "true");
 		setProperty("tab.search.cfgdesc", "Enable Search Tab");
@@ -149,7 +148,7 @@ public class SettingsManager extends Properties{
 		}
 		catch (IOException ex)
 		{
-			logger.log(Level.SEVERE, ex.getMessage());
+			logger.error(ex);
 			return false;
 		}
 		return true;
@@ -163,7 +162,6 @@ public class SettingsManager extends Properties{
 		}
 		catch (FileNotFoundException ex)
 		{
-			//Logger.getLogger(JAlarmView.class.getName()).log(Level.SEVERE, null, ex);
 			rv = false;
 			if(createSettingsFile())
 				saveSettings();
@@ -171,7 +169,7 @@ public class SettingsManager extends Properties{
 		catch (IOException ex)
 		{
 			rv = false;
-			logger.log(Level.SEVERE, ex.getMessage());
+			logger.error(ex);
 		}
 		return rv;
 	}//}}}
@@ -192,7 +190,7 @@ public class SettingsManager extends Properties{
 		}
 		catch(IOException e)
 		{
-			logger.log(Level.SEVERE, e.getMessage());
+			logger.error(e);
 			rc = false;
 		}
 		return rc;
@@ -349,8 +347,6 @@ public class SettingsManager extends Properties{
 		return getProperty(param).split(separator);
 	}//}}}
 	public int getInteger(String param) {//{{{
-		logger.log(Level.CONFIG, param);
-		logger.log(Level.CONFIG, getProperty(param));
 		try
 		{
 			return Integer.parseInt(getProperty(param));
