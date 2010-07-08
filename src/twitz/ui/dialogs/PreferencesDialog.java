@@ -250,6 +250,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz.skin"));
 		}
 		updateSkin = false;
+		updateLogin = false;
 		dispose();
 	}
 
@@ -280,19 +281,25 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			}
 			if(key.equals("twitter.id") || key.equals("twitter.password")) {
 				if(!value.equals(config.getString(key))) {
+					//logger.debug(key+" value: "+value);
 					//Tell TwitterManager to update itself.
-					try
-					{
-						TwitterManager tm = TwitterManager.getInstance();
-						tm.login();
-						//Any calls made to TwitterManager after this will be using the new login info.
-						//TODO: need to call Twitter.verifyCredentials() here
-					}
-					catch(Exception ignore) {}
+					updateLogin = true;
 				}
 			}
 		}
 		config.setProperties(p);
+		if(updateLogin)
+		{
+			try
+			{
+				TwitterManager tm = TwitterManager.getInstance();
+				tm.login();
+				//Any calls made to TwitterManager after this will be using the new login info.
+				//TODO: need to call Twitter.verifyCredentials() here
+			}
+			catch(Exception ignore) {}
+			updateLogin = false;
+		}
 		if(updateSkin) {
 			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz.skin"));
 			//mainApp.setLAFFromSettings();
@@ -318,6 +325,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	private TableRowSorter sorter;
 	private TwitzApp mainApp;
 	private boolean updateSkin = false;
+	private boolean updateLogin = false;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final boolean logdebug = logger.isDebugEnabled();
 	protected Properties undo = new Properties();

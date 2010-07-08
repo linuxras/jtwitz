@@ -79,7 +79,7 @@ public class TweetListRenderer extends SubstanceDefaultListCellRenderer {
 		setVerticalAlignment(TOP);
 
 		StringBuffer buf = new StringBuffer("<p>");
-		if(!s.getToUser().equals("")) {
+		if(s.getToUser() != null && !s.getToUser().equals("")) {
 			buf.append("<strong><font color=\"blue\">@");
 			buf.append(s.getToUser());
 			buf.append(" - </font></strong>");

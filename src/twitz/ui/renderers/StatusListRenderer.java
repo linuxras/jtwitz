@@ -60,7 +60,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		setVerticalAlignment(TOP);
 
 		StringBuffer buf = new StringBuffer("<p>");
-		if(!s.getInReplyToScreenName().equals("")) {
+		if(s.getInReplyToScreenName() != null && !s.getInReplyToScreenName().equals("")) {
 			buf.append("<strong><font color=\"blue\">@");
 			buf.append(s.getInReplyToScreenName());
 			buf.append(" - </font></strong>");

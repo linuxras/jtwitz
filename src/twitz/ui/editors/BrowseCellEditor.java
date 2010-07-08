@@ -22,6 +22,7 @@ import javax.swing.event.CellEditorListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import org.pushingpixels.substance.api.SubstanceSkin;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
@@ -249,6 +250,8 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 			StringBuffer buf = new StringBuffer();
 			for(int i=0; i < pass.length; i++)
 				buf.append(pass[i]);
+			//if(logdebug)
+			//	logger.debug("Current Password String: "+buf.toString());
 			rv = buf.toString();
 		}
 		else {
@@ -307,20 +310,15 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	private javax.swing.JPanel panel = new javax.swing.JPanel();
 	private javax.swing.JCheckBox chkEditor = new javax.swing.JCheckBox();
 	private javax.swing.JPasswordField passEditor = new javax.swing.JPasswordField();
-	private String[] skins;// = new String[]();
-//	{
-//		"Autumn", "BusinessBlackSteel", "BusinessBlueSteel", "Business",
-//		"ChallengerDeep", "CremeCoffee", "Creme", "DustCoffee", "Dust",
-//		"EmeraldDusk", "Gemini", "GraphiteAqua", "GraphiteGlass", "Graphite",
-//		"Magellan", "MistAqua", "MistSilver", "Moderate", "NebulaBrickWall",
-//		"Nebula", "OfficeBlue2007", "OfficeSilver2007", "Raven", "Sahara", "Twilight"
-//	};
-	private javax.swing.JComboBox cmbSkins;// = new javax.swing.JComboBox(skins);
+	private String[] skins;
+	private javax.swing.JComboBox cmbSkins;
 	//private javax.swing.JComboBox cmbSkins = new SubstanceSkinComboSelector();
 	private String boolModel[] = {"true", "false"};
 	private javax.swing.JSpinner boolEditor = new javax.swing.JSpinner(new javax.swing.SpinnerListModel(boolModel));
 	private twitz.util.SettingsManager config = twitz.util.SettingsManager.getInstance();
 	private String currentEditor = null;
+	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private boolean logdebug = logger.isDebugEnabled();
 	org.jdesktop.application.ResourceMap resourceMap;
     // End of variables declaration
 
