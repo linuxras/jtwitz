@@ -21,6 +21,7 @@ public class UserTest implements User{
 
 	private String screenName = "Twitz_ras";
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private Date born = new Date();
 
 	public UserTest() {
 		this("Twitz_ras");
@@ -178,7 +179,7 @@ public class UserTest implements User{
 
 	public Date getCreatedAt()
 	{
-		return new Date();
+		return born;
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 

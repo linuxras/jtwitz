@@ -19,11 +19,13 @@ import twitter4j.User;
  */
 public class StatusTest implements Status{
 
+	private Date created = new Date();
+
 	public StatusTest(){}
 	
 	public Date getCreatedAt()
 	{
-		return new Date();
+		return created;
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
