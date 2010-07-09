@@ -156,7 +156,7 @@ public class StatusTest implements Status{
 
 	public boolean isFavorited()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return true;
 	}
 
 	public User getUser()

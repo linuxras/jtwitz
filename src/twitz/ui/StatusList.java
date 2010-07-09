@@ -26,7 +26,7 @@ import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.StatusListModel;
-import twitz.ui.renderers.StatusListRenderer;
+import twitz.ui.renderers.StatusListPanelRenderer;
 
 /**
  *
@@ -43,7 +43,7 @@ public class StatusList extends JList implements MouseListener, ActionListener, 
 
 	public StatusList(ListModel model) {
 		super(model);
-		super.setCellRenderer(new StatusListRenderer());
+		super.setCellRenderer(new StatusListPanelRenderer());
 	}
 
 	/**

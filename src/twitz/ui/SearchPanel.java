@@ -105,7 +105,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 
         contactsList.setName("contactsList"); // NOI18N
 
-        statusList.setCellRenderer(new twitz.ui.renderers.StatusListRenderer());
+        statusList.setCellRenderer(new twitz.ui.renderers.StatusListPanelRenderer());
         statusList.setName("statusList"); // NOI18N
 
         tweetList.setName("tweetList"); // NOI18N

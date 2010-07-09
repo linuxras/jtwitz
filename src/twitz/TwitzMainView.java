@@ -95,6 +95,7 @@ import twitz.ui.SearchPanel;
 import twitz.ui.StatusPanel;
 import twitz.ui.TimeLinePanel;
 import twitz.ui.renderers.StatusListRenderer;
+import twitz.ui.renderers.StatusListPanelRenderer;
 
 /**
  *

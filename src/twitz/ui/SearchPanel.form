@@ -13,7 +13,7 @@
           <Connection code="new twitz.ui.models.StatusListModel()" type="code"/>
         </Property>
         <Property name="cellRenderer" type="javax.swing.ListCellRenderer" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-          <Connection code="new twitz.ui.renderers.StatusListRenderer()" type="code"/>
+          <Connection code="new twitz.ui.renderers.StatusListPanelRenderer()" type="code"/>
         </Property>
         <Property name="name" type="java.lang.String" value="statusList" noResource="true"/>
       </Properties>
