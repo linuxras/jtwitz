@@ -33,6 +33,11 @@ public class LocationListModel extends AbstractListModel {
 		return locations.elementAt(index);
 	}
 
+	public Location getLocationAt(int index)
+	{
+		return locations.elementAt(index);
+	}
+
 	public void addLocation(Location l) {
 		int index = getSize();
 		locations.addElement(l);

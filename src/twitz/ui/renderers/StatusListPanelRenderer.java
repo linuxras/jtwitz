@@ -350,11 +350,11 @@ public class StatusListPanelRenderer extends JPanel implements TwitzEventModel, 
 //		}
 		buf.append(pretify(s,s.getText()));
 		buf.append("</p>");
-		StringBuffer tbuf = new StringBuffer();
-		tbuf.append("<p><center><strong>");
-		tbuf.append(u.getScreenName()+"</strong><br/><em>");
-		tbuf.append(TimeSpanUtil.toTimeSpanString(d));
-		tbuf.append("<br/>"+p.getName()+"</em></center></p>");
+	//	StringBuffer tbuf = new StringBuffer();
+	//	tbuf.append("<p><center><strong>");
+	//	tbuf.append(u.getScreenName()+"</strong><br/><em>");
+	//	tbuf.append(TimeSpanUtil.toTimeSpanString(d));
+	//	tbuf.append("<br/>"+p.getName()+"</em></center></p>");
 
 		setAvatar(icon);
 		setStatus(s);

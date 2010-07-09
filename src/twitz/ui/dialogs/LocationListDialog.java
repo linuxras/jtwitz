@@ -277,7 +277,10 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		if(countriesList.getSelectedIndex() != -1)
 		{
 			//Get the woeid from the location in this list. maybe need a custom model here
-			selected = (Location)countriesList.getSelectedValue();
+			int index = countriesList.getSelectedIndex();
+			LocationListModel model (Location)countriesList.getModel();
+			//selected = (Location)countriesList.getSelectedValue();
+			selected = model.getLocationAt(index);
 			args.add(selected.getWoeid());
 			firePropertyChange("locationsChanged", oldLocation, selected.getCountryName());
 			oldLocation = selected.getCountryName();
@@ -285,7 +288,10 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		if(citiesList.getSelectedIndex() != -1)
 		{
 			//Get the woeid from the location in this list. maybe need a custom model here
-			selected = (Location)citiesList.getSelectedValue();
+			int index = citiesList.getSelectedIndex();
+			LocationListModel model (Location)citiesList.getModel();
+			//selected = (Location)citiesList.getSelectedValue();
+			selected = model.getLocationAt(index);
 			args.add(selected.getPlaceCode());
 			firePropertyChange("locationsChanged", oldLocation, selected.getPlaceName());
 			oldLocation = selected.getPlaceName();

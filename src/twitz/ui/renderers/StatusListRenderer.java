@@ -71,7 +71,14 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		tbuf.append("<p><center><strong>");
 		tbuf.append(u.getScreenName()+"</strong><br/><em>");
 		tbuf.append(TimeSpanUtil.toTimeSpanString(d));
-		tbuf.append("<br/>"+p.getName()+"</em></center></p>");
+		if(p != null)
+		{
+			tbuf.append("<br/>"+p.getName()+"</em></center></p>");
+		}
+		else
+		{
+				tbuf.append("</em></center></p>");
+		}
 
 		setIcon(icon);
 		setToolTipText("<html>"+tableWrap(tbuf.toString(), 200));
