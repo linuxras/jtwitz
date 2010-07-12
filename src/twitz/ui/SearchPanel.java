@@ -323,6 +323,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	@Action
 	public void doSearch()//{{{
 	{
+		btnSearch.setEnabled(true);
 		Map map = null;
 		ArrayList args = null;
 		switch(this.searchType)

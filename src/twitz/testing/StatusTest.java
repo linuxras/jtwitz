@@ -20,9 +20,23 @@ import twitter4j.User;
 public class StatusTest implements Status{
 
 	private Date created = new Date();
+	private String[] texts = {
+		"this is my test tweet, if this works then we know that something is going on right. It has just enough charactors for a full #twitter message.",
+		"@monkeybrain - this is my test tweet, if this works then we know that something is going on right. It has just enough charactors for a full #twitter message.",
+		"this is my test tweet, if this works then we know that something is going on right. It has just enough charactors for a full #twitter message.",
+		"@twitz_ras - this is my test tweet", 
+		"this is my test tweet, if this works then we know that something is going on right. It has just enough charactors for a full #twitter message.",
+		"@fembot23552 - if this works then we know that something is going on right.",
+		"this is my test tweet, if this works then we know that something is going on right. It has just enough charactors for a full #twitter message.",
+		"It has just enough charactors for a full #twitter message.",
+		"This works then we know that something is going on right.",
+		"this is my test tweet, if this works then we know that something is going on right. It has just enough charactors for a full #twitter message.",
+	};
+	private int text = 0;
 
 	public StatusTest(){}
 	
+	public StatusTest(int sample){this.text = sample;}
 	public Date getCreatedAt()
 	{
 		return created;
@@ -38,13 +52,13 @@ public class StatusTest implements Status{
 
 	public String getText()
 	{
-		return "this is my test tweet, if this works then we know that something is going on right. It has just enough charactors for a full twitter message.";
+		return texts[text];
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public String getSource()
 	{
-		return "this is my test tweet, if this works then we know that something is going on right";
+		return "jtwitz";
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 

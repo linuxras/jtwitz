@@ -298,6 +298,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				//TODO: need to call Twitter.verifyCredentials() here
 			}
 			catch(Exception ignore) {}
+			twitz.TwitzMainView.getInstance().initTwitter();
 			updateLogin = false;
 		}
 		if(updateSkin) {

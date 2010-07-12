@@ -240,12 +240,6 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		countries.add("Worldwide");
 		for(Location l : locals)
 		{
-			if(l.getWoeid() == 1)
-			{
-		//		countryModel.addLocation(l);
-		//		countries.add(l.getPlaceName());
-				continue; //woeid of 1 is Worldwide and should not be in cities list.
-			}
 			if(!countries.contains(l.getCountryName()))
 			{
 				countryModel.addLocation(l);
@@ -278,7 +272,7 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		{
 			//Get the woeid from the location in this list. maybe need a custom model here
 			int index = countriesList.getSelectedIndex();
-			LocationListModel model (Location)countriesList.getModel();
+			LocationListModel model = (LocationListModel)countriesList.getModel();
 			//selected = (Location)countriesList.getSelectedValue();
 			selected = model.getLocationAt(index);
 			args.add(selected.getWoeid());
@@ -289,7 +283,7 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		{
 			//Get the woeid from the location in this list. maybe need a custom model here
 			int index = citiesList.getSelectedIndex();
-			LocationListModel model (Location)citiesList.getModel();
+			LocationListModel model = (LocationListModel)citiesList.getModel();
 			//selected = (Location)citiesList.getSelectedValue();
 			selected = model.getLocationAt(index);
 			args.add(selected.getPlaceCode());

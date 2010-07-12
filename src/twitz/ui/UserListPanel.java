@@ -11,6 +11,7 @@
 
 package twitz.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.FocusEvent;
@@ -25,6 +26,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.BorderFactory;
 import javax.swing.event.ListDataEvent;
@@ -33,6 +35,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
+import org.jdesktop.swingx.JXCollapsiblePane;
 import twitter4j.PagableResponseList;
 import twitter4j.Paging;
 import twitter4j.Status;
@@ -73,38 +76,21 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        listPane = new javax.swing.JScrollPane();
-        contactsList1 = new twitz.ui.ContactsList();
-        toolbar = new javax.swing.JToolBar();
-        btnCollapse = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JToolBar.Separator();
+        btnCollapse = new javax.swing.JButton();
+        toolbar = new javax.swing.JToolBar();
         listName = new javax.swing.JLabel();
         jSeparator2 = new javax.swing.JToolBar.Separator();
         btnUserAdd = new javax.swing.JButton();
         btnUserDelete = new javax.swing.JButton();
+        listPane = new javax.swing.JScrollPane();
+        contactsList1 = new twitz.ui.ContactsList();
         pagingToolBar = new javax.swing.JToolBar();
         btnPrev = new javax.swing.JButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
         btnNext = new javax.swing.JButton();
 
-        setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        setName("UserListPanel"); // NOI18N
-        setLayout(new java.awt.BorderLayout());
-
-        listPane.setName("listPane"); // NOI18N
-
-        contactsList1.setModel(new ContactsListModel());
-        contactsList1.setCellRenderer(new ContactsRenderer());
-        contactsList1.setInUserList(true);
-        contactsList1.setName("contactsList1"); // NOI18N
-        listPane.setViewportView(contactsList1);
-
-        add(listPane, java.awt.BorderLayout.CENTER);
-
-        toolbar.setFloatable(false);
-        toolbar.setRollover(true);
-        toolbar.setName("toolbar"); // NOI18N
-        toolbar.setPreferredSize(new java.awt.Dimension(100, 22));
+        jSeparator1.setName("jSeparator1"); // NOI18N
 
         btnCollapse.setAction(actionMap.get("toggleCollapsed")); // NOI18N
         btnCollapse.setIcon(resourceMap.getIcon("btnCollapse.icon")); // NOI18N
@@ -114,10 +100,15 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
         btnCollapse.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
         btnCollapse.setName("btnCollapse"); // NOI18N
         btnCollapse.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolbar.add(btnCollapse);
 
-        jSeparator1.setName("jSeparator1"); // NOI18N
-        toolbar.add(jSeparator1);
+        setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        setName("UserListPanel"); // NOI18N
+        setLayout(new java.awt.BorderLayout());
+
+        toolbar.setFloatable(false);
+        toolbar.setRollover(true);
+        toolbar.setName("toolbar"); // NOI18N
+        toolbar.setPreferredSize(new java.awt.Dimension(100, 22));
 
         listName.setText(resourceMap.getString("listName.text")); // NOI18N
         listName.setToolTipText(listName.getText());
@@ -149,6 +140,16 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
         add(toolbar, java.awt.BorderLayout.NORTH);
 
+        listPane.setName("listPane"); // NOI18N
+
+        contactsList1.setModel(new ContactsListModel());
+        contactsList1.setCellRenderer(new ContactsRenderer());
+        contactsList1.setInUserList(true);
+        contactsList1.setName("contactsList1"); // NOI18N
+        listPane.setViewportView(contactsList1);
+
+        add(listPane, java.awt.BorderLayout.CENTER);
+
         pagingToolBar.setFloatable(false);
         pagingToolBar.setRollover(true);
         pagingToolBar.setName("pagingToolBar"); // NOI18N
@@ -178,24 +179,28 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
         btnNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         pagingToolBar.add(btnNext);
 
-        add(pagingToolBar, java.awt.BorderLayout.PAGE_END);
+        add(pagingToolBar, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 	//}}}
 
 	//Private methods
+	//
 	private void requestListStatus()//{{{
 	{
-		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", this);
-		ArrayList args = new ArrayList();
-		args.add(list.getUser().getScreenName());
-		args.add(list.getId());
-		Paging pager = new Paging();
-		pager.setPage(1); //FIXME: need to properly support the paging with a next/prev 
-		args.add(pager);
-		map.put("arguments", args);
-		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LIST_STATUSES, new java.util.Date().getTime(), map));
+		if(TwitzMainView.getInstance().isConnected())
+		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(list.getUser().getScreenName());
+			args.add(list.getId());
+			Paging pager = new Paging();
+			pager.setPage(1); //FIXME: need to properly support the paging with a next/prev 
+			args.add(pager);
+			map.put("arguments", args);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LIST_STATUSES, new java.util.Date().getTime(), map));
+		}
 	}//}}}
 
 	private void initDefaults() {//{{{
@@ -267,22 +272,40 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		jSeparator2.setPreferredSize(new Dimension(1000,20));
 		listName.setMaximumSize(new Dimension(40,listName.getPreferredSize().height));
 		listName.setFont(new Font("Arial", Font.BOLD, 10));
+		MouseListener ml = new MouseAdapter(){
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				toggleCollapsed();
+			}
+		};
+		listName.addMouseListener(ml);
+		jSeparator2.addMouseListener(ml);
+
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(listPane);
 
 		btnPrev.setEnabled(false);
 		btnNext.setEnabled(false);
+		//setCollapsed(true);
+	//	toggle = collapsiblePane.getActionMap().get(JXCollapsiblePane.TOGGLE_ACTION);
+	//	toggle.putValue(JXCollapsiblePane.COLLAPSE_ICON, resourceMap.getIcon("btnCollapse.down.icon"));
+	//	toggle.putValue(JXCollapsiblePane.EXPAND_ICON, resourceMap.getIcon("btnCollapse.icon"));
+	//	btnCollapse.setAction(toggle);
+	//	btnCollapse.setText("");
 	}//}}}
 
 	@Action
 	public void toggleCollapsed()
 	{
 		setCollapsed(!collapsed);
+		if(!isFocusOwner())
+			requestFocusInWindow();
 	}
 
 	@Action
 	public void addListUser() {
 		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("listname", getTitle());
+		map.put("listname", list.getName());
 		firePropertyChange("addListUser", map, null);
 	}
 
@@ -301,7 +324,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	}//}}}
 
 	@Action
-	public void getNext()
+	public void getNext()//{{{
 	{
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("caller", this);
@@ -314,10 +337,10 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		args.add(nextPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.LIST_MEMBERS, new java.util.Date().getTime(), map));
-	}
+	}//}}}
 
 	@Action
-	public void getPrevious()
+	public void getPrevious()//{{{
 	{
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("caller", this);
@@ -328,19 +351,23 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		args.add(prevPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.LIST_MEMBERS, new java.util.Date().getTime(), map));
-	}
+	}//}}}
 
 	public void setCollapsed(boolean c) {//{{{
+		boolean old = collapsed;
 		if(collapsed && c) {
 			return;
 		}
 		else if(collapsed && !c) {
 			listPane.setVisible(true);
 			contactsList1.setVisible(true);
+			contactsList1.revalidate();
 			setPreferredSize(new Dimension(50, boxHeight));
 			btnCollapse.setIcon(resourceMap.getIcon("btnCollapse.icon"));
 			collapsed = false;
-			this.revalidate();
+			requestListStatus();
+			setBorder(selectedBorder);
+			firePropertyChange("collapsed", old, collapsed);
 		}
 		else if(!collapsed && c) {
 			boxHeight = getHeight();
@@ -349,8 +376,12 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 			setPreferredSize(new Dimension(50, 24));
 			btnCollapse.setIcon(resourceMap.getIcon("btnCollapse.down.icon"));
 			collapsed = true;
-			this.revalidate();
+			setBorder(defaultBorder);
+			firePropertyChange("collapsed", old, collapsed);
 		}
+		//parent.collapsePanels(list.getName(), collapsed);
+		this.revalidate();
+		repaint();
 	}//}}}
 
 	public boolean isCollapsed() {
@@ -361,7 +392,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		return contactsList1;
 	}
 
-	public void setTitle(String title) {
+	public void setTitle(String title) {//{{{
 		if (title.length() > 9)
 		{
 			listName.setText(title.substring(0, 9));
@@ -371,7 +402,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 			listName.setText(title);
 		}
 		listName.setToolTipText(title);
-	}
+	}//}}}
 
 	public String getTitle() {
 		return listName.getText();
@@ -389,7 +420,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		contactsList1.addUser(user);
 	}
 
-	public void setUserList(UserList userList)
+	public void setUserList(UserList userList)//{{{
 	{
 		if(userList != null)
 		{
@@ -407,14 +438,14 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.LIST_MEMBERS, new java.util.Date().getTime(), map));
 			}
 		}
-	}
+	}//}}}
 
 	public UserList getUserList()
 	{
 		return list;
 	}
 
-	public void updateList(PagableResponseList<User> users)
+	public void updateList(PagableResponseList<User> users)//{{{
 	{
 		ContactsListModel clm = contactsList1.getModel();
 		clm.clear();
@@ -426,7 +457,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		btnPrev.setEnabled(users.hasPrevious());
 		btnNext.setEnabled(users.hasNext());
 		//TODO add next/prev buttons to manage paging
-	}
+	}//}}}
 
 	//MouseListener
 	public void mouseClicked(MouseEvent e) {//{{{
@@ -457,7 +488,6 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 				//twitter4j.Twitter t = TwitterManager.getInstance(TwitzMainView.getInstance()).getTwitterInstance();
 				
 			}
-			requestListStatus();
 			if(!isFocusOwner())
 				requestFocusInWindow();
 		}
@@ -468,15 +498,36 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	public void mouseExited(MouseEvent e) { }
 
 	//FocusListener
-	public void focusGained(FocusEvent e) {
-		if(logdebug)
-			logger.debug("Panel selected: "+getTitle());
-		setBorder(selectedBorder);
+	public void focusGained(FocusEvent e) {//{{{
+		//if(logdebug)
+		//	logger.debug("Panel selected: "+getTitle());
+		setCollapsed(false);
+		if(!e.isTemporary() && getInActive())
+		{
+			//requestListStatus();
+		//	setBorder(selectedBorder);
+			setInActive(false);
+		}
+	}//}}}
+
+	public void focusLost(FocusEvent e) {//{{{
+		//if(logdebug)
+		//	logger.debug("Panel unselected: "+getTitle());
+		if(e.getOppositeComponent() instanceof UserListPanel && !e.isTemporary())
+		{
+		//	setBorder(defaultBorder);
+			setInActive(true);
+		}
+	}//}}}
+
+	public void setInActive(boolean bool)
+	{
+		inactive = bool;
 	}
-	public void focusLost(FocusEvent e) {
-		if(logdebug)
-			logger.debug("Panel unselected: "+getTitle());
-		setBorder(defaultBorder);
+	
+	public boolean getInActive()
+	{
+		return inactive;
 	}
 
 	//TwitzEventModel
@@ -493,7 +544,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	}
 
 	//ActionListener
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent e) {//{{{
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("caller", this);
 		map.put("async", true);
@@ -502,7 +553,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		if(logdebug)
 			logger.debug("Firing TwitzEvent");
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
-	}
+	}//}}}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCollapse;
@@ -522,6 +573,8 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private Border defaultBorder, selectedBorder;
+	private javax.swing.Action toggle;
+	private JPanel contentPanel = new JPanel(new BorderLayout());
 
 	boolean collapsed = false;
 	int boxHeight = 350;
@@ -532,6 +585,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	final static Logger logger = Logger.getLogger(UserListPanel.class.getName());
 	boolean logdebug = logger.isDebugEnabled();
 	boolean loginfo = logger.isInfoEnabled();
+	private boolean inactive = true;
 
 	private long prevPage = -1;
 	private long nextPage = -1;

@@ -80,7 +80,7 @@ public class TwitterManager extends DefaultTwitzEventModel {
 		baseConfig = buildConfiguration();
 		twitter = new TwitterFactory(baseConfig).getInstance(config.getString("twitter.id"),config.getString("twitter.password"));
 		atwitter = new AsyncTwitterFactory(baseConfig, view).getInstance(config.getString("twitter.id"),config.getString("twitter.password"));
-		view.loadAllPanels();
+		//view.loadAllPanels();
 	}
 
 	public ResourceMap getResourceMap() {

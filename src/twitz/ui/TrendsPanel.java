@@ -31,6 +31,7 @@ import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzListener;
+import twitz.testing.*;
 
 /**
  *
@@ -177,6 +178,11 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 	{
 		lblLocation.setText("Worldwide");
 		lblLocation.setToolTipText("Worldwide");
+		
+		TrendsListModel tlm = (TrendsListModel) trendsList.getModel();
+		tlm.addTrend(new TrendTest());
+		tlm.addTrend(new TrendTest());
+		tlm.addTrend(new TrendTest());
 		ListSelectionListener lsl = new ListSelectionListener(){//{{{
 
 			public void valueChanged(ListSelectionEvent e)
@@ -186,6 +192,7 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 				callSearchOnTrend(trend);
 			}
 		};//}}}
+		trendsList.addListSelectionListener(lsl);
 	}
 
 	private void callSearchOnTrend(Trend trend)

@@ -6,6 +6,10 @@
 package twitz.ui;
 
 import java.awt.Component;
+import java.awt.BorderLayout;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -17,22 +21,46 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.GroupLayout.ParallelGroup;
 import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.JPanel;
+import javax.swing.JToolBar;
+import javax.swing.JToolBar.Separator;
 import javax.swing.SwingConstants;
 import twitter4j.User;
 import twitter4j.UserList;
+import twitter4j.PagableResponseList;
+import org.jdesktop.application.Action;
 import twitz.TwitzMainView;
+import twitz.events.*;
+import twitz.util.SettingsManager;
 
 
 /**
  *
  * @author mistik1
  */
-public class UserListMainPanel extends JPanel {
-	javax.swing.GroupLayout layout;
-	ParallelGroup vgroup;
-	SequentialGroup hgroup;
-	Map<String, UserListPanel> panels = Collections.synchronizedMap(new TreeMap<String, UserListPanel>());
-	Map<String,UserList> userlists = Collections.synchronizedMap(new TreeMap<String, UserList>());
+public class UserListMainPanel extends JPanel implements TwitzEventModel, PropertyChangeListener {
+
+	private BorderLayout blayout = new BorderLayout();
+	/**
+	 * The panel used to contain the UserListPanel used to display userlists
+	 */
+	private JPanel listPanel = new JPanel();
+	private JToolBar toolbar = new JToolBar();
+	private javax.swing.JButton btnPrev = new javax.swing.JButton();
+    private Separator jSeparator3 = new Separator();
+    private javax.swing.JButton btnNext = new javax.swing.JButton();
+    private javax.swing.JScrollPane userListPane = new javax.swing.JScrollPane();
+    private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.ui.UserListPanel.class);
+	private javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(UserListMainPanel.class, this);
+	private SettingsManager config = SettingsManager.getInstance();
+	private javax.swing.GroupLayout layout;
+	private ParallelGroup vgroup;
+	private SequentialGroup hgroup;
+	private Map<String, UserListPanel> panels = Collections.synchronizedMap(new TreeMap<String, UserListPanel>());
+	private Map<String,UserList> userlists = Collections.synchronizedMap(new TreeMap<String, UserList>());
+	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
+
+	private long nextPage = -1;
+	private long prevPage = -1;
 	
 	public UserListMainPanel()
 	{
@@ -41,8 +69,8 @@ public class UserListMainPanel extends JPanel {
 	}
 
 	@Override
-	public GroupLayout getLayout() {
-		return layout;
+	public BorderLayout getLayout() {
+		return blayout;
 	}
 
 	/**
@@ -57,10 +85,31 @@ public class UserListMainPanel extends JPanel {
 		return;
 	}
 
-	private void initLayout() {//{{{
-		layout = new javax.swing.GroupLayout(this);
+	public void collapsePanels(UserListPanel ulp, boolean collapsed)
+	{
+		if(!collapsed)
+		{
+			String listname = ulp.getUserList().getName(); //TODO Null check (should nevel be null as a userlistpanel should not exist with a userlist)
+			java.util.Set<String> set = panels.keySet();
+			java.util.Iterator<String> iter = set.iterator();
+			while(iter.hasNext())
+			{
+				String key = iter.next();
+				UserListPanel p = panels.get(key);
+				if(key.equals(listname))
+				{
+					//p.setCollapsed(false);
+					continue;
+				}
+				p.setCollapsed(true);
+			}
+		}
+	}
 
-        super.setLayout(layout);
+	private void initLayout() {//{{{
+		layout = new javax.swing.GroupLayout(listPanel);
+
+        super.setLayout(blayout);
 		layout.setHonorsVisibility(true);
 		//layout.setAutoCreateContainerGaps(true);
 		layout.setAutoCreateGaps(true);
@@ -78,30 +127,90 @@ public class UserListMainPanel extends JPanel {
 		ParallelGroup pg1 = layout.createParallelGroup(Alignment.LEADING)
 				.addGroup(hgroup);
 		layout.setVerticalGroup(pg1);
+		//Add the listPanel to our layout
+		listPanel.setLayout(layout);
+		add(userListPane, BorderLayout.CENTER);
+		setupToolBar();
+		add(toolbar, BorderLayout.NORTH);
+		btnNext.setEnabled(false);
+		btnPrev.setEnabled(false);
+
+        userListPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        userListPane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        userListPane.setAutoscrolls(true);
+        userListPane.setName("userListPane"); // NOI18N
+        userListPane.setViewportView(listPanel);
+		javax.swing.JScrollBar bar = userListPane.getVerticalScrollBar();
+		bar.setUnitIncrement(50);
+		TwitzMainView.fixJScrollPaneBarsSize(userListPane);
+
 	}//}}}
 
-	public void addPanel(Component comp) {
+	private void setupToolBar()//{{{
+	{
+        toolbar.setFloatable(false);
+        toolbar.setRollover(true);
+        toolbar.setName("listToolbar"); // NOI18N
+        toolbar.setPreferredSize(new java.awt.Dimension(100, 15));
 
-//      vgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
-//		hgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
+        btnPrev.setIcon(resourceMap.getIcon("btnPrev.icon")); // NOI18N
+        btnPrev.setText(resourceMap.getString("btnPrev.text")); // NOI18N
+        btnPrev.setToolTipText(resourceMap.getString("btnPrev.toolTipText")); // NOI18N
+        btnPrev.setFocusable(false);
+        btnPrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnPrev.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        btnPrev.setName("btnPrev"); // NOI18N
+        btnPrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolbar.add(btnPrev);
 
+        jSeparator3.setMaximumSize(new java.awt.Dimension(1000, 10));
+        jSeparator3.setName("jSeparator3"); // NOI18N
+        toolbar.add(jSeparator3);
+
+        btnNext.setIcon(resourceMap.getIcon("btnNext.icon")); // NOI18N
+        btnNext.setToolTipText(resourceMap.getString("btnNext.toolTipText")); // NOI18N
+        btnNext.setFocusable(false);
+        btnNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnNext.setLabel(resourceMap.getString("btnNext.label")); // NOI18N
+        btnNext.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        btnNext.setName("btnNext"); // NOI18N
+        btnNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		toolbar.add(btnNext);
+	}//}}}
+
+	@Action
+	public void getNext()//{{{
+	{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", this);
+		ArrayList args = new ArrayList();
+		args.add(config.getString("twitter.id"));//screenName
+		args.add(nextPage);
+		map.put("arguments", args);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
+	}//}}}
+
+	@Action
+	public void getPrevious()//{{{
+	{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", this);
+		ArrayList args = new ArrayList();
+		args.add(config.getString("twitter.id"));//screenName
+		args.add(prevPage);
+		map.put("arguments", args);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
+	}//}}}
+
+	public void addPanel(Component comp) //{{{
+	{
 		vgroup.addComponent(comp, 0, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE);
 		hgroup.addComponent(comp, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
-//		if(!userlists.isEmpty()){
-//			Set<String> set = userlists.keySet();
-//			Iterator iter = set.iterator();
-//			UserListPanel[] components = new UserListPanel[set.size()+1];
-//			int count = 0;
-//			while(iter.hasNext()) {
-//				components[count] = userlists.get(iter.next());
-//				count++;
-//			}
-//			components[count] = comp;
-//			layout.linkSize(SwingConstants.HORIZONTAL, components[components.length-1], comp);
-//		}
-	}
+	}//}}}
 
-	public boolean removeUserList(String listname) {
+	public boolean removeUserList(String listname) {//{{{
 		boolean rv = true;
 		UserListPanel panel = panels.get(listname);
 		if(panel != null) {
@@ -113,9 +222,9 @@ public class UserListMainPanel extends JPanel {
 		else
 			rv = false;
 		return rv;
-	}
+	}//}}}
 
-	public void removeAllUserList() {
+	public void removeAllUserList() {//{{{
 		Set<String> set = userlists.keySet();
 		Iterator iter = set.iterator();
 		while(iter.hasNext()) {
@@ -124,7 +233,7 @@ public class UserListMainPanel extends JPanel {
 		}
 		panels.clear();
 		userlists.clear();
-	}
+	}//}}}
 
 	/**
 	 * @deprecated This method is used only for development testing Do NOT use in production
@@ -132,46 +241,90 @@ public class UserListMainPanel extends JPanel {
 	 * @param listName
 	 * @return
 	 */
-	public UserListPanel addUserList(User[] users, String listName) {
+	public UserListPanel addUserList(User[] users, String listName) {//{{{
 		UserListPanel panel = new UserListPanel();
 		panel.addUser(users);
 		panel.setTitle(listName);
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 		panel.addTwitzListener(TwitzMainView.getInstance());
+		panel.addPropertyChangeListener("collapsed", this);
 		addPanel(panel);
 		panels.put(listName, panel);
+		//panel.setCollapsed(true);
 		return panel;
 		
-	}
+	}//}}}
 
 	/**
 	 * @deprecated This method is used only for development testing Do NOT use in production
 	 * @param listName
 	 * @return
 	 */
-	public UserListPanel addUserList(String listName) {
+	public UserListPanel addUserList(String listName) {//{{{
 		UserListPanel panel = new UserListPanel();
 		panel.setTitle(listName);
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 		panel.addTwitzListener(TwitzMainView.getInstance());
+		panel.addPropertyChangeListener("collapsed", this);
 		addPanel(panel);
 		panels.put(listName, panel);
+		//panel.setCollapsed(true);
 		return panel;
-	}
+	}//}}}
 
-	public UserListPanel addUserList(UserList list)
+	public UserListPanel addUserList(UserList list)//{{{
 	{
 		UserListPanel panel = new UserListPanel();
 		panel.setTitle(list.getName());
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 		//We add it first here because setUserList causes a TwitzEvent to be fired to get the list users
 		panel.addTwitzListener(TwitzMainView.getInstance());
+		panel.addPropertyChangeListener("collapsed", this);
 		
 		panel.setUserList(list);
 		
 		addPanel(panel);
 		userlists.put(list.getName(), list);
 		panels.put(list.getName(), panel);
+		//panel.setCollapsed(true);
 		return panel;
+	}//}}}
+
+	public void addUserList(PagableResponseList<UserList> userLists)//{{{
+	{
+		//Clear out the current lists
+		removeAllUserList();
+		for(UserList list : userLists)
+		{
+			addUserList(list);
+		}
+		nextPage = userLists.getNextCursor();
+		prevPage = userLists.getPreviousCursor();
+		btnNext.setEnabled(userLists.hasNext());
+		btnPrev.setEnabled(userLists.hasPrevious());
+	}//}}}
+
+	//TwitzEventModel
+	public void addTwitzListener(TwitzListener o) {
+		dtem.addTwitzListener(o);
 	}
+
+	public void removeTwitzListener(TwitzListener o) {
+		dtem.removeTwitzListener(o);
+	}
+	
+	public void fireTwitzEvent(TwitzEvent e) {
+		dtem.fireTwitzEvent(e);
+	}
+
+	public void propertyChange(PropertyChangeEvent evt)
+	{
+		if("collapsed".equals(evt.getPropertyName()))
+		{
+			boolean collapsed = (Boolean)evt.getNewValue();
+			UserListPanel p = (UserListPanel)evt.getSource();
+			this.collapsePanels(p, collapsed);
+		}
+	}
+
 }

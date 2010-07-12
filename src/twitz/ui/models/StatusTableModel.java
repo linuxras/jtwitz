@@ -9,24 +9,27 @@ import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 import twitter4j.Status;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author mistik1
  */
-public class TweetTableModel extends AbstractTableModel {
+public class StatusTableModel extends AbstractTableModel {
 
 	protected Vector<Vector<Status>> tableData = new Vector<Vector<Status>>();
 
 	protected Vector columns = new Vector();
+	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-	public TweetTableModel() {
-
+	public StatusTableModel() {
+		super();
 	}
 
 	@Override
 	public Class getColumnClass(int col)
 	{
+	//	logger.debug("getColumnClass() called: "+col);
 		return Status.class;
 	}
 	
@@ -64,10 +67,12 @@ public class TweetTableModel extends AbstractTableModel {
 		r.setElementAt(s, column);
 		fireTableCellUpdated(row, column);
 	}
-
-	public boolean isCellEditable()
+	
+	@Override
+	public boolean isCellEditable(int rowIndex, int columnIndex)
 	{
-		return false;
+		logger.debug("isCellEditable() called:");
+		return true;
 	}
 
 	public void addRow(Vector<Status> data)

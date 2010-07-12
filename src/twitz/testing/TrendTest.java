@@ -15,7 +15,7 @@ public class TrendTest implements Trend{
 
 	public String getName()
 	{
-		return "#TESTING";
+		return "#TESTING TRENDS";
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
@@ -27,7 +27,7 @@ public class TrendTest implements Trend{
 
 	public String getQuery()
 	{
-		return "Query string here";
+		return "TESTING+TRENDS";
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 

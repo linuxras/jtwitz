@@ -98,8 +98,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		Rectangle frame = comp.getBounds();
 		Rectangle desktop = ge.getMaximumWindowBounds();
-		logger.debug("Width of desktop: " + desktop.toString());
-		logger.debug("Width of frame: " + frame.toString());
+//		logger.debug("Width of desktop: " + desktop.toString());
+//		logger.debug("Width of frame: " + frame.toString());
 		boolean up = false;
 		boolean down = false;
 		boolean left = false;

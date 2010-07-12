@@ -11,10 +11,16 @@
 
 package twitz.ui;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Vector;
+import javax.swing.JTable;
+import javax.swing.table.TableColumn;
 import twitter4j.PagableResponseList;
 import twitter4j.Paging;
 import twitter4j.ResponseList;
@@ -25,7 +31,9 @@ import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
+import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.models.StatusListModel;
+import twitz.ui.models.StatusTableModel;
 
 /**
  *
@@ -66,7 +74,31 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 
 	private void initDefaults()
 	{
+	//	StatusTableModel model = new StatusTableModel();
+	//	model.addColumn("Tweets");
+	//	status = new javax.swing.JTable(model);
+	//	status.setDefaultRenderer(Status.class, new twitz.ui.renderers.StatusTablePanelRenderer());
+	//	status.setDefaultEditor(Status.class, new twitz.ui.editors.StatusTablePanelEditor());
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
+	//	statusScrollPane.setViewportView(status);
+	//	status.setFillsViewportHeight(true);
+		MouseListener clickListener = new MouseAdapter(){
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				StatusList source = (StatusList)e.getSource();
+				int selection = source.getSelectedIndex();
+				System.out.println("Inside click event");
+				if (source.isActionSpot(e))
+				{
+					StatusPopupPanel spp = new StatusPopupPanel();
+					spp.configureBox(source, source.getSelectedValue(), selection);
+					spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
+				//twitz.TwitzApp.fixLocation(spp);
+				}
+			}
+		};
+		//statusList.addMouseListener(clickListener);
 	}
 
 	public void setUserList(UserList list)
@@ -111,6 +143,21 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 		}
 	}
 
+	public void setStatusTable(JTable list)
+	{
+		JTable old = this.status;
+		if(list != null)
+		{
+			this.status = list;
+			this.firePropertyChange("StatusPanelStatusListChanged", old, this.status);
+		}
+	}
+
+	public JTable getStatusTable()
+	{
+		return status;
+	}
+
 	public StatusList getStatusList()
 	{
 		return this.statusList;
@@ -120,10 +167,19 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 	{
 		StatusListModel model = getStatusList().getModel();
 		model.clear();
+	//	StatusTableModel model = (StatusTableModel)status.getModel();
+
+	//	Vector<Vector<Status>> top = new Vector<Vector<Status>>();
 		for(Status s: statuses)
 		{
+	//		Vector<Status> in = new Vector<Status>();
+	//		in.add(s);
+	//		top.add(in);
 			model.addStatus(s);
 		}
+	//	Vector head = new Vector();
+	//	head.add("Tweets");
+	//	model.setDataVector(top, head);
 	}
 
 	//TwitzEventModel
@@ -144,6 +200,8 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
     private javax.swing.JScrollPane statusScrollPane;
     // End of variables declaration//GEN-END:variables
 
+//	private twitz.ui.StatusTable status = new twitz.ui.StatusTable();
+	private javax.swing.JTable status = null;
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
     private org.jdesktop.application.ResourceMap resourceMap;
 	private boolean isUserList = false;

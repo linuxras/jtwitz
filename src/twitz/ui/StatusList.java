@@ -5,10 +5,16 @@
 
 package twitz.ui;
 
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.HierarchyBoundsAdapter;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyBoundsListener;
+import java.awt.event.MouseAdapter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -19,23 +25,27 @@ import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import twitter4j.Status;
 import twitter4j.User;
+import org.apache.log4j.Logger;
 import twitz.TwitzMainView;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
+import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.models.StatusListModel;
-import twitz.ui.renderers.StatusListPanelRenderer;
+import twitz.ui.renderers.StatusListRenderer;
 
 /**
  *
  * @author mistik1
  */
-public class StatusList extends JList implements MouseListener, ActionListener, TwitzEventModel{
+public class StatusList extends JList implements ActionListener, TwitzEventModel{
 
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private StatusListModel model = new StatusListModel();;
+	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private boolean logdebug = logger.isDebugEnabled();
 
 	public StatusList() {
 		this(new StatusListModel());
@@ -43,7 +53,62 @@ public class StatusList extends JList implements MouseListener, ActionListener, 
 
 	public StatusList(ListModel model) {
 		super(model);
-		super.setCellRenderer(new StatusListPanelRenderer());
+		super.setCellRenderer(new StatusListRenderer());
+	//	HierarchyBoundsListener hbl = new HierarchyBoundsAdapter(){
+	//		public void ancestorResized(HierarchyEvent e)
+	//		{
+	//			if(logdebug)
+	//				logger.debug("Resize is taking place");
+	//			validate();
+	//		}
+	//	};
+	//	addHierarchyBoundsListener(hbl);
+		initDefaults();
+	}
+
+	private void initDefaults()
+	{
+		MouseListener clickListener = new MouseAdapter(){
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				StatusList source = (StatusList) e.getSource();
+				if (e.getButton() == MouseEvent.BUTTON3)
+				{
+					java.awt.Point p = e.getPoint();
+					int index = source.locationToIndex(p);
+					if (index != -1)
+					{ //Show menu only if list is not empty
+						if (source.getSelectedIndex() == -1)
+						{
+							source.setSelectedIndex(index);
+						}
+						//Make the caller this panel as we can add the selected list to the panel
+						//that  will make the action listener of the menu items this panel as well
+						showMenu(source, p);
+					}
+				}
+				else
+				{
+
+					int selection = source.getSelectedIndex();
+					System.out.println("Inside click event");
+					if (source.isActionSpot(e))
+					{
+						StatusPopupPanel spp = new StatusPopupPanel();
+						spp.configureBox(source, source.getSelectedValue(), selection);
+						spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
+					//twitz.TwitzApp.fixLocation(spp);
+					}
+				}
+			}
+		};
+		addMouseListener(clickListener);
+	}
+
+	private void showMenu(StatusList list, Point p)
+	{
+		TwitzMainView.getInstance().getActionsMenu(this).show(list, p.x, p.y);
 	}
 
 	/**
@@ -126,6 +191,31 @@ public class StatusList extends JList implements MouseListener, ActionListener, 
         return rv;
     }
 
+	public boolean isActionSpot(MouseEvent e)
+	{
+		final java.awt.Point loc = e.getPoint();
+		int selection = this.getSelectedIndex();
+		if(selection != -1)
+		{
+			//SwingUtilities.convertPoint(this, loc, this)
+			Rectangle rect = getCellBounds(selection, selection);
+//			System.out.println("Index: " + selection + " \nCell Size:" + rect);
+			int pos = (rect.width - 45);
+			int ypos = (rect.height - 25);
+			Rectangle box = new Rectangle(rect.x + pos, rect.y + ypos, 20, 20);
+			//Rectangle(int x, int y, int width, int height)
+//			System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
+			//box.setBounds(rect.x+pos, rect.y+ypos, 20, 20);
+			if (box.contains(loc))
+			{
+//				System.out.println("Got the spot");
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {
 		dtem.addTwitzListener(o);
@@ -138,35 +228,6 @@ public class StatusList extends JList implements MouseListener, ActionListener, 
 	public void fireTwitzEvent(TwitzEvent e) {
 		dtem.fireTwitzEvent(e);
 	}
-
-	//MouseListener
-	public void mouseClicked(MouseEvent e) {//{{{
-		if (e.getButton() == MouseEvent.BUTTON3)
-		{
-//			if(!isFocusOwner())
-//				requestFocusInWindow();
-			java.awt.Point p = e.getPoint();
-			if (e.getSource() instanceof StatusList)
-			{
-				StatusList list = (StatusList) e.getSource();
-				int index = list.locationToIndex(p);
-				if (index != -1)
-				{ //Show menu only if list is not empty
-					if(list.getSelectedIndex() == -1)
-						list.setSelectedIndex(index);
-					//Make the caller this panel as we can add the selected list to the panel
-					//that  will make the action listener of the menu items this panel as well
-					TwitzMainView.getInstance().getActionsMenu(this).show(list, p.x, p.y);
-				}
-
-			}
-		}
-	}//}}}
-
-	public void mousePressed(MouseEvent e) { }
-	public void mouseReleased(MouseEvent e)	{ }
-	public void mouseEntered(MouseEvent e) { }
-	public void mouseExited(MouseEvent e) { }
 
 	public void actionPerformed(ActionEvent e) {
 		Map map = Collections.synchronizedMap(new TreeMap());
