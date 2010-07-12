@@ -203,11 +203,11 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		tb.append(width+"");
 		tb.append("><tr><td align='left'>");
 		tb.append(TimeSpanUtil.toTimeSpanString(d));
-		tb.append("</td><td align='right'>");
+		tb.append("</td><td align='right' width='16'>");
 		tb.append("<img border=0 src='"+retweet.toString()+"'>");
-		tb.append("</td><td align='right'>");
+		tb.append("</td><td align='right' width='16'>");
 		tb.append("<img border=0 src='"+fav.toString()+"'>");
-		tb.append("</td><td align='right'>");
+		tb.append("</td><td align='right' width='16'>");
 		tb.append("<img border=0 src='"+action.toString()+"'>");
 		tb.append("</td></tr></table>");
 
