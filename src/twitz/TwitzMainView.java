@@ -79,9 +79,13 @@ import twitz.events.TwitzEventModel;
 import twitz.twitter.TwitterManager;
 import twitz.testing.*;
 import twitz.util.SettingsManager;
+import twitz.util.UserStore;
+import twitz.ui.BlockedPanel;
 import twitz.ui.ContactsList;
-import twitz.ui.TrendsPanel;
+import twitz.ui.FollowersPanel;
+import twitz.ui.FriendsPanel;
 import twitz.ui.StatusList;
+import twitz.ui.TrendsPanel;
 import twitz.ui.UserListPanel;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.models.StatusTableModel;
@@ -654,7 +658,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		friendsPane.insertTab(resourceMap.getString("friends.TabConstraints.tabTitle"), resourceMap.getIcon("friends.TabConstraints.tabIcon"), friends, resourceMap.getString("friends.TabConstraints.tabToolTip"),0); // NOI18N
         friendsPane.addTab(resourceMap.getString("userListMainPanel1.TabConstraints.tabTitle"), resourceMap.getIcon("userListMainPanel1.TabConstraints.tabIcon"), userListMainPanel1, resourceMap.getString("userListMainPanel1.TabConstraints.tabToolTip")); // NOI18N
         //friendsPanel.setLeftComponent(friendsPane);
-		friendsPane.addTab(resourceMap.getString("following.TabConstraints.tabTitle"), resourceMap.getIcon("following.TabConstraints.tabIcon"), following, resourceMap.getString("following.TabConstraints.tabToolTip")); // NOI18N
+		//friendsPane.addTab(resourceMap.getString("following.TabConstraints.tabTitle"), resourceMap.getIcon("following.TabConstraints.tabIcon"), following, resourceMap.getString("following.TabConstraints.tabToolTip")); // NOI18N
 		friendsPane.addTab(resourceMap.getString("followers.TabConstraints.tabTitle"), resourceMap.getIcon("followers.TabConstraints.tabIcon"), followers, resourceMap.getString("followers.TabConstraints.tabToolTip")); // NOI18N
 		friendsPane.addTab(resourceMap.getString("blocked.TabConstraints.tabTitle"), resourceMap.getIcon("blocked.TabConstraints.tabIcon"), blocked, resourceMap.getString("blocked.TabConstraints.tabToolTip")); // NOI18N
 
@@ -935,10 +939,6 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				}
 			}
 		});//}}}
-		friends.addMouseListener(mouseListener);
-		following.addMouseListener(mouseListener);
-		followers.addMouseListener(mouseListener);
-		blocked.addMouseListener(mouseListener);
 		//Setup the ActionListener for the search buttin
 		
 		btnTweet.setActionCommand("UPDATE_STATUS");
@@ -948,11 +948,11 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		friendsTweets.addTwitzListener(this);
 		friends.addTwitzListener(this);
 		followers.addTwitzListener(this);
-		following.addTwitzListener(this);
 		blocked.addTwitzListener(this);
 		searchPanel.addTwitzListener(this);
 		trendPanel.addTwitzListener(this);
 		userListMainPanel1.addTwitzListener(this);
+		timelinePanel.addTwitzListener(this);
 
 		blockedList.addTwitzListener(this);
 		//Disable the menuitems no long in use
@@ -1021,6 +1021,15 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		worker.execute();
 	}//}}}
 
+	public void addSampleFriends()
+	{
+		StatusListModel mod = (StatusListModel) friendsStatusPanel.getStatusList().getModel();
+		mod.clear();
+		for(int i=0; i<10; i++)
+			mod.addStatus(new StatusTest(i));
+
+	}
+
 	private void addSampleData() {//{{{
 		StatusListModel dm = timelinePanel.getStatusList().getModel();
 		//TODO: Test code to be removed in production
@@ -1029,26 +1038,21 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		}
 //		timelinePanel.getStatusList().setFixedCellHeight(120);
 
-		ContactsListModel fcm = friends.getModel();
-		fcm.add(0, new UserTest());
-		fcm.add(1, new UserTest());
-		fcm.add(2, new UserTest());
-
 		User[] ouser = new User[]{
-			new UserTest(),
+			new UserTest("Python"),
 			new UserTest("Ladybug"),
 			new UserTest("perry")
 		};
 		
 
 		User[] puser = new User[]{
-			new UserTest(),
+			new UserTest("cansport"),
 			new UserTest("CNN News"),
 			new UserTest("Abc News"),
 			new UserTest("Nbc Online"),
 			new UserTest("Black Power gen"),
 			new UserTest("Facts of Life"),
-			new UserTest()
+			new UserTest("black_rino")
 		};
 //		UserListTest(int id, String name, String fullName,
 //			String slug, String desc, int subCount,
@@ -1078,6 +1082,9 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		UserListPanel pnl5 = userListMainPanel1.addUserList(ult5);
 		pnl5.addUser(puser);
 
+		friends.addUser(ouser);
+		blocked.addUser(ouser);
+		followers.addUser(puser);
 //		userListMainPanel1.addUserList(ouser, "Panel 1");
 //		userListMainPanel1.addUserList(puser, "Panel 2");
 //		userListMainPanel1.addUserList(puser, "Mizer Ball");
@@ -1313,6 +1320,11 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		UserListPanel ulp = null;
 		StatusPanel sp = null;
 		TimeLinePanel tlp = null;
+		FriendsPanel fp = null;
+		BlockedPanel bp = null;
+		FollowersPanel flp = null;
+
+		ActionListener actions = null;
 
 		boolean selected = true;
 		if(caller != null)
@@ -1343,6 +1355,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				{
 					selected = false;
 				}
+				actions = ulp;
 			}
 			else if (caller instanceof StatusList)
 			{
@@ -1351,6 +1364,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				{
 					selected = false;
 				}
+				actions = tl;
 			}
 			else if(caller instanceof StatusPanel)
 			{
@@ -1359,6 +1373,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				{
 					selected = false;
 				}
+				actions = sp;
 			}
 			else if(caller instanceof TimeLinePanel)
 			{
@@ -1367,6 +1382,34 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				{
 					selected = false;
 				}
+				actions = tlp;
+			}
+			else if(caller instanceof FriendsPanel)
+			{
+				fp = (FriendsPanel)caller;
+				if(fp.getContactsList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				actions = fp;
+			}
+			else if(caller instanceof BlockedPanel)
+			{
+				bp = (BlockedPanel)caller;
+				if(bp.getContactsList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				actions = bp;
+			}
+			else if(caller instanceof FollowersPanel)
+			{
+				flp = (FollowersPanel)caller;
+				if(flp.getContactsList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				actions = flp;
 			}
 		}
 		JPopupMenu menu = new JPopupMenu(getResourceMap().getString("ACTIONS"));
@@ -1376,13 +1419,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		JMenuItem item = new JMenuItem(getResourceMap().getString("REPORT_SPAM"));
 		//item.setActionCommand(TwitterConstants.REPORT_SPAM+"");
 		item.setActionCommand("REPORT_SPAM");
-		if(cl != null) {
-			item.addActionListener(cl);
-		} else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.bomb"));
 		item.setEnabled(selected);
@@ -1395,14 +1433,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("CREATE_BLOCK"));
 		item.setActionCommand("CREATE_BLOCK");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.stop"));
 		item.setEnabled(selected);
@@ -1411,14 +1443,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 		item = new JMenuItem(getResourceMap().getString("DESTROY_BLOCK"));
 		item.setActionCommand("DESTROY_BLOCK");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.stop"));
 		item.setEnabled(selected);
@@ -1430,14 +1456,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.setIcon(getResourceMap().getIcon("icon.user"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("CREATE_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setActionCommand("CREATE_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_add"));
@@ -1446,14 +1466,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("DESTROY_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setActionCommand("DESTROY_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_delete"));
@@ -1462,14 +1476,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("EXISTS_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setActionCommand("EXISTS_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_go"));
@@ -1478,14 +1486,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("SHOW_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setActionCommand("SHOW_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_gray"));
@@ -1501,14 +1503,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("SEND_DIRECT_MESSAGE"));
 		item.setActionCommand("SEND_DIRECT_MESSAGE");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.user_comment"));
 		item.setEnabled(selected);
@@ -1530,14 +1526,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("NEAR_BY_PLACES"));
 		item.setActionCommand("NEAR_BY_PLACES");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.map"));
 		item.setEnabled(selected);
@@ -1546,16 +1536,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 		item = new JMenuItem(getResourceMap().getString("GEO_DETAILS"));
 		item.setActionCommand("GEO_DETAILS");
-		if(cl != null) {
-			item.addActionListener(cl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null)
-		{
-			item.addActionListener(tl);
-		}
+		item.addActionListener(actions);
 		item.setIcon(getResourceMap().getIcon("icon.map_edit"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
@@ -1570,15 +1554,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("ADD_LIST_MEMBER"));
 		item.setActionCommand("ADD_LIST_MEMBER");
-		if(cl != null) {
-			item.addActionListener(cl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
+		item.addActionListener(actions);
 		item.setIcon(getResourceMap().getIcon("icon.group_add"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
@@ -1586,14 +1565,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 		item = new JMenuItem(getResourceMap().getString("DELETE_LIST_MEMBER"));
 		item.setActionCommand("DELETE_LIST_MEMBER");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.group_delete"));
 		item.setEnabled(selected);
@@ -1602,13 +1575,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 		item = new JMenuItem(getResourceMap().getString("CHECK_LIST_MEMBERSHIP"));
 		item.setActionCommand("CHECK_LIST_MEMBERSHIP");
-		if(cl != null) {
-			item.addActionListener(cl);
-		} else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.group_gear"));
 		item.setEnabled(selected);
@@ -1619,14 +1587,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	//USER_TIMELINE
 		item = new JMenuItem(getResourceMap().getString("USER_TIMELINE"));
 		item.setActionCommand("USER_TIMELINE");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(actions != null) {
+			item.addActionListener(actions);
 		}
 		item.setIcon(getResourceMap().getIcon("icon.timeline_marker"));
 		item.setEnabled(selected);
@@ -1918,8 +1880,11 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		}
 		else if(tabPane.getSelectedComponent().equals(friendsPanel)) {
 			if(friendsPane.getSelectedComponent().equals(friends)){
-				User u = friends.getSelectedValue();
-				return u.getScreenName();
+				User u = friends.getContactsList().getSelectedValue();
+				if(u != null)
+					return u.getScreenName();
+				else
+					return null;
 			}
 			else {
 				int comps = userListMainPanel1.getComponentCount();
@@ -1969,7 +1934,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		else if(tabPane.getSelectedComponent().equals(friendsPanel)) {
 			//return this.getSelectedUserNames(friendsList);
 			if(friendsPane.getSelectedComponent().equals(friends)){
-				return this.getSelectedUserNames(friends);
+				return this.getSelectedUserNames(friends.getContactsList());
 			}
 			else {
 				int comps = userListMainPanel1.getComponentCount();
@@ -2486,34 +2451,13 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotFriendsStatuses(PagableResponseList<User> users)//{{{
 	{
-		//Now we update the friendsNameList
-		ContactsListModel clm = friends.getModel();
-		//Clear the contact list here as only one page at a time should show
-		clm.clear();
-		for(User user : users) {
-			clm.addElement(user);
-		}
-		if(users.hasNext()) {
-			//update the next button
-		}
-		if(users.hasPrevious()) {
-			//update any buttons and such
-		}
+		//Now we update the friendsList
+		friends.updateList(users);
 	}//}}}
 
 	public void gotFollowersStatuses(PagableResponseList<User> users)//{{{
 	{
-		ContactsListModel clm = followers.getModel();
-		clm.clear();
-		for(User user : users) {
-			clm.addElement(user);
-		}
-		if(users.hasNext()) {
-			//update the next button
-		}
-		if(users.hasPrevious()) {
-			//update any buttons and such
-		}
+		followers.updateList(users);
 	}//}}}
 
 	public void createdUserList(UserList userList)
@@ -2748,10 +2692,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotBlockingUsers(ResponseList<User> blockingUsers)//{{{
 	{
-		ContactsListModel m = (ContactsListModel)blocked.getModel();
-		for(User u : blockingUsers) {
-			m.addElement(u);
-		}
+		blocked.updateList(blockingUsers);
 	}//}}}
 
 	public void gotBlockingUsersIDs(IDs blockingUsersIDs)
@@ -2898,10 +2839,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	int busyIconIndex = 0;
 	private int oldHeight = 400;
 	private ContactsList blockedList = new ContactsList();
-	private ContactsList friends = new ContactsList();
-	private ContactsList followers = new ContactsList();
-	private ContactsList following = new ContactsList();
-	private ContactsList blocked = new ContactsList();
+	private FriendsPanel friends = new FriendsPanel();
+	private FollowersPanel followers = new FollowersPanel();
+	//private ContactsList following = new ContactsList();
+	private BlockedPanel blocked = new BlockedPanel();
 	private StatusList friendsTweets;
 	private StatusPanel friendsStatusPanel;
 	private TrendsPanel trendPanel;

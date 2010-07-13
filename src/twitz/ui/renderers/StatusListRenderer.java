@@ -12,6 +12,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.Map;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,6 +43,7 @@ import twitter4j.util.TimeSpanUtil;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
 import twitz.ui.dialogs.StatusPopupPanel;
+import twitz.ui.StatusList;
 
 public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	
@@ -45,10 +51,11 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	private String statusTitle = "Status";
 	private Border border = BorderFactory.createTitledBorder(new SoftBevelBorder(BevelBorder.RAISED), statusTitle, TitledBorder.LEADING, TitledBorder.BELOW_TOP); // NOI18N
 	private int selection = -1;
-	private JList source = null;
+	private StatusList source = null;
 	private boolean selected = false;
 	private boolean focused = false;
 	private Status status = null;
+	private String spotTip = "";
 
 	private MouseListener clickListener = new MouseAdapter(){
 		@Override
@@ -69,7 +76,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	{
 		super();
 		this.putClientProperty(SubstanceLookAndFeel.COLORIZATION_FACTOR, 1.0);
-		this.addMouseListener(clickListener);
+		//this.addMouseListener(clickListener);
 	}
 	
 	private void updateBorder(boolean selected)//{{{
@@ -79,7 +86,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	}//}}}
 
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean hasFocus)
+	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean hasFocus) //{{{
 	{
 		super.getListCellRendererComponent(list, value, index, isSelected, hasFocus);
 		Status s = (Status)value;
@@ -87,7 +94,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		Place p = s.getPlace();
 		Date d = s.getCreatedAt();
 		selection = index;
-		source = list;
+		source = (StatusList)list;
 		focused = hasFocus;
 		selected = isSelected;
 
@@ -160,16 +167,17 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	//		setBorder(raised);
 	//	}
 		return this;
-	}
+	} //}}}
 
-	private String tableWrap(String source, int width) {
+	private String tableWrap(String source, int width) //{{{
+	{
 		StringBuffer table = new StringBuffer("<table border=0 width=");
 		table.append(width+"");
 		table.append("><tr><td>");
 		table.append(source);
 		table.append("</td></tr></table>");
 		return table.toString();
-	}
+	} //}}}
 
 	private String tableWrap(Status stat, int width) {//{{{
 		User u = stat.getUser();
@@ -251,7 +259,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		if(isActionSpot(e))
 		{
 			source.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			return "Action Spot"; //TODO: Needs I18N
+			return resourceMap.getString(spotTip); 
 		}
 		source.setCursor(Cursor.getDefaultCursor());
 		return super.getToolTipText();
@@ -262,18 +270,27 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		final java.awt.Point loc = e.getPoint();
 		if(source != null)
 		{
+			Map<String, Rectangle> hotspots = source.getHotSpots();
 			Rectangle rect = source.getCellBounds(selection, selection);
-//			System.out.println("Index: " + selection + " \nCell Size:" + rect);
-			int pos = (rect.width - 45);
-//			int ypos = (rect.height - 25);
-			Rectangle box = new Rectangle(rect.x + pos, rect.height - 25, 20, 20);
-			//Rectangle(int x, int y, int width, int height)
-//			System.out.println("pos: "+pos+" ypos: "+ypos+"\nBox: " + box + "\nPoint: " + loc);
-			//box.setBounds(rect.x+pos, rect.y+ypos, 20, 20);
-			if (box.contains(loc))
+			Set<String> set = hotspots.keySet();
+			Iterator<String> iter = set.iterator();
+			while(iter.hasNext())
 			{
-//				System.out.println("Got the spot");
-				 return true;
+				String key = iter.next();
+				Rectangle dim = hotspots.get(key);
+//				System.out.println("Index: " + selection + " \nCell Size:" + rect);
+				int pos = (rect.width - dim.x);
+//				int ypos = (rect.height - 25);
+				Rectangle box = new Rectangle(rect.x + pos, rect.height - dim.y, dim.width, dim.height);
+				//Rectangle(int x, int y, int width, int height)
+//				System.out.println("pos: "+pos+" ypos: "+ypos+"\nBox: " + box + "\nPoint: " + loc);
+				//box.setBounds(rect.x+pos, rect.y+ypos, 20, 20);
+				if (box.contains(loc))
+				{
+					spotTip = "tooltip."+key;
+//					System.out.println("Got the spot");
+					 return true;
+				}
 			}
 		}
 		return false;

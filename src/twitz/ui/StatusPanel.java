@@ -11,10 +11,17 @@
 
 package twitz.ui;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.Rectangle;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Iterator;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -31,19 +38,29 @@ import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
+import twitz.ui.StatusList;
 import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.models.StatusListModel;
 import twitz.ui.models.StatusTableModel;
+import twitz.util.*;
 
 /**
  *
  * @author mistik1
  */
-public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, java.io.Serializable{
+public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
+		PropertyChangeListener, ActionListener, MouseListener, java.io.Serializable
+	{
+	
+	public StatusPanel()
+	{
+		this(false);
+	}
 
     /** Creates new form StatusPanel */
-    public StatusPanel() {
+    public StatusPanel(boolean timeline) {
 		super();
+		this.inTimeline = timeline;
 		resourceMap = twitz.TwitzApp.getContext().getResourceMap(StatusPanel.class);
         initComponents();
 		initDefaults();
@@ -82,23 +99,12 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
 	//	statusScrollPane.setViewportView(status);
 	//	status.setFillsViewportHeight(true);
-		MouseListener clickListener = new MouseAdapter(){
-			@Override
-			public void mouseClicked(MouseEvent e)
-			{
-				StatusList source = (StatusList)e.getSource();
-				int selection = source.getSelectedIndex();
-				System.out.println("Inside click event");
-				if (source.isActionSpot(e))
-				{
-					StatusPopupPanel spp = new StatusPopupPanel();
-					spp.configureBox(source, source.getSelectedValue(), selection);
-					spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
-				//twitz.TwitzApp.fixLocation(spp);
-				}
-			}
-		};
-		//statusList.addMouseListener(clickListener);
+		statusList.addHotSpot("Actions", new Rectangle(45, 25, 20, 20));
+		statusList.addHotSpot("Favorite", new Rectangle(65, 25, 20, 20));
+		statusList.addHotSpot("Retweet", new Rectangle(85, 25, 20, 20));
+		statusList.addPropertyChangeListener(this);
+		if(!inTimeline)
+			statusList.addMouseListener(this);
 	}
 
 	public void setUserList(UserList list)
@@ -131,6 +137,16 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 	public boolean isInUserList()
 	{
 		return this.isUserList;
+	}
+	
+	public void setInTimeline(boolean val)
+	{
+		this.inTimeline = val;
+	}
+
+	public boolean isInTimeline()
+	{
+		return this.inTimeline;
 	}
 
 	public void setStatusList(StatusList list)
@@ -175,6 +191,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 	//		Vector<Status> in = new Vector<Status>();
 	//		in.add(s);
 	//		top.add(in);
+			store.registerUser(s.getUser());
 			model.addStatus(s);
 		}
 	//	Vector head = new Vector();
@@ -195,6 +212,66 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 		dtem.fireTwitzEvent(e);
 	}
 
+	//ActionListener
+	public void actionPerformed(ActionEvent e) {//{{{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("caller", this);
+		map.put("async", true);
+		Status[] selections = getStatusList().getSelectedValues();
+		//User[] selections = new User[select.length]; //getContactsList().getSelectedValues();
+		map.put("selections", selections);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
+	}//}}}
+	
+	public void propertyChange(PropertyChangeEvent evt)//{{{
+	{
+		if(evt.getSource() instanceof StatusList)
+		{
+			StatusList source = (StatusList)evt.getSource();
+			if("Actions".equals(evt.getPropertyName()))
+			{
+				Status lstat = source.getSelectedValue();
+				int selection = source.getSelectedIndex();
+				MouseEvent e = (MouseEvent)evt.getNewValue();
+				StatusPopupPanel spp = new StatusPopupPanel();
+				spp.configureBox(source, lstat, selection);
+				spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
+			}
+		}
+	}//}}}
+
+	//MouseListener
+	public void mouseClicked(MouseEvent e) {//{{{
+		if (e.getButton() == MouseEvent.BUTTON3)
+		{
+			java.awt.Point p = e.getPoint();
+			if (e.getSource() instanceof StatusList)
+			{
+				StatusList clist = (StatusList) e.getSource();
+				int index = clist.locationToIndex(p);
+				if (index != -1)
+				{ //Show menu only if list is not empty
+					if(clist.getSelectedIndex() == -1)
+						clist.setSelectedIndex(index);
+					//Make the caller this panel as we can add the selected list to the panel
+					//that  will make the action listener of the menu items this panel as well
+					twitz.TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
+				}
+
+			}
+		}
+		else if(e.getButton() == MouseEvent.BUTTON1) {
+			if(e.getSource() instanceof StatusList) {
+				StatusList clist = (StatusList)e.getSource();
+				
+			}
+		}
+	}//}}}
+	public void mousePressed(MouseEvent e) { }
+	public void mouseReleased(MouseEvent e)	{ }
+	public void mouseEntered(MouseEvent e) { }
+	public void mouseExited(MouseEvent e) { }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private twitz.ui.StatusList statusList;
     private javax.swing.JScrollPane statusScrollPane;
@@ -205,6 +282,8 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
     private org.jdesktop.application.ResourceMap resourceMap;
 	private boolean isUserList = false;
+	private boolean inTimeline = false;
 	private UserList userlist = null;
+	private UserStore store = UserStore.getInstance();
 
 }

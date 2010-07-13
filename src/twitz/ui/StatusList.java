@@ -16,6 +16,10 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyBoundsListener;
 import java.awt.event.MouseAdapter;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.swing.DefaultListModel;
@@ -46,6 +50,7 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 	private StatusListModel model = new StatusListModel();;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private boolean logdebug = logger.isDebugEnabled();
+	private Map<String, Rectangle> hotspots = Collections.synchronizedMap(new TreeMap<String, Rectangle>());
 
 	public StatusList() {
 		this(new StatusListModel());
@@ -54,19 +59,10 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 	public StatusList(ListModel model) {
 		super(model);
 		super.setCellRenderer(new StatusListRenderer());
-	//	HierarchyBoundsListener hbl = new HierarchyBoundsAdapter(){
-	//		public void ancestorResized(HierarchyEvent e)
-	//		{
-	//			if(logdebug)
-	//				logger.debug("Resize is taking place");
-	//			validate();
-	//		}
-	//	};
-	//	addHierarchyBoundsListener(hbl);
 		initDefaults();
 	}
 
-	private void initDefaults()
+	private void initDefaults() //{{{
 	{
 		MouseListener clickListener = new MouseAdapter(){
 			@Override
@@ -85,30 +81,42 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 						}
 						//Make the caller this panel as we can add the selected list to the panel
 						//that  will make the action listener of the menu items this panel as well
-						showMenu(source, p);
+						//showMenu(source, p);
 					}
 				}
 				else
 				{
 
 					int selection = source.getSelectedIndex();
-					System.out.println("Inside click event");
-					if (source.isActionSpot(e))
-					{
-						StatusPopupPanel spp = new StatusPopupPanel();
-						spp.configureBox(source, source.getSelectedValue(), selection);
-						spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
-					//twitz.TwitzApp.fixLocation(spp);
-					}
+					//System.out.println("Inside click event");
+					checkActionSpot(e);
+				//	if (source.isActionSpot(e))
+				//	{
+				//		StatusPopupPanel spp = new StatusPopupPanel();
+				//		spp.configureBox(source, source.getSelectedValue(), selection);
+				//		spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
+				//	}
 				}
 			}
 		};
 		addMouseListener(clickListener);
-	}
+	} //}}}
 
 	private void showMenu(StatusList list, Point p)
 	{
 		TwitzMainView.getInstance().getActionsMenu(this).show(list, p.x, p.y);
+	}
+
+	public void addHotSpot(String property, Rectangle rect) {
+		if(rect != null && property != null)
+		{
+			hotspots.put(property, rect);
+		}
+	}
+	
+	public Map<String, Rectangle> getHotSpots()
+	{
+		return hotspots;
 	}
 
 	/**
@@ -135,7 +143,8 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 		return (StatusListModel)super.getModel();
 	}
 
-	public void setSelectedValue(Status aUser, boolean scrollToStatus) {
+	public void setSelectedValue(Status aUser, boolean scrollToStatus) //{{{
+	{
         if(aUser == null)
             setSelectedIndex(-1);
         else if(!aUser.equals(getSelectedValue())) {
@@ -153,10 +162,11 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
             setSelectedIndex(-1);
         }
         //repaint();
-    }
+    } //}}}
 
 	@Override
-	public Status getSelectedValue() {
+	public Status getSelectedValue() //{{{
+	{
         int i = getMinSelectionIndex();
         if (i == -1) {
 			return null;
@@ -165,10 +175,11 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 			StatusListModel dm = (StatusListModel)getModel();
 			return (Status)dm.getElementAt(i);
 		}
-    }
+    } //}}}
 
 	@Override
-	public Status[] getSelectedValues() {
+	public Status[] getSelectedValues() //{{{
+	{
         ListSelectionModel sm = getSelectionModel();
         StatusListModel dm = (StatusListModel) getModel();
 
@@ -189,31 +200,36 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
         Status[] rv = new Status[n];
         System.arraycopy(rvTmp, 0, rv, 0, n);
         return rv;
-    }
+    } //}}}
 
-	public boolean isActionSpot(MouseEvent e)
+	public void checkActionSpot(MouseEvent e)
 	{
 		final java.awt.Point loc = e.getPoint();
 		int selection = this.getSelectedIndex();
+
 		if(selection != -1)
 		{
-			//SwingUtilities.convertPoint(this, loc, this)
+			Set<String> set = hotspots.keySet();
+			Iterator<String> iter = set.iterator();
 			Rectangle rect = getCellBounds(selection, selection);
-//			System.out.println("Index: " + selection + " \nCell Size:" + rect);
-			int pos = (rect.width - 45);
-			int ypos = (rect.height - 25);
-			Rectangle box = new Rectangle(rect.x + pos, rect.y + ypos, 20, 20);
-			//Rectangle(int x, int y, int width, int height)
-//			System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
-			//box.setBounds(rect.x+pos, rect.y+ypos, 20, 20);
-			if (box.contains(loc))
+			while(iter.hasNext())
 			{
-//				System.out.println("Got the spot");
-				return true;
+				String key = iter.next();
+				Rectangle dim = hotspots.get(key);
+//				System.out.println("Index: " + selection + " \nCell Size:" + rect);
+				int pos = (rect.width - dim.x);
+				int ypos = (rect.height - dim.y);
+				Rectangle box = new Rectangle(rect.x + pos, rect.y + ypos, dim.width, dim.height);
+				//addHotspot("Actions", new Rectangle(45, 25, 20, 20));
+//				System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
+				if (box.contains(loc))
+				{
+//					System.out.println("Got the spot");
+					firePropertyChange(key, null, e); //We send the MouseEvent along
+					break;
+				}
 			}
 		}
-
-		return false;
 	}
 
 	//TwitzEventModel

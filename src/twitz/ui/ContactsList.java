@@ -23,6 +23,7 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.renderers.ContactsRenderer;
+import twitz.util.*;
 
 /**
  *
@@ -34,6 +35,7 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private static Logger logger = Logger.getLogger(ContactsList.class.getName());
 	private boolean logdebug = logger.isDebugEnabled();
+	private UserStore store = UserStore.getInstance();
 	private boolean inUserList = false;
 	/**
 	 * This is the Userlist object, this is only valid if inUserList is <em>true</em>
@@ -51,6 +53,7 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 	public User addUser(User u) {
 		ContactsListModel dm = (ContactsListModel)getModel();
 		dm.addElement(u);
+		store.registerUser(u);
 		return u;
 	}
 
@@ -58,6 +61,7 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 		ContactsListModel dm = (ContactsListModel)getModel();
 		for(User usr : u) {
 			dm.addElement(usr);
+			store.registerUser(usr);
 		}
 		return u;
 	}
@@ -66,6 +70,7 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 		ContactsListModel dm = (ContactsListModel)getModel();
 		for(User usr : u) {
 			dm.addElement(u);
+			store.registerUser(usr);
 		}
 		return u;
 	}

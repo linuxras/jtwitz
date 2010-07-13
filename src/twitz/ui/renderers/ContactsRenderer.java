@@ -4,11 +4,14 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.MediaTracker;
+import java.util.ArrayList;
+import java.util.regex.*;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import org.jdesktop.application.ResourceMap;
+import twitter4j.Status;
 import twitter4j.User;
 import twitz.testing.*;
 import org.pushingpixels.substance.api.*;
@@ -43,15 +46,51 @@ public class ContactsRenderer extends SubstanceDefaultListCellRenderer {
 		}
 		//Image img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
 		icon = new ImageIcon(img);
-		StringBuffer buf = new StringBuffer("<html><center><b>");
-		buf.append(u.getScreenName()+"</b></center>From: ");
-		buf.append(u.getLocation()+"<br/>");
-		buf.append("Joined: "+u.getCreatedAt().toString()+"");
+		Status s = u.getStatus();
 		setText("<html><b>"+u.getScreenName()+"</b>");
 		setIcon(icon);
-		setToolTipText(buf.toString());
+		if(list instanceof twitz.ui.ContactsList)
+			setToolTipText("<html>"+tableWrap(u, s, 250));
 		setVerticalAlignment(TOP);
 		setFont(new Font("Arial", Font.BOLD, 10));
 		return this;
 	}
+
+	private String tableWrap(User u, Status s, int width) //{{{
+	{
+		StringBuffer table = new StringBuffer("<table border=0 width=");
+		table.append(width+"");
+		table.append("><tr align='center' ><td><b>");
+		table.append(u.getScreenName());
+		table.append("</b></td></tr><tr><td>");
+		table.append(pretify(s.getText()));
+		table.append("</td></tr>");
+		if(u.getLocation() != null)
+		{
+			table.append("<tr><td>From: "+u.getLocation()+"</td></tr>");
+		}
+		table.append("</table>");
+		return table.toString();
+	} //}}}
+
+	private String pretify(String text)//{{{
+	{
+		ArrayList<String> list = new ArrayList<String>();
+		String rv = "";
+		String left = "<strong><font color=\"blue\">";
+		String right = "</font></strong>";
+		Pattern p = Pattern.compile("([#@]\\w+?)\\s");
+		Matcher m = p.matcher(text);
+		while(m.find())
+		{
+			list.add(m.group());
+		}
+		String t = text;
+		for(String s:list)
+		{
+			t = t.replaceAll(s, left+s+right);
+		}
+		rv = t;
+		return rv;
+	} //}}}
 }

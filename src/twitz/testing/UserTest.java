@@ -98,7 +98,7 @@ public class UserTest implements User{
 
 	public Status getStatus()
 	{
-		return new StatusTest();
+		return new StatusTest(3);
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
