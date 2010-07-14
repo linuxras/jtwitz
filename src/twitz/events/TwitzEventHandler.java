@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Vector;
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import twitter4j.*;
 import org.apache.log4j.Logger;
@@ -23,6 +24,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private boolean logdebug = logger.isDebugEnabled();
 	private Vector<String> names = new Vector<String>();
+    private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
 
 	public TwitzEventHandler(TwitzEvent event, TwitterManager tmanager)
 	{
@@ -34,6 +36,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	{
 		String rv = "";
 		int userId = -1;
+		int listId = -1;
 		String screenName = null;
 		Component caller = null;
 		Map eventMap = null;
@@ -71,26 +74,26 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case TRENDS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "TRENDS: Not supported yet", "2"
+							"Twitz Message", "TRENDS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case CURRENT_TRENDS:
 				//
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "CURRENT_TRENDS: Not supported yet", "2"
+							"Twitz Message", "CURRENT_TRENDS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case DAILY_TRENDS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "DAILY_TRENDS: Not supported yet", "2"
+							"Twitz Message", "DAILY_TRENDS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case WEEKLY_TRENDS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "WEEKLY_TRENDS: Not supported yet", "2"
+							"Twitz Message", "WEEKLY_TRENDS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case PUBLIC_TIMELINE:
@@ -125,7 +128,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				//tm.getAsyncTwitterInstance().setStatus(screenName);
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "SHOW_STATUS: Not supported yet", "2"
+							"Twitz Message", "SHOW_STATUS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case UPDATE_STATUS:
@@ -158,13 +161,13 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case SHOW_USER:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "SHOW_USER: Not supported yet", "2"
+							"Twitz Message", "SHOW_USER: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case LOOKUP_USERS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "LOOKUP_USERS: Not supported yet", "2"
+							"Twitz Message", "LOOKUP_USERS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case SEARCH_USERS:
@@ -178,13 +181,13 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case SUGGESTED_USER_CATEGORIES:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "SUGGESTED_USER_CATEGORIES: Not supported yet", "2"
+							"Twitz Message", "SUGGESTED_USER_CATEGORIES: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case USER_SUGGESTIONS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "USER_SUGGESTIONS: Not supported yet", "2"
+							"Twitz Message", "USER_SUGGESTIONS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case FRIENDS_STATUSES:
@@ -267,7 +270,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case UPDATE_USER_LIST:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "UPDATE_USER_LIST: Not supported yet", "2"
+							"Twitz Message", "UPDATE_USER_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case USER_LISTS:
@@ -279,13 +282,13 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case SHOW_USER_LIST:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "SHOW_USER_LIST: Not supported yet", "2"
+							"Twitz Message", "SHOW_USER_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case DESTROY_USER_LIST:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "DESTROY_USER_LIST: Not supported yet", "2"
+							"Twitz Message", "DESTROY_USER_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case USER_LIST_STATUSES:
@@ -299,13 +302,13 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "USER_LIST_MEMBERSHIPS: Not supported yet", "2"
+							"Twitz Message", "USER_LIST_MEMBERSHIPS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case USER_LIST_SUBSCRIPTIONS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "USER_LIST_SUBSCRIPTIONS: Not supported yet", "2"
+							"Twitz Message", "USER_LIST_SUBSCRIPTIONS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case LIST_MEMBERS:
@@ -320,39 +323,49 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				}
 				break;
 			case ADD_LIST_MEMBER:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "ADD_LIST_MEMBER: Not supported yet", "2"
-						});
+				if(args != null && args.size() == 2)
+				{
+					listId = (Integer)args.get(0);
+					userId = (Integer)args.get(1);
+					if(screenName != null && !screenName.equals(""))
+					{
+						tm.getAsyncTwitterInstance().addUserListMember(listId, userId);
+					}
+				}
 				break;
 			case DELETE_LIST_MEMBER:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "DELETE_LIST_MEMBER: Not supported yet", "2"
-						});
+				if(args != null && args.size() == 2)
+				{
+					listId = (Integer)args.get(0);
+					userId = (Integer)args.get(1);
+					if(screenName != null && !screenName.equals(""))
+					{
+						tm.getAsyncTwitterInstance().deleteUserListMember(listId, userId);
+					}
+				}
 				break;
 			case CHECK_LIST_MEMBERSHIP:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "CHECK_LIST_MEMBERSHIP: Not supported yet", "2"
+							"Twitz Message", "CHECK_LIST_MEMBERSHIP: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case LIST_SUBSCRIBERS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "LIST_SUBSCRIBERS: Not supported yet", "2"
+							"Twitz Message", "LIST_SUBSCRIBERS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case SUBSCRIBE_LIST:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "SUBSCRIBE_LIST: Not supported yet", "2"
+							"Twitz Message", "SUBSCRIBE_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case UNSUBSCRIBE_LIST:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "UNSUBSCRIBE_LIST: Not supported yet", "2"
+							"Twitz Message", "UNSUBSCRIBE_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case CHECK_LIST_SUBSCRIPTION:
@@ -360,13 +373,13 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case DIRECT_MESSAGES:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "DIRECT_MESSAGES: Not supported yet", "2"
+							"Twitz Message", "DIRECT_MESSAGES: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case SENT_DIRECT_MESSAGES:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "SENT_DIRECT_MESSAGES: Not supported yet", "2"
+							"Twitz Message", "SENT_DIRECT_MESSAGES: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case SEND_DIRECT_MESSAGE:
@@ -382,7 +395,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case DESTROY_DIRECT_MESSAGES:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "DESTROY_DIRECT_MESSAGES: Not supported yet", "2"
+							"Twitz Message", "DESTROY_DIRECT_MESSAGES: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case CREATE_FRIENDSHIP:
@@ -416,7 +429,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				}
 				else
 				{
-					rv = "You must select more than one User to use this feature"; //TODO: needs I18N
+					rv = resourceMap.getString("SELECT_MORE_USERS_ERROR.TEXT"); 
 				}
 				break;
 			case SHOW_FRIENDSHIP:
@@ -432,92 +445,100 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case INCOMING_FRIENDSHIPS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "INCOMING_FRIENDSHIPS: Not supported yet", "2"
+							"Twitz Message", "INCOMING_FRIENDSHIPS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case OUTGOING_FRIENDSHIPS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "OUTGOING_FRIENDSHIPS: Not supported yet", "2"
+							"Twitz Message", "OUTGOING_FRIENDSHIPS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case FRIENDS_IDS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "FRIENDS_IDS: Not supported yet", "2"
+							"Twitz Message", "FRIENDS_IDS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case FOLLOWERS_IDS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "FOLLOWERS_IDS: Not supported yet", "2"
+							"Twitz Message", "FOLLOWERS_IDS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case RATE_LIMIT_STATUS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "RATE_LIMIT_STATUS: Not supported yet", "2"
+							"Twitz Message", "RATE_LIMIT_STATUS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case UPDATE_DELIVERY_DEVICE:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "UPDATE_DELIVERY_DEVICE: Not supported yet", "2"
+							"Twitz Message", "UPDATE_DELIVERY_DEVICE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case UPDATE_PROFILE_COLORS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "UPDATE_PROFILE_COLORS: Not supported yet", "2"
+							"Twitz Message", "UPDATE_PROFILE_COLORS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case UPDATE_PROFILE_IMAGE:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "UPDATE_PROFILE_IMAGE: Not supported yet", "2"
+							"Twitz Message", "UPDATE_PROFILE_IMAGE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case UPDATE_PROFILE_BACKGROUND_IMAGE:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "UPDATE_PROFILE_BACKGROUND_IMAGE: Not supported yet", "2"
+							"Twitz Message", "UPDATE_PROFILE_BACKGROUND_IMAGE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case UPDATE_PROFILE:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "UPDATE_PROFILE: Not supported yet", "2"
+							"Twitz Message", "UPDATE_PROFILE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case FAVORITES:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "FAVORITES: Not supported yet", "2"
+							"Twitz Message", "FAVORITES: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case CREATE_FAVORITE:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "CREATE_FAVORITE: Not supported yet", "2"
+							"Twitz Message", "CREATE_FAVORITE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case DESTROY_FAVORITE:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "DESTROY_FAVORITE: Not supported yet", "2"
+							"Twitz Message", "DESTROY_FAVORITE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case ENABLE_NOTIFICATION:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "ENABLE_NOTIFICATION: Not supported yet", "2"
-						});
+				if(args != null && args.size() == 1)
+				{
+					screenName = (String)args.get(0);
+					if(screenName != null && !screenName.equals(""))
+					{
+						tm.getAsyncTwitterInstance().enableNotification(screenName);
+					}
+				}
 				break;
 			case DISABLE_NOTIFICATION:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "DISABLE_NOTIFICATION: Not supported yet", "2"
-						});
+				if(args != null && args.size() == 1)
+				{
+					screenName = (String)args.get(0);
+					if(screenName != null && !screenName.equals(""))
+					{
+						tm.getAsyncTwitterInstance().disableNotification(screenName);
+					}
+				}
 				break;
 			case CREATE_BLOCK:
 				logger.info("Create Block clicked");
@@ -552,7 +573,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case BLOCKING_USERS_IDS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "BLOCKING_USERS_IDS: Not supported yet", "2"
+							"Twitz Message", "BLOCKING_USERS_IDS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case REPORT_SPAM:
@@ -590,19 +611,19 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case NEAR_BY_PLACES:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "NEAR_BY_PLACES: Not supported yet", "2"
+							"Twitz Message", "NEAR_BY_PLACES: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case REVERSE_GEO_CODE:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "REVERSE_GEO_CODE: Not supported yet", "2"
+							"Twitz Message", "REVERSE_GEO_CODE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case GEO_DETAILS:
 				firePropertyChange("POPUP", new Object(), new String[]
 						{
-							"Twitz Message", "GEO_DETAILS: Not supported yet", "2"
+							"Twitz Message", "GEO_DETAILS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
 			case TEST:
@@ -617,7 +638,16 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		if(error)
 		{
 			twitz.TwitzMainView.getInstance().onException(errorT, errorMethod);
+			return;
 		}
+		String value = "";
+		try
+		{
+			value = get();
+		}
+		catch(Exception ignore){/*ignore this for now*/}
+		if(!value.equals(""))
+			JOptionPane.showMessageDialog(null, value, resourceMap.getString("ERROR_TITLE.TEXT"), JOptionPane.ERROR_MESSAGE);
 	}
 
 	private String getScreenNameFromMap(Object obj) {//{{{

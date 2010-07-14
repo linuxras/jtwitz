@@ -1280,7 +1280,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	private JMenu createActionsMenu() {//{{{
 		JMenu menu = new JMenu();
-		JMenu users = new JMenu("User Actions"); //TODO: needs i18n
+		JMenu users = new JMenu(resourceMap.getString("ACTIONS_MENU.TEXT"));
 		//java.awt.Component selected = tabPane.getSelectedComponent();
 		JPopupMenu actions = getActionsMenu(timelinePanel);
 		MenuElement[] aelems = actions.getSubElements();
@@ -2070,7 +2070,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	//Updates the contact list in a background thread
 	public void updateContactList() {
 		TwitzEvent te = new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new Date().getTime());
-		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+//		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, tm);
+		handler.addPropertyChangeListener(mainApp.getTrayIcon());
+		handler.execute();
 	}
 
 	public boolean isConnected() {
@@ -2356,75 +2359,42 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotPublicTimeline(ResponseList<Status> statuses)//{{{
 	{
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotHomeTimeline(ResponseList<Status> statuses)//{{{
 	{
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotFriendsTimeline(ResponseList<Status> statuses)//{{{
 	{
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotUserTimeline(ResponseList<Status> statuses)//{{{
 	{
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotMentions(ResponseList<Status> statuses)//{{{
 	{
-		
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotRetweetedByMe(ResponseList<Status> statuses)//{{{
 	{
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotRetweetedToMe(ResponseList<Status> statuses)//{{{
 	{
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotRetweetsOfMe(ResponseList<Status> statuses)//{{{
 	{
-		StatusListModel tlm = timelinePanel.getStatusList().getModel();
-		tlm.clear();
-		for(Status s : statuses) {
-			tlm.addStatus(s);
-		}
+		timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotShowStatus(Status status)
@@ -2451,7 +2421,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		args.add(u.getScreenName());
 		map.put("arguments", args);
 		TwitzEvent te = new TwitzEvent(this, TwitzEventType.USER_TIMELINE, new Date().getTime(), map);
-		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+//		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, tm);
+		handler.addPropertyChangeListener(mainApp.getTrayIcon());
+		handler.execute();
 	}//}}}
 
 	public void destroyedStatus(Status destroyedStatus)//{{{
@@ -2465,7 +2438,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		args.add(u.getScreenName());
 		map.put("arguments", args);
 		TwitzEvent te = new TwitzEvent(this, TwitzEventType.USER_TIMELINE, new Date().getTime(), map);
-		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+		//(new twitz.events.TwitzEventHandler(te, tm)).execute();
+		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, tm);
+		handler.addPropertyChangeListener(mainApp.getTrayIcon());
+		handler.execute();
 	}//}}}
 
 	public void retweetedStatus(Status retweetedStatus)//{{{
@@ -2479,7 +2455,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		args.add(u.getScreenName());
 		map.put("arguments", args);
 		TwitzEvent te = new TwitzEvent(this, TwitzEventType.USER_TIMELINE, new Date().getTime(), map);
-		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+//		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, tm);
+		handler.addPropertyChangeListener(mainApp.getTrayIcon());
+		handler.execute();
 	}//}}}
 
 	public void gotRetweets(ResponseList<Status> retweets)//{{{
@@ -2530,7 +2509,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	public void createdUserList(UserList userList)
 	{
 		this.userListMainPanel1.addUserList(userList);
-		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void updatedUserList(UserList userList)
@@ -2596,32 +2575,32 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotUserListSubscribers(PagableResponseList<User> users)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void subscribedUserList(UserList userList)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void unsubscribedUserList(UserList userList)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void checkedUserListSubscription(User user)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotDirectMessages(ResponseList<DirectMessage> messages)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotSentDirectMessages(ResponseList<DirectMessage> messages)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void sentDirectMessage(DirectMessage message)//{{{
@@ -2632,17 +2611,35 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void destroyedDirectMessage(DirectMessage message)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void createdFriendship(User user)//{{{
 	{
+		//Load friends list
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", friends);
+		ArrayList args = new ArrayList();
+		args.add(config.getString("twitter.id"));//screenName
+		args.add(-1L);
+		map.put("arguments", args);
+		eventOccurred(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
 		String[] str = {"Twitz Message", getResourceMap().getString("FRIENDSHIP_CREATED.TEXT",user.getScreenName()),"2"};
 		firePropertyChange("POPUP", new Object(), str);
 	}//}}}
 
 	public void destroyedFriendship(User user)//{{{
 	{
+		//Load friends list
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", friends);
+		ArrayList args = new ArrayList();
+		args.add(config.getString("twitter.id"));//screenName
+		args.add(-1L);
+		map.put("arguments", args);
+		eventOccurred(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
 		String[] str = {"Twitz Message", getResourceMap().getString("FRIENDSHIP_DELETED.TEXT",user.getScreenName()),"2"};
 		firePropertyChange("POPUP", new Object(), str);
 	}//}}}
@@ -2662,42 +2659,42 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	public void gotShowFriendship(Relationship relationship)
 	{
 		//TODO create model for displaying relationships
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotIncomingFriendships(IDs ids)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotOutgoingFriendships(IDs ids)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotFriendsIDs(IDs ids)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotFollowersIDs(IDs ids)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotRateLimitStatus(RateLimitStatus rateLimitStatus)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void updatedDeliveryDevice(User user)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void updatedProfileColors(User user)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void updatedProfileImage(User user) //{{{
@@ -2707,7 +2704,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void updatedProfileBackgroundImage(User user)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void updatedProfile(User user) //{{{
@@ -2717,44 +2714,50 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotFavorites(ResponseList<Status> statuses)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void createdFavorite(Status status)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void destroyedFavorite(Status status)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void enabledNotification(User user) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Enabled notifications for "+user.getScreenName(),"2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOTIFICATION_ADDED.TEXT", user.getScreenName()),"2"});
 	} //}}}
 
 	public void disabledNotification(User user) //{{{
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Disabled Notifications for "+user.getScreenName(),"2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOTIFICATION_REMOVED.TEXT", user.getScreenName()),"2"});
 	} //}}}
 
 	public void createdBlock(User user)//{{{
 	{
 		TwitzEvent te = new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new Date().getTime());
-		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+//		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, tm);
+		handler.addPropertyChangeListener(mainApp.getTrayIcon());
+		handler.execute();
 	}//}}}
 
 	public void destroyedBlock(User user)//{{{
 	{
 		TwitzEvent te = new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new Date().getTime());
-		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+//		(new twitz.events.TwitzEventHandler(te, tm)).execute();
+		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, tm);
+		handler.addPropertyChangeListener(mainApp.getTrayIcon());
+		handler.execute();
 	}//}}}
 
 	public void gotExistsBlock(boolean blockExists)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotBlockingUsers(ResponseList<User> blockingUsers)//{{{
@@ -2764,13 +2767,13 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotBlockingUsersIDs(IDs blockingUsersIDs)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void reportedSpam(User reportedSpammer)
 	{
 		//TODO: flag this user for exclusion filter from further viewing if twitter.com does not do it.
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotAvailableTrends(ResponseList<Location> locations) //{{{
@@ -2785,17 +2788,17 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotNearByPlaces(ResponseList<Place> places)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotReverseGeoCode(ResponseList<Place> places)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotGeoDetails(Place place)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Not supported yet","2"});
+		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void tested(boolean test)//{{{
@@ -2823,16 +2826,43 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		if(te.getStatusCode() == 401)
 		{
 			//Incorrect login or password, do something and return
-			displayError(te, "Twitter Error", "Incorrect user name or password", method, true);
+			displayError(te, resourceMap.getString("ERROR_TITLE.TEXT"), resourceMap.getString("PASSWORD_ERROR.TEXT"), method, true);
 			//showPrefsBox();
+			return;
+		}
+		if(te.getStatusCode() == 404) 
+		{
+			if(method != null && method.equals(TwitterMethod.CHECK_LIST_MEMBERSHIP))
+			{
+				displayError(te, resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
+						resourceMap.getString("USER_NOT_USERLIST_MEMBER.TEXT"), method, false);
+				return;
+			}
+			if(method != null)
+			{
+				displayError(te, resourceMap.getString("ERROR_TITLE.TEXT"), 
+						resourceMap.getString("RESOURCE_NOT_FOUND_ERROR.TEXT"), method, false);
+			}
+			else
+			{
+				displayError(te, resourceMap.getString("ERROR_TITLE.TEXT"),
+						resourceMap.getString("RESOURCE_NOT_FOUND_ERROR.TEXT"), null, false);
+			}
 			return;
 		}
 
 		
 		if(method != null)
-			displayError(te, "Twitter Error", "Error Occurred while attempting: \n\t"+tm.getResourceMap().getString(method.name()), method, false);
+		{
+			displayError(te, resourceMap.getString("ERROR_TITLE.TEXT"), 
+					resourceMap.getString("DEFAULT_ERROR_MESSAGE.TEXT",tm.getResourceMap().getString(method.name())),
+					method, false);
+		}
 		else
-			displayError(te, "Twitter Error", "Unexpected fatal error\nCannot complete operation\n"+te.getCause().getMessage(), null, false);
+		{
+			displayError(te, resourceMap.getString("ERROR_TITLE.TEXT"), 
+					resourceMap.getString("DEFAULT_NO_METHOD_MESSAGE.TEXT",te.getCause().getMessage()), null, false);
+		}
 	}//}}}
 	//}}}
 	//END abstract methods
@@ -2850,7 +2880,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			URL path = new URL(s);
 			msg.setMessage(path);
 			msg.setResizable(true);
-			msg.setTitle("Twitz Logs"); //TODO: NEEDS I18N
+			msg.setTitle(resourceMap.getString("LOG_WINDOW_TITLE.TEXT"));
 			msg.setSize(640, 480);
 			msg.setVisible(true);
 			//InputStream is = this.getClass().getResourceAsStream(path);
