@@ -51,6 +51,8 @@ public class ContactsRenderer extends SubstanceDefaultListCellRenderer {
 		setIcon(icon);
 		if(list instanceof twitz.ui.ContactsList)
 			setToolTipText("<html>"+tableWrap(u, s, 250));
+		else
+			setToolTipText(u.getScreenName());
 		setVerticalAlignment(TOP);
 		setFont(new Font("Arial", Font.BOLD, 10));
 		return this;
