@@ -955,10 +955,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			public void stateChanged(ChangeEvent e)
 			{
 				if(tabPane.getSelectedComponent().equals(searchPanel)) {
-					actionPanel.setVisible(false);
+					tweetBox.setVisible(false);
 				}
 				else {
-					actionPanel.setVisible(true);
+					tweetBox.setVisible(true);
 				}
 			}
 		});//}}}
