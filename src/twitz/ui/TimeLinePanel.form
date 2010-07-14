@@ -95,8 +95,10 @@
                 <StringItem index="0" value="Home"/>
                 <StringItem index="1" value="User"/>
                 <StringItem index="2" value="Public"/>
-                <StringItem index="3" value="Recent by"/>
-                <StringItem index="4" value="Mentions"/>
+                <StringItem index="3" value="Retweeted by me"/>
+                <StringItem index="4" value="Retweeted to me"/>
+                <StringItem index="5" value="Retweets of me"/>
+                <StringItem index="6" value="Mentions"/>
               </StringArray>
             </Property>
             <Property name="toolTipText" type="java.lang.String" resourceKey="cmbTimelineType.toolTipText"/>
@@ -120,6 +122,7 @@
             </Property>
             <Property name="icon" type="javax.swing.Icon" resourceKey="btnRefresh.icon"/>
             <Property name="toolTipText" type="java.lang.String" resourceKey="btnRefresh.toolTipText"/>
+            <Property name="text" type="java.lang.String" resourceKey="btnRefresh.text"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="4"/>
             <Property name="name" type="java.lang.String" value="btnRefresh" noResource="true"/>

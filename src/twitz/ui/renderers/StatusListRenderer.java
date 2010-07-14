@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Date;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
@@ -44,6 +45,7 @@ import twitz.TwitzApp;
 import twitz.TwitzMainView;
 import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.StatusList;
+import twitz.util.ListHotSpot;
 
 public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	
@@ -57,26 +59,10 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	private Status status = null;
 	private String spotTip = "";
 
-	private MouseListener clickListener = new MouseAdapter(){
-		@Override
-		public void mouseClicked(MouseEvent e)
-		{
-			System.out.println("Inside click event");
-			if(isActionSpot(e))
-			{
-				StatusPopupPanel spp = new StatusPopupPanel();
-				spp.configureBox(source, getStatus(), selection);
-				spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
-				//twitz.TwitzApp.fixLocation(spp);
-			}
-		}
-	};
-
 	public StatusListRenderer()
 	{
 		super();
 		this.putClientProperty(SubstanceLookAndFeel.COLORIZATION_FACTOR, 1.0);
-		//this.addMouseListener(clickListener);
 	}
 	
 	private void updateBorder(boolean selected)//{{{
@@ -113,16 +99,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		}
 		icon = new ImageIcon(img);
 		//getScaledInstance(int width, int height, int hints)
-		setVerticalAlignment(TOP);
 
-	//	StringBuffer buf = new StringBuffer("<p>");
-	//	if(s.getInReplyToScreenName() != null && !s.getInReplyToScreenName().equals("")) {
-	//		buf.append("<strong><font color=\"blue\">@");
-	//		buf.append(s.getInReplyToScreenName());
-	//		buf.append(" - </font></strong>");
-	//	}
-	//	buf.append(s.getText());
-	//	buf.append("</p>");
 	//	StringBuffer tbuf = new StringBuffer();
 	//	tbuf.append("<p><center><strong>");
 	//	tbuf.append(u.getScreenName()+"</strong><br/><em>");
@@ -146,26 +123,12 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 			width = list.getParent().getWidth()-85;
 			//System.out.println("Parent found using width: "+width);
 		}
-	//	setText("<html>"+tableWrap(buf.toString(), width));
 		
 		statusTitle = s.getUser().getScreenName();
 		setText("<html>"+tableWrap(s, width));
 		setVerticalAlignment(TOP);
 		setHorizontalAlignment(CENTER);
 		updateBorder(isSelected);
-	//	Border margin = new EmptyBorder(5,10,5,10);
-
-	//	Border inraised = new SoftBevelBorder(SoftBevelBorder.RAISED);
-	//	Border inlowered = new SoftBevelBorder(SoftBevelBorder.LOWERED);
-	//	Border raised = new CompoundBorder(margin, inraised);
-	//	Border lowered = new CompoundBorder(margin, inlowered);
-	//	if(isSelected) {
-	//		setBorder(lowered);
-	//	}
-	//	else
-	//	{
-	//		setBorder(raised);
-	//	}
 		return this;
 	} //}}}
 
@@ -184,7 +147,6 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		Place p = stat.getPlace();
 		Date d = stat.getCreatedAt();
 
-		//ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
 		String filename = resourceMap.getResourcesDir() + resourceMap.getString(stat.isRetweet() ? "icon.arrow_rotate_clockwise" : "icon.arrow_rotate_clockwise_off" );
 		//logger.debug(filename);
 		URL retweet = resourceMap.getClassLoader().getResource(filename);
@@ -199,13 +161,6 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		table.append(width+"");
 		table.append("><tr><td>");
 		table.append(pretify(stat, stat.getText()));
-//		table.append("</td></tr><tr><td>");
-//		table.append(TimeSpanUtil.toTimeSpanString(d));
-//		table.append("</td><td align='right'>");
-//		//logger.debug(retweet.toString());
-//		table.append("<img border=0 src='"+retweet.toString()+"'></td>");
-//		table.append("<td align='right'><img border=0 src='"+fav.toString()+"'>");
-//		table.append("</td><td align='right'><img border=0 src='"+action.toString()+"'>");
 		table.append("</td></tr></table>");
 		StringBuffer tb = new StringBuffer("<table border=0 width=");
 		tb.append(width+"");
@@ -255,7 +210,8 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	}
 
 	@Override
-	public String getToolTipText(java.awt.event.MouseEvent e) {
+	public String getToolTipText(java.awt.event.MouseEvent e) //{{{
+	{
 		if(isActionSpot(e))
 		{
 			source.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -263,36 +219,25 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		}
 		source.setCursor(Cursor.getDefaultCursor());
 		return super.getToolTipText();
-	}
+	}//}}}
 
-	private boolean isActionSpot(MouseEvent e)
+	private boolean isActionSpot(MouseEvent e)//{{{
 	{
+		boolean rv = false;
 		final java.awt.Point loc = e.getPoint();
 		if(source != null)
 		{
-			Map<String, Rectangle> hotspots = source.getHotSpots();
-			Rectangle rect = source.getCellBounds(selection, selection);
-			Set<String> set = hotspots.keySet();
-			Iterator<String> iter = set.iterator();
-			while(iter.hasNext())
+			Vector<ListHotSpot> hotzone = source.getHotSpot();
+			for(ListHotSpot spot : hotzone)
 			{
-				String key = iter.next();
-				Rectangle dim = hotspots.get(key);
-//				System.out.println("Index: " + selection + " \nCell Size:" + rect);
-				int pos = (rect.width - dim.x);
-//				int ypos = (rect.height - 25);
-				Rectangle box = new Rectangle(rect.x + pos, rect.height - dim.y, dim.width, dim.height);
-				//Rectangle(int x, int y, int width, int height)
-//				System.out.println("pos: "+pos+" ypos: "+ypos+"\nBox: " + box + "\nPoint: " + loc);
-				//box.setBounds(rect.x+pos, rect.y+ypos, 20, 20);
-				if (box.contains(loc))
+				if(spot.isActionSpot(e, selection, source))
 				{
-					spotTip = "tooltip."+key;
-//					System.out.println("Got the spot");
-					 return true;
+					spotTip = "tooltip."+spot.getName();
+					rv = true;
+					break;
 				}
 			}
 		}
-		return false;
-	}
+		return rv;
+	}//}}}
 }

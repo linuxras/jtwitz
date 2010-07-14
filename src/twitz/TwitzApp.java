@@ -407,6 +407,11 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		view.fixTables();
 	}
 	
+	public TwitzTrayIcon getTrayIcon()
+	{
+		return this.tray;
+	}
+
 	public void propertyChange(PropertyChangeEvent e) {//{{{
 		if(e.getPropertyName().equals("lookAndFeelChange")) {
 			setLAFFromSettings(true);

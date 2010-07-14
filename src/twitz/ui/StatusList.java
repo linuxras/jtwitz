@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
@@ -39,6 +40,7 @@ import twitz.events.TwitzListener;
 import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.models.StatusListModel;
 import twitz.ui.renderers.StatusListRenderer;
+import twitz.util.ListHotSpot;
 
 /**
  *
@@ -51,6 +53,7 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private boolean logdebug = logger.isDebugEnabled();
 	private Map<String, Rectangle> hotspots = Collections.synchronizedMap(new TreeMap<String, Rectangle>());
+	private Vector<ListHotSpot> hotzone = new Vector<ListHotSpot>();
 
 	public StatusList() {
 		this(new StatusListModel());
@@ -105,6 +108,16 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 	private void showMenu(StatusList list, Point p)
 	{
 		TwitzMainView.getInstance().getActionsMenu(this).show(list, p.x, p.y);
+	}
+
+	public void addHotSpot(ListHotSpot spot)
+	{
+		hotzone.add(spot);
+	}
+
+	public Vector<ListHotSpot> getHotSpot()
+	{
+		return hotzone;
 	}
 
 	public void addHotSpot(String property, Rectangle rect) {
@@ -202,35 +215,42 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
         return rv;
     } //}}}
 
-	public void checkActionSpot(MouseEvent e)
+	public void checkActionSpot(MouseEvent e)//{{{
 	{
-		final java.awt.Point loc = e.getPoint();
 		int selection = this.getSelectedIndex();
-
-		if(selection != -1)
+		if(selection == -1)
+			return;
+		for(ListHotSpot spot : hotzone)
 		{
-			Set<String> set = hotspots.keySet();
-			Iterator<String> iter = set.iterator();
-			Rectangle rect = getCellBounds(selection, selection);
-			while(iter.hasNext())
-			{
-				String key = iter.next();
-				Rectangle dim = hotspots.get(key);
-//				System.out.println("Index: " + selection + " \nCell Size:" + rect);
-				int pos = (rect.width - dim.x);
-				int ypos = (rect.height - dim.y);
-				Rectangle box = new Rectangle(rect.x + pos, rect.y + ypos, dim.width, dim.height);
-				//addHotspot("Actions", new Rectangle(45, 25, 20, 20));
-//				System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
-				if (box.contains(loc))
-				{
-//					System.out.println("Got the spot");
-					firePropertyChange(key, null, e); //We send the MouseEvent along
-					break;
-				}
-			}
+			spot.checkActionSpot(e, this);
 		}
-	}
+	//	final java.awt.Point loc = e.getPoint();
+	//	int selection = this.getSelectedIndex();
+
+	//	if(selection != -1)
+	//	{
+	//		Set<String> set = hotspots.keySet();
+	//		Iterator<String> iter = set.iterator();
+	//		Rectangle rect = getCellBounds(selection, selection);
+	//		while(iter.hasNext())
+	//		{
+	//			String key = iter.next();
+	//			Rectangle dim = hotspots.get(key);
+//	//			System.out.println("Index: " + selection + " \nCell Size:" + rect);
+	//			int pos = (rect.width - dim.x);
+	//			int ypos = (rect.height - dim.y);
+	//			Rectangle box = new Rectangle(rect.x + pos, rect.y + ypos, dim.width, dim.height);
+	//			//addHotspot("Actions", new Rectangle(45, 25, 20, 20));
+//	//			System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
+	//			if (box.contains(loc))
+	//			{
+//	//				System.out.println("Got the spot");
+	//				firePropertyChange(key, null, e); //We send the MouseEvent along
+	//				break;
+	//			}
+	//		}
+	//	}
+	}//}}}
 
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {

@@ -16,6 +16,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -26,6 +28,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 import javax.accessibility.Accessible;
 import javax.swing.plaf.basic.ComboPopup;
+import org.jdesktop.application.Action;
 import twitter4j.PagableResponseList;
 import twitter4j.ResponseList;
 import twitter4j.Status;
@@ -109,7 +112,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
         timelineToolbar.setName("timelineToolbar"); // NOI18N
         timelineToolbar.setPreferredSize(new java.awt.Dimension(124, 24));
 
-        cmbTimelineType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Home", "User", "Public", "Recent by", "Mentions" }));
+        cmbTimelineType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Home", "User", "Public", "Retweeted by me", "Retweeted to me", "Retweets of me", "Mentions" }));
         cmbTimelineType.setToolTipText(resourceMap.getString("cmbTimelineType.toolTipText")); // NOI18N
         cmbTimelineType.setMinimumSize(new java.awt.Dimension(100, 24));
         cmbTimelineType.setName("cmbTimelineType"); // NOI18N
@@ -123,6 +126,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
         btnRefresh.setAction(actionMap.get("doSearch")); // NOI18N
         btnRefresh.setIcon(resourceMap.getIcon("btnRefresh.icon")); // NOI18N
         btnRefresh.setToolTipText(resourceMap.getString("btnRefresh.toolTipText")); // NOI18N
+        btnRefresh.setText(resourceMap.getString("btnRefresh.text")); // NOI18N
         btnRefresh.setFocusable(false);
         btnRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
         btnRefresh.setName("btnRefresh"); // NOI18N
@@ -140,7 +144,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
         add(statusScrollPane, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 //}}}
-	private void initDefaults()
+	private void initDefaults()//{{{
 	{
 		statusPanel = new twitz.ui.StatusPanel(true);
 		add(statusPanel, java.awt.BorderLayout.CENTER);
@@ -167,16 +171,76 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 			}
 		};
 		txtTimelineUser.addFocusListener(fl);
-		txtTimelineUser.setEnabled(true);
+		txtTimelineUser.setEnabled(false);
 		txtTimelineUser.setEditable(true);
 		txtTimelineUser.setRenderer(new twitz.ui.renderers.ContactsRenderer());
-		AutoCompleteDecorator.decorate(txtTimelineUser, new UserToStringConverter()); 
+		AutoCompleteDecorator.decorate(txtTimelineUser, new UserToStringConverter());
+		cmbTimelineType.addItemListener(new ItemListener(){
+
+			public void itemStateChanged(ItemEvent e)
+			{
+				if(e.getStateChange() == ItemEvent.SELECTED)
+				{
+					String item = (String)e.getItem();
+					txtTimelineUser.setEnabled("User".equals(item));
+				}
+			}
+		});
+		//btnRefresh.setAction(actionMap.get("requestTimeLine"));
 		//UserComboBoxAdaptor uca = new UserComboBoxAdaptor(txtTimelineUser, UserStore.getInstance().getRegisteredUsers());
 		//AutoCompleteDecorator.decorate(list, textField);txtTimelineUser
 		//twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
+	}//}}}
+
+	@Action
+	public void doSearch()
+	{
+		String user = null;
+		int type = cmbTimelineType.getSelectedIndex();
+		switch(type)
+		{
+			case 0: //Home timeline
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime()));
+				break;
+			case 1: //User
+				if(txtTimelineUser.getSelectedItem() instanceof User)
+				{
+					user = ((User)txtTimelineUser.getSelectedItem()).getScreenName();
+				}
+				else if(txtTimelineUser.getSelectedItem() instanceof String)
+				{
+					user = (String)txtTimelineUser.getSelectedItem();
+				}
+				if(user != null && !user.equals(""))
+				{
+					Map map = Collections.synchronizedMap(new TreeMap());
+					map.put("async", true);
+					map.put("caller", this);
+					ArrayList args = new ArrayList();
+					args.add(user);
+					map.put("arguments", args);
+					fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_TIMELINE, new java.util.Date().getTime(), map));
+				}
+				break;
+			case 2: //Public
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.PUBLIC_TIMELINE, new java.util.Date().getTime()));
+				break;
+			case 3: //Retweet by me
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_BY_ME, new java.util.Date().getTime()));
+				break;
+			case 4: //Retweets to me
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_TO_ME, new java.util.Date().getTime()));
+				break;
+			case 5: //Retweet of
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETS_OF_ME, new java.util.Date().getTime()));
+				break;
+			case 6: //Mentions
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.MENTIONS, new java.util.Date().getTime()));
+				break;
+		}
 	}
 
-	public void setStatusList(StatusList list)
+	public void setStatusList(StatusList list)//{{{
 	{
 		StatusList old = this.statusList;
 		if(list != null)
@@ -184,7 +248,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 			statusPanel.setStatusList(list);
 			this.firePropertyChange("TimeLinePanelStatusListChanged", old, list);
 		}
-	}
+	}//}}}
 
 	public StatusList getStatusList()
 	{
@@ -214,16 +278,6 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	public void updateStatus(ResponseList<Status> statuses)
 	{
 		statusPanel.updateStatus(statuses);
-		//StatusListModel model = getStatusList().getModel();
-		//model.clear();
-		//for(Status s: statuses)
-		//{
-		//	model.addStatus(s);
-		//}
-//		btnTimelinePrev.setEnabled(statuses.hasPrevious());
-//		btnTimelineNext.setEnabled(statuses.hasNext());
-//		setPrevCursor(statuses.getPreviousCursor());
-//		setNextCursor(statuses.getNextCursor());
 	}
 	
 	//TwitzEventModel

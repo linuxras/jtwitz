@@ -33,12 +33,14 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	public String doInBackground() //{{{
 	{
 		String rv = "";
-		//int type = t.getEventType();
+		int userId = -1;
 		String screenName = null;
 		Component caller = null;
 		Map eventMap = null;
 		boolean async = true;
 		ArrayList args = null;
+		Paging pager = null;
+		long cursor = -10;
 
 		if(mainEvent.getEventMap() != null) {
 			eventMap = mainEvent.getEventMap();
@@ -127,11 +129,6 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 						});
 				break;
 			case UPDATE_STATUS:
-				if(logdebug)
-						logger.debug("Updating status");
-				//String tweet = txtTweet.getText();
-				//btnTweet.setEnabled(false);
-				//txtTweet.setEnabled(false);
 				if(args != null && args.size() == 1)
 				{
 					String tweet = (String)args.get(0);
@@ -191,10 +188,66 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 						});
 				break;
 			case FRIENDS_STATUSES:
-				tm.getAsyncTwitterInstance().getFriendsStatuses();
+				if(args != null && args.size() == 2) //pager
+				{
+					if(args.get(0) instanceof String)
+						screenName = (String)args.get(0);
+					if(args.get(0) instanceof Integer)
+						userId = (Integer)args.get(0);
+					if(args.get(1) instanceof Long)
+						cursor = (Long)args.get(1);
+					if(screenName != null && cursor != -10)
+						tm.getAsyncTwitterInstance().getFriendsStatuses(screenName, cursor);
+					else if(userId != -1 && cursor != -10)
+						tm.getAsyncTwitterInstance().getFriendsStatuses(userId, cursor);
+				}
+				else if(args != null && args.size() == 1) //no pager
+				{
+					if(args.get(0) instanceof String)
+						screenName = (String)args.get(0);
+					if(args.get(0) instanceof Integer)
+						userId = (Integer)args.get(0);
+					
+					if(screenName != null)
+						tm.getAsyncTwitterInstance().getFriendsStatuses(screenName);
+					else if(userId != -1)
+						tm.getAsyncTwitterInstance().getFriendsStatuses(userId);
+				}
+				else
+				{
+					tm.getAsyncTwitterInstance().getFriendsStatuses();
+				}
 				break;
 			case FOLLOWERS_STATUSES:
-				tm.getAsyncTwitterInstance().getFollowersStatuses();
+				if(args != null && args.size() == 2) //pager
+				{
+					if(args.get(0) instanceof String)
+						screenName = (String)args.get(0);
+					if(args.get(0) instanceof Integer)
+						userId = (Integer)args.get(0);
+					if(args.get(1) instanceof Long)
+						cursor = (Long)args.get(1);
+					if(screenName != null && cursor != -10)
+						tm.getAsyncTwitterInstance().getFollowersStatuses(screenName, cursor);
+					else if(userId != -1 && cursor != -10)
+						tm.getAsyncTwitterInstance().getFollowersStatuses(userId, cursor);
+				}
+				else if(args != null && args.size() == 1) //no pager
+				{
+					if(args.get(0) instanceof String)
+						screenName = (String)args.get(0);
+					if(args.get(0) instanceof Integer)
+						userId = (Integer)args.get(0);
+					
+					if(screenName != null)
+						tm.getAsyncTwitterInstance().getFollowersStatuses(screenName);
+					else if(userId != -1)
+						tm.getAsyncTwitterInstance().getFollowersStatuses(userId);
+				}
+				else
+				{
+					tm.getAsyncTwitterInstance().getFollowersStatuses();
+				}
 				break;
 			case CREATE_USER_LIST:
 				//createUserList(java.lang.String listName, boolean isPublicList, java.lang.String description) 

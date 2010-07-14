@@ -99,10 +99,20 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
 	//	statusScrollPane.setViewportView(status);
 	//	status.setFillsViewportHeight(true);
-		statusList.addHotSpot("Actions", new Rectangle(45, 25, 20, 20));
-		statusList.addHotSpot("Favorite", new Rectangle(65, 25, 20, 20));
-		statusList.addHotSpot("Retweet", new Rectangle(85, 25, 20, 20));
-		statusList.addPropertyChangeListener(this);
+	//	statusList.addHotSpot("Actions", new Rectangle(45, 25, 20, 20));
+	//	statusList.addHotSpot("Favorite", new Rectangle(65, 25, 20, 20));
+	//	statusList.addHotSpot("Retweet", new Rectangle(85, 25, 20, 20));
+	//	statusList.addPropertyChangeListener(this);
+		ListHotSpot action = new ListHotSpot("Actions", ListHotSpot.Direction.RIGHT_TO_LEFT, new Rectangle(45, 25, 20, 20), "");
+		action.addPropertyChangeListener(this);
+		ListHotSpot fav = new ListHotSpot("Favorite", ListHotSpot.Direction.RIGHT_TO_LEFT, new Rectangle(65, 25, 20, 20), "");
+		fav.addPropertyChangeListener(this);
+		ListHotSpot retweet = new ListHotSpot("Retweet", ListHotSpot.Direction.RIGHT_TO_LEFT, new Rectangle(85, 25, 20, 20), "");
+		//ListHotSpot retweet = new ListHotSpot("Retweet", ListHotSpot.Direction.LEFT_TO_RIGHT, new Rectangle(85, 25, 20, 20), "");
+		retweet.addPropertyChangeListener(this);
+		statusList.addHotSpot(action);
+		statusList.addHotSpot(fav);
+		statusList.addHotSpot(retweet);
 		if(!inTimeline)
 			statusList.addMouseListener(this);
 	}
@@ -225,18 +235,14 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 	
 	public void propertyChange(PropertyChangeEvent evt)//{{{
 	{
-		if(evt.getSource() instanceof StatusList)
+		if("Actions".equals(evt.getPropertyName()))
 		{
-			StatusList source = (StatusList)evt.getSource();
-			if("Actions".equals(evt.getPropertyName()))
-			{
-				Status lstat = source.getSelectedValue();
-				int selection = source.getSelectedIndex();
-				MouseEvent e = (MouseEvent)evt.getNewValue();
-				StatusPopupPanel spp = new StatusPopupPanel();
-				spp.configureBox(source, lstat, selection);
-				spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
-			}
+			Status lstat = statusList.getSelectedValue();
+			int selection = statusList.getSelectedIndex();
+			MouseEvent e = (MouseEvent)evt.getNewValue();
+			StatusPopupPanel spp = new StatusPopupPanel();
+			spp.configureBox(statusList, lstat, selection);
+			spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
 		}
 	}//}}}
 
