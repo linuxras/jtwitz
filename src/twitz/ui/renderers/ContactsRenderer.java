@@ -64,9 +64,13 @@ public class ContactsRenderer extends SubstanceDefaultListCellRenderer {
 		table.append(width+"");
 		table.append("><tr align='center' ><td><b>");
 		table.append(u.getScreenName());
-		table.append("</b></td></tr><tr><td>");
-		table.append(pretify(s.getText()));
-		table.append("</td></tr>");
+		table.append("</b></td></tr>");
+		if(s != null && s.getText() != null)
+		{
+			table.append("<tr><td>");
+			table.append(pretify(s.getText()));
+			table.append("</td></tr>");
+		}
 		if(u.getLocation() != null)
 		{
 			table.append("<tr><td>From: "+u.getLocation()+"</td></tr>");

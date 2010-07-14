@@ -2266,6 +2266,11 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 					}
 				}
 			break;
+			case EXISTS_FRIENDSHIP:
+				if(eventMap != null) {
+					names = getScreenNamesFromMap(eventMap.get("selections"));
+				}
+			break;
 		}
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(t, tm);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
