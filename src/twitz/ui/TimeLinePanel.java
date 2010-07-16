@@ -308,6 +308,8 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 		{
 			if(txtTimelineUser.isPopupVisible())
 				return; //Dont update if combo is currently in use
+			final Object obj = txtTimelineUser.getSelectedItem();
+
 			SwingWorker<DefaultComboBoxModel, Object> worker = new SwingWorker<DefaultComboBoxModel, Object>(){
 
 				@Override
@@ -334,6 +336,8 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 					{
 						logger.error(ex.getLocalizedMessage(), ex);
 					}
+					if(obj != null)
+						txtTimelineUser.setSelectedItem(obj);
 				}
 			};
 			worker.execute();
