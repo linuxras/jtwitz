@@ -18,7 +18,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -27,26 +26,22 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.accessibility.Accessible;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.plaf.basic.ComboPopup;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
-import twitter4j.PagableResponseList;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.User;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
-import org.jdesktop.swingx.combobox.*;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
-import twitz.ui.models.StatusListModel;
 import twitz.util.*;
 
 /**
@@ -156,6 +151,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 		add(statusPanel, java.awt.BorderLayout.CENTER);
 		statusPanel.getStatusList().addMouseListener(this);
 		FocusListener fl = new FocusAdapter(){
+			@Override
 			public void focusGained(FocusEvent e)
 			{
 				txtTimelineUser.removeAllItems();
@@ -324,18 +320,19 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 				@Override
 				public void done()
 				{
-					Logger.getLogger(TimeLinePanel.class.getName()).log(Level.INFO, "Updating timeline ComboBox");
+					if(logdebug)
+						logger.info("Updating timeline ComboBox");
 					try
 					{
 						txtTimelineUser.setModel(get());
 					}
 					catch (InterruptedException ex)
 					{
-						Logger.getLogger(TimeLinePanel.class.getName()).log(Level.SEVERE, null, ex);
+						logger.error(ex.getLocalizedMessage(), ex);
 					}
 					catch (ExecutionException ex)
 					{
-						Logger.getLogger(TimeLinePanel.class.getName()).log(Level.SEVERE, null, ex);
+						logger.error(ex.getLocalizedMessage(), ex);
 					}
 				}
 			};
@@ -405,6 +402,8 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
     private org.jdesktop.application.ResourceMap resourceMap;
     private javax.swing.ActionMap actionMap;
 	private static final DBManager DBM = DBManager.getInstance();
+	private static final Logger logger = Logger.getLogger(TimeLinePanel.class.getName());
+	private static final boolean logdebug = logger.isDebugEnabled();
 	private long nextCursor = -1;
 	private long prevCursor = -1;
 	private int delay = 300000;

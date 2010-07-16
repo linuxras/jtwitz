@@ -32,7 +32,7 @@ public class UserTest implements User{
 	}
 
 	public UserTest(String screenName) {
-		this(12345, screenName, screenName, "http://localhost/mistik1/me_3.jpg");
+		this(12345, screenName, screenName, "http://localhost/~mistik1/me_3.jpg");
 	}
 
 	public UserTest(int userid, String screenName, String fullname, String avatar)
