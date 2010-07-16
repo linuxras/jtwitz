@@ -1032,11 +1032,12 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 				else
 				{
 					connected = online;
+					
 					if(online)
 					{
 						loadAllPanels();
 					}
-					else
+					else if(DEVMODE)
 					{
 						addSampleData();
 					}
@@ -1048,10 +1049,15 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void addSampleFriends()
 	{
-		StatusListModel mod = (StatusListModel) friendsStatusPanel.getStatusList().getModel();
-		mod.clear();
-		for(int i=0; i<10; i++)
-			mod.addStatus(new StatusTest(i));
+		if(DEVMODE)
+		{
+			StatusListModel mod = (StatusListModel) friendsStatusPanel.getStatusList().getModel();
+			mod.clear();
+			for (int i = 0; i < 10; i++)
+			{
+				mod.addStatus(new StatusTest(i));
+			}
+		}
 
 	}
 
@@ -3104,6 +3110,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	java.beans.PropertyChangeListener statusListener;
 	//A Map to store all the statuses in the recentList table
 	private Map<Long, Status> recentMap = new TreeMap<Long, Status>();
+	public static final String DEVMODE_TEXT = System.getProperty("twitz_mode");
+	private static final boolean DEVMODE = ("devmode".equals(DEVMODE_TEXT));
 	private static TwitzMainView instance;
 
 }

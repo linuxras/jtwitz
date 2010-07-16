@@ -26,7 +26,11 @@ public class UserToStringConverter extends ObjectToStringConverter {
 			User u = (User)item;
 			return new String[]{u.getScreenName(), u.getName()};
 		}
-		return new String[]{"Not Found"};
+		else if(item instanceof String)
+		{ //Return back the item itself since the search so we dont break normal combo functionality
+			return new String[]{(String)item};
+		}
+		return new String[0];
 	}
 
 	@Override
