@@ -43,6 +43,7 @@ import org.apache.log4j.Logger;
 import org.jdesktop.application.ResourceMap;
 import org.jdesktop.application.SingleFrameApplication;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import twitz.util.DBManager;
 import twitz.util.SettingsManager;
 
 /**
@@ -55,6 +56,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	public static final String TWEET_MINI = "TweetMini";
 
 	private java.awt.Window window = null;
+	private static DBManager DBM;// = DBManager.getInstance();
 	private static SettingsManager config;// = SettingsManager.getInstance();
 	static Logger logger;
 	static boolean logdebug = false;
@@ -246,6 +248,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	@Override
 	protected void initialize(String[] args) {//{{{
 		String s = SettingsManager.getConfigDirectory().getAbsolutePath();
+		//
 		System.out.println("This is the storage dir: "+s);
 		System.setProperty("storage.dir", s);
 		logger = Logger.getLogger(TwitzApp.class.getName());
@@ -263,6 +266,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 		config = SettingsManager.getInstance();
 		hidden = config.getBoolean("minimize.startup");
+		DBM = DBManager.getInstance();
 		themer.addPropertyChangeListener(this);
 		setLAFFromSettings(false, true);
 		if(logdebug)

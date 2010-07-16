@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
 import javax.swing.JPanel;
+import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.BorderFactory;
 import javax.swing.event.ListDataEvent;
@@ -360,12 +361,40 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 		contactsList1.addUser(user);
 	}
 
-	public void updateList(ResponseList<User> users)//{{{
+	public void updateList(final ResponseList<User> users)//{{{
 	{
-		ContactsListModel clm = contactsList1.getModel();
-		clm.clear();
-		for(User u : users)
-			clm.addElement(u);
+		if(users != null)
+		{
+			SwingWorker<ContactsListModel, Object> worker = new SwingWorker<ContactsListModel, Object>()
+			{
+				public ContactsListModel doInBackground()
+				{
+					ContactsListModel clm = new ContactsListModel();
+					for(User u : users)
+					{
+						clm.addElement(u);
+					}
+					return clm;
+				}
+
+				public void done()
+				{
+					try
+					{
+						contactsList1.setModel(get());
+					}
+					catch(Exception e)
+					{
+						logger.error("Error while loading search results", e);//TODO needs I18N
+					}
+				}
+			};
+			worker.execute();
+		}
+	//	ContactsListModel clm = contactsList1.getModel();
+	//	clm.clear();
+	//	for(User u : users)
+	//		clm.addElement(u);
 		
 	//	prevPage = users.getPreviousCursor();
 	//	nextPage = users.getNextCursor();

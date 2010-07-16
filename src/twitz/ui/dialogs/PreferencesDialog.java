@@ -225,7 +225,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			if(key.endsWith(".cfgdesc") || key.endsWith(".cfgtype")) {
 				continue; //skip to next iteration
 			}
-			if (!config.getString(key + ".cfgtype").equals("NULL"))
+			String type = config.getString(key + ".cfgtype");
+			if (!type.equals("NULL") && !type.equals("Internal"))
 			{
 				Vector row = new Vector();
 				String value = config.getString(key);

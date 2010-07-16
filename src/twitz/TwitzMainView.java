@@ -1055,12 +1055,47 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	}
 
+	public User[] getSampleListUsers(int which)//{{{
+	{
+		User[] rv = new User[0];
+
+		User[] ouser = new User[]{
+			new UserTest("Python"),
+			new UserTest("Ladybug"),
+			new UserTest("perry")
+		};
+
+		User[] puser = new User[]{
+			new UserTest("cansport"),
+			new UserTest("CNN News"),
+			new UserTest("Abc News"),
+			new UserTest("Nbc Online"),
+			new UserTest("Black Power gen"),
+			new UserTest("Facts of Life"),
+			new UserTest("black_rino")
+		};
+		switch(which)
+		{
+			case 0:
+				rv = ouser;
+			break;
+			case 1:
+				rv = puser;
+			break;
+		}
+		return rv;
+	}//}}}
+
 	private void addSampleData() {//{{{
 		StatusListModel dm = timelinePanel.getStatusList().getModel();
 		//TODO: Test code to be removed in production
 		for (int i=0; i < 10; i++) {
 			dm.addStatus(new StatusTest(i));
 		}
+
+		trendPanel.addTrend(new TrendTest());
+		trendPanel.addTrend(new TrendTest());
+		trendPanel.addTrend(new TrendTest());
 //		timelinePanel.getStatusList().setFixedCellHeight(120);
 
 		User[] ouser = new User[]{
@@ -2271,6 +2306,15 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 					names = getScreenNamesFromMap(eventMap.get("selections"));
 				}
 			break;
+			case HOME_TIMELINE:
+			case FRIENDS_TIMELINE:
+			case USER_TIMELINE:
+			case MENTIONS:
+			case RETWEETED_BY_ME:
+			case RETWEETED_TO_ME:
+			case RETWEETS_OF_ME:
+				timelineQue.add(caller);
+			break;
 		}
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(t, tm);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
@@ -2364,42 +2408,121 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public void gotPublicTimeline(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
 	}//}}}
 
 	public void gotHomeTimeline(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotFriendsTimeline(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotUserTimeline(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotMentions(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotRetweetedByMe(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotRetweetedToMe(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotRetweetsOfMe(ResponseList<Status> statuses)//{{{
 	{
-		timelinePanel.updateStatus(statuses);
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
 	public void gotShowStatus(Status status)
@@ -2977,6 +3100,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	 * This que is used to track which part of the application is requesting an action
 	 */
 	private ArrayDeque que = new ArrayDeque();
+	private ArrayDeque timelineQue = new ArrayDeque();
 	java.beans.PropertyChangeListener statusListener;
 	//A Map to store all the statuses in the recentList table
 	private Map<Long, Status> recentMap = new TreeMap<Long, Status>();

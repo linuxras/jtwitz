@@ -14,8 +14,10 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.ResourceMap;
+import org.tmatesoft.sqljet.core.SqlJetException;
 import twitz.TwitzApp;
 
 /**
@@ -28,8 +30,11 @@ public class SettingsManager extends Properties{
 	//String configFile = System.getProperty("user.home")+"/.Twitz/user_prefs.ini";
 	String configFile = "user_prefs.ini";
 	File config;
-	Logger logger = Logger.getLogger(SettingsManager.class.getName());
+	static Logger logger;
 	private static SettingsManager instance;
+	private static DBManager DBM;
+	private String currentSession = "Default";
+	private boolean autosave = true;
 
 	public static enum OS {
 		WINDOWS,
@@ -40,10 +45,13 @@ public class SettingsManager extends Properties{
 	private SettingsManager() {//{{{
 		File f = getConfigDirectory();
 		config = new File(f, configFile);
-		if(!loadSettings())
-		{
-			setDefaults();
-		}
+		DBM = DBManager.getInstance();
+		logger  = Logger.getLogger(SettingsManager.class.getName());
+		loadSettingsFromDb();
+//		if(!loadSettings())
+//		{
+//			setDefaults();
+//		}
 	}//}}}
 
 	/**
@@ -54,6 +62,7 @@ public class SettingsManager extends Properties{
 	public SettingsManager(String cfg) {//{{{
 		this.configFile = cfg;
 		config = new File(configFile);
+		logger  = Logger.getLogger(SettingsManager.class.getName());
 		loadSettings();
 	}//}}}
 
@@ -154,6 +163,32 @@ public class SettingsManager extends Properties{
 		return true;
 	}//}}}
 
+	private void loadSettingsFromDb()
+	{
+		autosave = false;
+		try
+		{
+			setProperties(DBM.lookupSettingsForSession(currentSession));
+		}
+		catch (SqlJetException ex)
+		{
+			logger.error("Error while loading settings for DBM", ex);
+		}
+		autosave = true;
+	}
+
+	private void saveSettingsToDb()
+	{
+		try
+		{
+			DBM.updateSettings(currentSession, this);
+		}
+		catch (SqlJetException ex)
+		{
+			logger.error("Fatal error while saving records", ex);
+		}
+	}
+
 	private boolean saveSettings() {//{{{
 		boolean rv = true;
 		try
@@ -226,15 +261,25 @@ public class SettingsManager extends Properties{
 	 * @return
 	 */
 	public static File getConfigDirectory() {//{{{
-		ResourceMap resource = TwitzApp.getContext().getResourceMap();
-		String appId = resource.getString("Application.id");
-		String vendorId = resource.getString("Application.venderId");
+		ResourceMap resource = null;
+		String appId = null;//resource.getString("Application.id");
+		String vendorId = null;//resource.getString("Application.venderId");
+		try
+		{
+			resource = TwitzApp.getContext().getResourceMap();
+			appId = resource.getString("Application.id");
+			vendorId = resource.getString("Application.venderId");
+		}
+		catch(Exception e)
+		{
+			java.util.logging.Logger.getLogger(SettingsManager.class.getName()).log(Level.WARNING, "Error while looking up resource");
+		}
 		if(appId == null) {
-			appId = TwitzApp.getContext().getApplicationClass().getSimpleName();
+			appId = "Twitz";//TwitzApp.getContext().getApplicationClass().getSimpleName();
 		}
 		if (vendorId == null)
 		{
-			vendorId = "UnknownApplicationVendor";
+			vendorId = "Andrew Williams";
 		}
 
 		File directory = null;
@@ -401,7 +446,17 @@ public class SettingsManager extends Properties{
 	@Override
 	public Object setProperty(String property, String value) {//{{{
 		Object rv = super.setProperty(property, value);
-		saveSettings();
+		Properties p = new Properties();
+		p.setProperty(property, value);
+		try
+		{
+			DBM.updateSettings(currentSession, p);
+		}
+		catch (SqlJetException ex)
+		{
+			logger.error("Fatal error while saving record", ex);
+		}
+		//saveSettingsToDb();
 		return rv;
 	}//}}}
 	public void setProperties(Properties list) {//{{{
@@ -409,7 +464,10 @@ public class SettingsManager extends Properties{
 		while (e.hasMoreElements()) {
 			String key = (String)e.nextElement();
 			setProperty(key, list.getProperty(key));
+			//System.out.println("got: "+key+" = "+ list.getProperty(key));
 		}
-		saveSettings();
+		if(autosave)
+			saveSettingsToDb();
+			//saveSettings();
 	}//}}}
 }

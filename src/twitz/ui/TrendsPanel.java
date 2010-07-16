@@ -179,10 +179,6 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 		lblLocation.setText("Worldwide");
 		lblLocation.setToolTipText("Worldwide");
 		
-		TrendsListModel tlm = (TrendsListModel) trendsList.getModel();
-		tlm.addTrend(new TrendTest());
-		tlm.addTrend(new TrendTest());
-		tlm.addTrend(new TrendTest());
 		ListSelectionListener lsl = new ListSelectionListener(){//{{{
 
 			public void valueChanged(ListSelectionEvent e)
@@ -220,7 +216,13 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 		this.lblLocation.setText(text);
 	}
 
-	public void setTrends(Trends trends) {
+	public void addTrend(Trend trend)
+	{
+		TrendsListModel tlm = (TrendsListModel) trendsList.getModel();
+		tlm.addTrend(trend);
+	}
+
+	public void setTrends(final Trends trends) {
 		Trend[] tr = trends.getTrends();
 		TrendsListModel tlm = (TrendsListModel) trendsList.getModel();
 		tlm.clear();
@@ -243,7 +245,7 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 
 	public void propertyChange(PropertyChangeEvent evt)
 	{
-		System.out.println("got property change for: "+evt.getPropertyName());
+		//System.out.println("got property change for: "+evt.getPropertyName());
 		if(evt.getPropertyName().equals("locationsChanged"))
 		{
 			lblLocation.setText((String)evt.getNewValue());

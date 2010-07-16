@@ -28,6 +28,7 @@ import twitter4j.User;
 import twitter4j.UserList;
 import twitter4j.PagableResponseList;
 import org.jdesktop.application.Action;
+import org.apache.log4j.Logger;
 import twitz.TwitzMainView;
 import twitz.events.*;
 import twitz.util.SettingsManager;
@@ -58,6 +59,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 	private Map<String, UserListPanel> panels = Collections.synchronizedMap(new TreeMap<String, UserListPanel>());
 	private Map<String,UserList> userlists = Collections.synchronizedMap(new TreeMap<String, UserList>());
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	private long nextPage = -1;
 	private long prevPage = -1;
@@ -274,18 +276,26 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 
 	public UserListPanel addUserList(UserList list)//{{{
 	{
-		UserListPanel panel = new UserListPanel();
-		panel.setTitle(list.getName());
-		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
-		//We add it first here because setUserList causes a TwitzEvent to be fired to get the list users
-		panel.addTwitzListener(TwitzMainView.getInstance());
-		panel.addPropertyChangeListener("collapsed", this);
-		
-		panel.setUserList(list);
-		
-		addPanel(panel);
-		userlists.put(list.getName(), list);
-		panels.put(list.getName(), panel);
+		UserListPanel panel = null;
+		try
+		{
+			panel = new UserListPanel();
+			panel.setTitle(list.getName());
+			//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
+			//We add it first here because setUserList causes a TwitzEvent to be fired to get the list users
+			panel.addTwitzListener(TwitzMainView.getInstance());
+			panel.addPropertyChangeListener("collapsed", this);
+			
+			panel.setUserList(list);
+			
+			addPanel(panel);
+			userlists.put(list.getName(), list);
+			panels.put(list.getName(), panel);
+		}
+		catch(Exception e)
+		{
+			logger.error("Error while adding UserListPanel", e);
+		}
 		//panel.setCollapsed(true);
 		return panel;
 	}//}}}

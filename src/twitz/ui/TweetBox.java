@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.swing.Icon;
+import javax.swing.JButton;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import twitter4j.Status;
@@ -213,6 +214,11 @@ public class TweetBox extends javax.swing.JPanel implements ActionListener, Twit
 	public void setButtonEnabled(boolean value)
 	{
 		this.btnTweet.setEnabled(value);
+	}
+
+	public JButton getMiniButton()
+	{
+		return btnMini;
 	}
 
 	public void clearTweetText()

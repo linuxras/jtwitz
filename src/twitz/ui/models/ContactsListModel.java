@@ -8,6 +8,7 @@ package twitz.ui.models;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
+import javax.swing.ListModel;
 import twitter4j.User;
 import twitz.testing.UserTest;
 import javax.swing.JList;

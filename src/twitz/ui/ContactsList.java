@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 import org.apache.log4j.Logger;
 import javax.swing.JList;
+import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import twitter4j.User;
 import twitter4j.UserList;
@@ -158,6 +159,13 @@ public class ContactsList extends JList implements ActionListener, TwitzEventMod
 		}
 		return new ContactsListModel();
 	}//}}}
+
+	@Override
+	public void setModel(ListModel mod)
+	{
+		if(mod instanceof ContactsListModel)
+			super.setModel(mod);
+	}
 
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {

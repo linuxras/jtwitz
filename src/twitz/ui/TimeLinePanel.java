@@ -26,7 +26,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.accessibility.Accessible;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.plaf.basic.ComboPopup;
 import org.jdesktop.application.Action;
 import twitter4j.PagableResponseList;
@@ -170,10 +176,16 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 				//AutoCompleteDecorator.decorate(txtTimelineUser, UserStore.getInstance().getRegisteredUsersAsList(), false, new UserToStringConverter()); 
 			}
 		};
-		txtTimelineUser.addFocusListener(fl);
+		//ActionListener
+		Timer comboUpdate = new Timer(delay, this);
+		comboUpdate.setInitialDelay(initialDelay);
+		comboUpdate.setActionCommand("COMBO_TIMER");
+		comboUpdate.start();
+
+		//txtTimelineUser.addFocusListener(fl);
 		txtTimelineUser.setEnabled(false);
 		txtTimelineUser.setEditable(true);
-		txtTimelineUser.setRenderer(new twitz.ui.renderers.ContactsRenderer());
+		txtTimelineUser.setRenderer(new twitz.ui.renderers.UserComboRenderer());
 		AutoCompleteDecorator.decorate(txtTimelineUser, new UserToStringConverter());
 		cmbTimelineType.addItemListener(new ItemListener(){
 
@@ -295,13 +307,50 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 
 	//ActionListener
 	public void actionPerformed(ActionEvent e) {//{{{
-		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("caller", this);
-		map.put("async", true);
-		Status[] selections = getStatusList().getSelectedValues();
-		//User[] selections = new User[select.length]; //getContactsList().getSelectedValues();
-		map.put("selections", selections);
-		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
+		String cmd = e.getActionCommand();
+		if("COMBO_TIMER".equals(cmd))
+		{
+			if(txtTimelineUser.isPopupVisible())
+				return; //Dont update if combo is currently in use
+			SwingWorker<DefaultComboBoxModel, Object> worker = new SwingWorker<DefaultComboBoxModel, Object>(){
+
+				@Override
+				protected DefaultComboBoxModel doInBackground() throws Exception
+				{
+					DefaultComboBoxModel cmod = new DefaultComboBoxModel(DBM.getRegisteredUsers());
+					return cmod;
+				}
+
+				@Override
+				public void done()
+				{
+					Logger.getLogger(TimeLinePanel.class.getName()).log(Level.INFO, "Updating timeline ComboBox");
+					try
+					{
+						txtTimelineUser.setModel(get());
+					}
+					catch (InterruptedException ex)
+					{
+						Logger.getLogger(TimeLinePanel.class.getName()).log(Level.SEVERE, null, ex);
+					}
+					catch (ExecutionException ex)
+					{
+						Logger.getLogger(TimeLinePanel.class.getName()).log(Level.SEVERE, null, ex);
+					}
+				}
+			};
+			worker.execute();
+		}
+		else
+		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("caller", this);
+			map.put("async", true);
+			Status[] selections = getStatusList().getSelectedValues();
+			//User[] selections = new User[select.length]; //getContactsList().getSelectedValues();
+			map.put("selections", selections);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(cmd), new java.util.Date().getTime(), map));
+		}
 	}//}}}
 	
 	//MouseListener
@@ -355,6 +404,9 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	private twitz.ui.StatusPanel statusPanel;
     private org.jdesktop.application.ResourceMap resourceMap;
     private javax.swing.ActionMap actionMap;
+	private static final DBManager DBM = DBManager.getInstance();
 	private long nextCursor = -1;
 	private long prevCursor = -1;
+	private int delay = 300000;
+	private int initialDelay = 10000;
 }

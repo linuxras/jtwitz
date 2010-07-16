@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.swing.SwingWorker;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import twitter4j.Query;
 import twitter4j.QueryResult;
@@ -265,9 +267,14 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 				break;
 			default:
 				if(!txtSearch.getText().equals(""))
+				{
 					btnSearch.setEnabled(true);
+				}
 				else
+				{
 					btnSearch.setEnabled(false);
+					setCurrentPage(1);
+				}
 		}
 	}//GEN-LAST:event_txtSearchKeyReleased
 
@@ -319,6 +326,8 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	private javax.swing.ActionMap actionMap;
 	private org.jdesktop.application.ResourceMap resourceMap;
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
+	private String lastSearch = "";
+	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Action
 	public void doSearch()//{{{
@@ -330,7 +339,13 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		{
 			case TWEET:
 				Query query = new Query();
-				query.setQuery(txtSearch.getText());
+				String searchText = txtSearch.getText();
+				if(!searchText.equals(lastSearch))
+				{
+					setCurrentPage(1);
+				}
+				lastSearch = searchText;
+				query.setQuery(searchText);
 				if (!txtSinceDate.getEditor().getText().equals(""))
 				{
 					query.setSince(txtSinceDate.getEditor().getText());
@@ -426,7 +441,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		return (this.searchType == TWEET) ? tweetList : contactsList;
 	}
 
-	public void updateTweetsList(QueryResult results)
+	public void updateTweetsList(final QueryResult results)//{{{
 	{
 		if(results != null)
 		{
@@ -435,19 +450,39 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 			searchPane.setViewportView(tweetList);
 			btnPrev.setEnabled((currentPage > 1));
 			btnNext.setEnabled((currentPage < 1500));
-			List<Tweet> tweets = results.getTweets();
-			double completedIn = results.getCompletedIn();
-		//do something with tweets.
-			TweetListModel tlm = tweetList.getModel();
-			tlm.clear();
-			for(Tweet t : tweets)
+			final List<Tweet> tweets = results.getTweets();
+			SwingWorker<TweetListModel, Object> worker = new SwingWorker<TweetListModel, Object>()
 			{
-				tlm.addTweet(t);
-			}
-		}
-	}
+				public TweetListModel doInBackground()
+				{
+					double completedIn = results.getCompletedIn();
+					//do something with tweets.
+					TweetListModel tlm = new TweetListModel();
+					//tlm.clear();
+					for(Tweet t : tweets)
+					{
+						tlm.addTweet(t);
+					}
+					return tlm;
+				}
 
-	public void updateUsersList(ResponseList<User> results)
+				public void done()
+				{
+					try
+					{
+						tweetList.setModel(get());
+					}
+					catch(Exception e)
+					{
+						logger.error("Error while loading search results", e);//TODO needs I18N
+					}
+				}
+			};
+			worker.execute();
+		}
+	}//}}}
+
+	public void updateUsersList(final ResponseList<User> results)//{{{
 	{
 		if(results != null)
 		{
@@ -455,14 +490,34 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 			searchPane.setViewportView(contactsList);
 			btnPrev.setEnabled((currentPage > 1));
 			btnNext.setEnabled((currentPage < 1500));
-			ContactsListModel clm = contactsList.getModel();
-			clm.clear();
-			for(User u : results)
+			SwingWorker<ContactsListModel, Object> worker = new SwingWorker<ContactsListModel, Object>()
 			{
-				contactsList.addUser(u);
-			}
+
+				public ContactsListModel doInBackground()
+				{
+					ContactsListModel clm = new ContactsListModel();
+					for(User u : results)
+					{
+						clm.addElement(u);
+					}
+					return clm;
+				}
+
+				public void done()
+				{
+					try
+					{
+						contactsList.setModel(get());
+					}
+					catch(Exception e)
+					{
+						logger.error("Error while loading search results", e);//TODO needs I18N
+					}
+				}
+			};
+			worker.execute();
 		}
-	}
+	}//}}}
 
 	public void addTwitzListener(TwitzListener o)
 	{

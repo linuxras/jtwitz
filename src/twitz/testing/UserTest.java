@@ -8,6 +8,7 @@ package twitz.testing;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import twitter4j.RateLimitStatus;
 import twitter4j.Status;
@@ -22,30 +23,48 @@ public class UserTest implements User{
 	private String screenName = "Twitz_ras";
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Date born = new Date();
+	private URL profile_img;
+	private int id = -1;
+	private String name = screenName;
 
 	public UserTest() {
 		this("Twitz_ras");
 	}
 
 	public UserTest(String screenName) {
-		this.screenName = screenName;
+		this(12345, screenName, screenName, "http://localhost/mistik1/me_3.jpg");
 	}
-	
+
+	public UserTest(int userid, String screenName, String fullname, String avatar)
+	{
+		this.id = userid;
+		this.screenName = screenName;
+		this.name = fullname;
+		try
+		{
+			this.profile_img = new URL(avatar);
+		}
+		catch (MalformedURLException ex)
+		{
+			//ignore
+		}
+	}
+
 	public int getId()
 	{
-		return 123454;
+		return this.id;
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public String getName()
 	{
-		return "Andrew Williams";
+		return this.name;
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public String getScreenName()
 	{
-		return screenName;
+		return this.screenName;
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
@@ -67,17 +86,18 @@ public class UserTest implements User{
 
 	public URL getProfileImageURL()
 	{
-		URL img = null;
-		try
-		{
-			img = new URL("http://localhost/~mistik1/me_3.jpg");
-			//throw new UnsupportedOperationException("Not supported yet.");
-		}
-		catch (MalformedURLException ex)
-		{
-			logger.error(ex);
-		}
-		return img;
+//		URL img = null;
+//		try
+//		{
+//			img = new URL("http://localhost/~mistik1/me_3.jpg");
+//			//throw new UnsupportedOperationException("Not supported yet.");
+//		}
+//		catch (MalformedURLException ex)
+//		{
+//			logger.error(ex);
+//		}
+//		return img;
+		return this.profile_img;
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
