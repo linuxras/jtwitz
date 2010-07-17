@@ -322,7 +322,7 @@ public class DBManager {
 		return instance;
 	}//}}}
 
-	public Properties lookupSettingsForSession(String name) throws SqlJetException
+	public synchronized Properties lookupSettingsForSession(String name) throws SqlJetException
 	{
 		Properties rv = new Properties();
 		db.open();
@@ -367,7 +367,7 @@ public class DBManager {
 		return rv;
 	}
 
-	public void updateSettings(String name, Properties prop) throws SqlJetException
+	public synchronized void updateSettings(String name, Properties prop) throws SqlJetException
 	{
 		try
 		{
@@ -404,12 +404,12 @@ public class DBManager {
 		}
 	}
 
-	public User lookupUser(String username)
+	public synchronized User lookupUser(String username)
 	{
 		return new UserTest();
 	}
 
-	public void registerUser(User user) throws SqlJetException
+	public synchronized void registerUser(User user) throws SqlJetException
 	{
 		try
 		{//USER TABLE (userid, screenname, fullname, picture_url)
@@ -431,7 +431,7 @@ public class DBManager {
 			users.addElement(user);
 	}
 
-	public Vector<User> getRegisteredUsers() throws SqlJetException
+	public synchronized Vector<User> getRegisteredUsers() throws SqlJetException
 	{
 		Vector<User> rv = new Vector<User>();
 		try
@@ -463,7 +463,7 @@ public class DBManager {
 		return rv;
 	}
 
-	public List<User> getRegisteredUsersAsList() throws SqlJetException
+	public synchronized List<User> getRegisteredUsersAsList() throws SqlJetException
 	{
 		Vector<User> v = getRegisteredUsers();
 		return v.subList(0, v.size());
