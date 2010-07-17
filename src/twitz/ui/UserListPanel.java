@@ -144,7 +144,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
         listPane.setName("listPane"); // NOI18N
 
         contactsList1.setModel(new ContactsListModel());
-        contactsList1.setCellRenderer(new ContactsRenderer());
+        contactsList1.setCellRenderer();
         contactsList1.setInUserList(true);
         contactsList1.setName("contactsList1"); // NOI18N
         listPane.setViewportView(contactsList1);

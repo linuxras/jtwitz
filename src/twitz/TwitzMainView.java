@@ -1162,10 +1162,13 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	@Action
 	public void loadAllPanels()//{{{
 	{
-		//Update the timeline view.
-		eventOccurred(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime()));
-		//Update trends view
 		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", timelinePanel);
+		//Update the timeline view.
+		eventOccurred(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime(), map));
+		//Update trends view
+		map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
 		map.put("caller", trendPanel);
 		ArrayList args = new ArrayList();
@@ -1182,7 +1185,10 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		map.put("arguments", args);
 		eventOccurred(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
 		//Load blocked users
-		eventOccurred(new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new java.util.Date().getTime()));
+		map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", blocked);
+		eventOccurred(new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new java.util.Date().getTime(), map));
 		//Load followers list
 		map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);

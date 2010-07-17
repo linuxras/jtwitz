@@ -20,6 +20,6 @@ GOTO done
 cmd.exe
 GOTO done
 :WRUN
-java -cp "F:\Documents\Twitz\thirdparty\AppFramework.jar;F:\Documents\Twitz\thirdparty\twitter4j-core-2.1.2.jar;F:\Documents\Twitz\thirdparty\swingx-0.9.4.jar;F:\Documents\Twitz\thirdparty\substance-tools.jar;F:\Documents\Twitz\thirdparty\substance-tst.jar;F:\Documents\Twitz\thirdparty\substance.jar;F:\Documents\Twitz\thirdparty\trident.jar;F:\Documents\Twitz\thirdparty\commons-logging-1.1.1.jar;F:\Documents\Twitz\${libs.swing-layout.classpath};F:\Documents\Twitz\${libs.absolutelayout.classpath};F:\Documents\Twitz\thirdparty\log4j-1.2.14.jar;F:\Documents\Twitz\dist\Twitz.jar" twitz.TwitzApp
+java -cp "F:\Documents\Twitz\thirdparty\AppFramework.jar;F:\Documents\Twitz\thirdparty\twitter4j-core-2.1.2.jar;F:\Documents\Twitz\thirdparty\swingx-0.9.4.jar;F:\Documents\Twitz\thirdparty\substance-tools.jar;F:\Documents\Twitz\thirdparty\substance-tst.jar;F:\Documents\Twitz\thirdparty\substance.jar;F:\Documents\Twitz\thirdparty\trident.jar;F:\Documents\Twitz\thirdparty\commons-logging-1.1.1.jar;F:\Documents\Twitz\${libs.swing-layout.classpath};F:\Documents\Twitz\${libs.absolutelayout.classpath};F:\Documents\Twitz\thirdparty\log4j-1.2.14.jar;F:\Documents\Twitz\thirdparty\antlr-runtime-3.1.3.jar;F:\Documents\Twitz\thirdparty\sqljet.1.0.3.b914.jar;F:\Documents\Twitz\dist\Twitz.jar" twitz.TwitzApp
 GOTO done
 :done
