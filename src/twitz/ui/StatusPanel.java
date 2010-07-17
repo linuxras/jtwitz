@@ -28,6 +28,8 @@ import java.util.TreeMap;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.table.TableColumn;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import twitter4j.PagableResponseList;
 import twitter4j.Paging;
 import twitter4j.ResponseList;
@@ -189,24 +191,44 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 		return this.statusList;
 	}
 
-	public void updateStatus(ResponseList<Status> statuses)
+	public void updateStatus(final ResponseList<Status> statuses)
 	{
-		StatusListModel model = getStatusList().getModel();
-		model.clear();
-	//	StatusTableModel model = (StatusTableModel)status.getModel();
-
-	//	Vector<Vector<Status>> top = new Vector<Vector<Status>>();
-		for(Status s: statuses)
+		if(statuses != null)
 		{
-	//		Vector<Status> in = new Vector<Status>();
-	//		in.add(s);
-	//		top.add(in);
-			store.registerUser(s.getUser());
-			model.addStatus(s);
+			SwingWorker<List<Status>, Status> worker = new SwingWorker<List<Status>, Status>()
+			{
+				StatusListModel model = new StatusListModel();
+
+				@Override
+				public List<Status> doInBackground()
+				{
+					for(Status s: statuses)
+					{
+						publish(s);
+						store.registerUser(s.getUser());
+						model.addStatus(s);
+					}
+					return null;//I wont be using get() to process anything
+				}
+
+				@Override
+				protected void process(List<Status> part)
+				{
+					for(Status s: part)
+					{
+						store.registerUser(s.getUser());
+						model.addStatus(s);
+					}
+				}
+
+				@Override
+				protected void done()
+				{
+					getStatusList().setModel(model);
+				}
+			};
+			worker.execute();
 		}
-	//	Vector head = new Vector();
-	//	head.add("Tweets");
-	//	model.setDataVector(top, head);
 	}
 
 	//TwitzEventModel

@@ -12,6 +12,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -24,6 +25,8 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.JToolBar.Separator;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import twitter4j.User;
 import twitter4j.UserList;
 import twitter4j.PagableResponseList;
@@ -300,18 +303,52 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 		return panel;
 	}//}}}
 
-	public void addUserList(PagableResponseList<UserList> userLists)//{{{
+	public void addUserList(final PagableResponseList<UserList> userLists)//{{{
 	{
-		//Clear out the current lists
-		removeAllUserList();
-		for(UserList list : userLists)
+		if(userLists != null)
 		{
-			addUserList(list);
+			//Clear out the current lists
+			try
+			{
+				SwingUtilities.invokeAndWait( new Runnable(){public void run() {removeAllUserList();}});
+			}
+			catch(Exception ie)
+			{
+				logger.error(ie);
+			}
+
+			SwingWorker<List<UserList>, UserList> worker = new SwingWorker<List<UserList>, UserList>()
+			{
+				
+				@Override
+				public List<UserList> doInBackground()
+				{
+					for(UserList list : userLists)
+					{
+						//addUserList(list);
+						publish(list);
+					}
+					return null;
+				}
+
+				@Override
+				protected void done()
+				{
+					btnNext.setEnabled(userLists.hasNext());
+					btnPrev.setEnabled(userLists.hasPrevious());
+				}
+
+				@Override
+				protected void process(List<UserList> part)
+				{
+					for(UserList u : part)
+						addUserList(u);
+				}
+			};
+			worker.execute();
+			nextPage = userLists.getNextCursor();
+			prevPage = userLists.getPreviousCursor();
 		}
-		nextPage = userLists.getNextCursor();
-		prevPage = userLists.getPreviousCursor();
-		btnNext.setEnabled(userLists.hasNext());
-		btnPrev.setEnabled(userLists.hasPrevious());
 	}//}}}
 
 	//TwitzEventModel

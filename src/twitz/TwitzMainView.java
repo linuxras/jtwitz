@@ -628,7 +628,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 
 	public javax.swing.JTextField getTweetField()
 	{
-		return this.txtTweet;
+		return tweetBox.getTweetField(); //this.txtTweet;
 	}
 
 	/**
@@ -1017,6 +1017,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 					{
 						//Authentication incorrect
 						tec = te;
+						online = false;
 					}
 				}
 				return null;
@@ -2201,6 +2202,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 		return rv;
 	}//}}}
 
+
 	public Component getActiveComponent() {//{{{
 		Component rv = null;
 		if(tabPane.getSelectedComponent().equals(recentPane)) {
@@ -2374,7 +2376,7 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			map.put("async", true);
 			User[] selections = new User[4];//getContactsList().getSelectedValues();
 			map.put("selections", selections);
-			logger.debug("Got action to perform");
+			logger.debug("Got action to perform"); 
 			eventOccurred(new TwitzEvent(this, TwitzEventType.valueOf(evt.getActionCommand()),
 						new java.util.Date().getTime()));
 		}
@@ -2383,18 +2385,6 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 	// TwitterListener//{{{
 	public void searched(QueryResult queryResult)//{{{
 	{
-//		Vector results = new Vector();
-//		List<Tweet> l = queryResult.getTweets();
-//		for(Tweet t : l) {
-//			//results.add(t);
-//			Vector v = new Vector();
-//			v.add(t.getFromUser());
-//			v.add(t.getText());
-//			results.add(v);
-//		}
-//		DefaultTableModel m = (DefaultTableModel) tblSearch.getModel();
-//		m.setDataVector(results, searchHeaders);
-//		lblPage.setText(queryResult.getPage()+"");
 		searchPanel.updateTweetsList(queryResult);
 	}//}}}
 

@@ -216,6 +216,11 @@ public class TweetBox extends javax.swing.JPanel implements ActionListener, Twit
 		this.btnTweet.setEnabled(value);
 	}
 
+	public javax.swing.JTextField getTweetField()
+	{
+		return txtTweet;
+	}
+
 	public JButton getMiniButton()
 	{
 		return btnMini;
