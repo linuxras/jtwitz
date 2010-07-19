@@ -12,8 +12,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
+import java.util.Vector;
 import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.ResourceMap;
@@ -24,17 +28,19 @@ import twitz.TwitzApp;
  *
  * @author mistik1
  */
-public class SettingsManager extends Properties{
+public class TwitzSessionManager extends Properties{
 
 	//this needs to be moved to where it can be checked for SecurityException
 	//String configFile = System.getProperty("user.home")+"/.Twitz/user_prefs.ini";
 	String configFile = "user_prefs.ini";
 	File config;
 	static Logger logger;
-	private static SettingsManager instance;
+	private static TwitzSessionManager instance;
 	private static DBManager DBM;
 	private String currentSession = "Default";
 	private boolean autosave = true;
+	private Vector<SettingsManager> vsessions = new Vector<SettingsManager>();
+	protected Map<String, SettingsManager> sessions = Collections.synchronizedMap(new TreeMap<String, SettingsManager>());
 
 	public static enum OS {
 		WINDOWS,
@@ -42,16 +48,11 @@ public class SettingsManager extends Properties{
 		UNIX
 	};
 
-	private SettingsManager()
-	{
-		this("Default");
-	}
-	public SettingsManager(String sessionName) {//{{{
-		this.currentSession = sessionName;
+	private TwitzSessionManager() {//{{{
 		File f = getConfigDirectory();
 		config = new File(f, configFile);
 		DBM = DBManager.getInstance();
-		logger  = Logger.getLogger(SettingsManager.class.getName());
+		logger  = Logger.getLogger(TwitzSessionManager.class.getName());
 		loadSettingsFromDb();
 //		if(!loadSettings())
 //		{
@@ -64,22 +65,32 @@ public class SettingsManager extends Properties{
 	 * manage any java .properties file
 	 * @param cfg - config file to manage
 	 */
-//	public SettingsManager(String cfg) {//{{{
-//		this.configFile = cfg;
-//		config = new File(configFile);
-//		logger  = Logger.getLogger(SettingsManager.class.getName());
-//		loadSettings();
-//	}//}}}
+	public TwitzSessionManager(String cfg) {//{{{
+		this.configFile = cfg;
+		config = new File(configFile);
+		logger  = Logger.getLogger(TwitzSessionManager.class.getName());
+		loadSettings();
+	}//}}}
 
 	/**
 	 * Default way to get a SettingsManager instance
 	 * @return SettingsManager singleton
 	 */
-	public static synchronized SettingsManager getInstance() {//{{{
+	public static synchronized TwitzSessionManager getInstance() {//{{{
 		if(instance == null)
-			instance = new SettingsManager();
+			instance = new TwitzSessionManager();
 		return instance;
 	}//}}}
+
+	public synchronized SettingsManager getSettingsManagerInstance(String sessionName)
+	{
+		SettingsManager rv = null;
+		if(sessions.containsKey(sessionName))
+			return sessions.get(sessionName);
+		rv = new SettingsManager(sessionName);
+		sessions.put(sessionName, rv);
+		return rv;
+	}
 
 	private void setDefaults() {//{{{
 		setProperty("twitter.id", "changeme");
@@ -277,7 +288,7 @@ public class SettingsManager extends Properties{
 		}
 		catch(Exception e)
 		{
-			java.util.logging.Logger.getLogger(SettingsManager.class.getName()).log(Level.WARNING, "Error while looking up resource");
+			java.util.logging.Logger.getLogger(TwitzSessionManager.class.getName()).log(Level.WARNING, "Error while looking up resource");
 		}
 		if(appId == null) {
 			appId = "Twitz";//TwitzApp.getContext().getApplicationClass().getSimpleName();

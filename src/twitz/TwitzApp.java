@@ -31,6 +31,8 @@ import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.Vector;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -45,6 +47,7 @@ import org.jdesktop.application.SingleFrameApplication;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import twitz.util.DBManager;
 import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  * The main class of the application.
@@ -58,6 +61,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	private java.awt.Window window = null;
 	private static DBManager DBM;// = DBManager.getInstance();
 	private static SettingsManager config;// = SettingsManager.getInstance();
+	private static TwitzSessionManager[] sessions;
 	static Logger logger;
 	static boolean logdebug = false;
 	TwitzTrayIcon tray = null;
@@ -272,7 +276,19 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		if(logdebug)
 			logger.debug("Leaving initialize...");
 	}//}}}
-	
+
+	private void loadAvailableSessions()
+	{
+		try
+		{
+			Vector<Map<String, Object>> sess = DBM.lookupSessions();
+		}
+		catch (Exception e)
+		{
+			logger.error(e.getLocalizedMessage());
+		}
+	}
+
 	private final static Logger getLogger() {
 		return logger;
 	}

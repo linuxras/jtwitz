@@ -2327,7 +2327,8 @@ public class TwitzMainView extends javax.swing.JPanel implements ActionListener,
 			case RETWEETED_BY_ME:
 			case RETWEETED_TO_ME:
 			case RETWEETS_OF_ME:
-				timelineQue.add(caller);
+				if(caller != null)
+					timelineQue.add(caller);
 			break;
 		}
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(t, tm);

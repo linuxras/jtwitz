@@ -18,10 +18,15 @@ import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
+import javax.swing.BorderFactory;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableColumnModel;
@@ -32,6 +37,7 @@ import org.jdesktop.application.Action;
 import twitz.*;
 import twitz.twitter.TwitterManager;
 import twitz.ui.renderers.PreferencesTableCellRenderer;
+import twitz.util.DBManager;
 import twitz.util.SettingsManager;
 
 /**
@@ -39,6 +45,22 @@ import twitz.util.SettingsManager;
  * @author mistik1
  */
 public class PreferencesDialog extends javax.swing.JDialog {
+
+	private SettingsManager config = SettingsManager.getInstance();
+	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(PreferencesDialog.class);
+	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(PreferencesDialog.class, this);
+	private Vector vHeaders = new Vector();
+	private TableRowSorter sorter;
+	private TwitzApp mainApp;
+	private boolean updateSkin = false;
+	private boolean updateLogin = false;
+	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private final boolean logdebug = logger.isDebugEnabled();
+	protected Properties undo = new Properties();
+	private DBManager DBM = DBManager.getInstance();
+	private Vector<Map<String, Object>> sessions;
+	private Map<String, Object> sessionMap;
+	private Object currentSession;
 
     /** Creates new form PreferencesDialog */
     public PreferencesDialog(java.awt.Frame parent, boolean modal, TwitzApp app) {
@@ -64,18 +86,23 @@ public class PreferencesDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
+        configPane = new javax.swing.JScrollPane();
         tblConfig = new javax.swing.JTable();
         btnOk = new javax.swing.JButton();
         btnApply = new javax.swing.JButton();
         btnCancel = new javax.swing.JButton();
+        profileBar = new javax.swing.JToolBar();
+        cmbProfile = new javax.swing.JComboBox();
+        chkDefault = new javax.swing.JCheckBox();
+        btnLoadProfile = new javax.swing.JButton();
+        btnNewProfile = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(PreferencesDialog.class);
         setTitle(resourceMap.getString("Form.title")); // NOI18N
         setName("Form"); // NOI18N
 
-        jScrollPane1.setName("jScrollPane1"); // NOI18N
+        configPane.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("configPane.border.title"))); // NOI18N
+        configPane.setName("configPane"); // NOI18N
 
         tblConfig.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -103,11 +130,11 @@ public class PreferencesDialog extends javax.swing.JDialog {
                 return canEdit [columnIndex];
             }
         });
+        tblConfig.setFillsViewportHeight(true);
         tblConfig.setName("tblConfig"); // NOI18N
         tblConfig.setRowHeight(20);
-        jScrollPane1.setViewportView(tblConfig);
+        configPane.setViewportView(tblConfig);
 
-        javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(PreferencesDialog.class, this);
         btnOk.setAction(actionMap.get("btnOkClicked")); // NOI18N
         btnOk.setIcon(resourceMap.getIcon("btnOk.icon")); // NOI18N
         btnOk.setText(resourceMap.getString("btnOk.text")); // NOI18N
@@ -123,14 +150,51 @@ public class PreferencesDialog extends javax.swing.JDialog {
         btnCancel.setText(resourceMap.getString("btnCancel.text")); // NOI18N
         btnCancel.setName("btnCancel"); // NOI18N
 
+        profileBar.setFloatable(false);
+        profileBar.setRollover(true);
+        profileBar.setName("profileBar"); // NOI18N
+
+        cmbProfile.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Default" }));
+        cmbProfile.setToolTipText(resourceMap.getString("cmbProfile.toolTipText")); // NOI18N
+        cmbProfile.setName("cmbProfile"); // NOI18N
+        profileBar.add(cmbProfile);
+
+        chkDefault.setAction(actionMap.get("setDefaultProfile")); // NOI18N
+        chkDefault.setText(resourceMap.getString("chkDefault.text")); // NOI18N
+        chkDefault.setToolTipText(resourceMap.getString("chkDefault.toolTipText")); // NOI18N
+        chkDefault.setFocusable(false);
+        chkDefault.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
+        chkDefault.setName("chkDefault"); // NOI18N
+        chkDefault.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        profileBar.add(chkDefault);
+
+        btnLoadProfile.setAction(actionMap.get("loadProfile")); // NOI18N
+        btnLoadProfile.setIcon(resourceMap.getIcon("btnLoadProfile.icon")); // NOI18N
+        btnLoadProfile.setText(resourceMap.getString("btnLoadProfile.text")); // NOI18N
+        btnLoadProfile.setToolTipText(resourceMap.getString("btnLoadProfile.toolTipText")); // NOI18N
+        btnLoadProfile.setFocusable(false);
+        btnLoadProfile.setName("btnLoadProfile"); // NOI18N
+        btnLoadProfile.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        profileBar.add(btnLoadProfile);
+
+        btnNewProfile.setAction(actionMap.get("createProfile")); // NOI18N
+        btnNewProfile.setIcon(resourceMap.getIcon("btnNewProfile.icon")); // NOI18N
+        btnNewProfile.setText(resourceMap.getString("btnNewProfile.text")); // NOI18N
+        btnNewProfile.setToolTipText(resourceMap.getString("btnNewProfile.toolTipText")); // NOI18N
+        btnNewProfile.setFocusable(false);
+        btnNewProfile.setName("btnNewProfile"); // NOI18N
+        btnNewProfile.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        profileBar.add(btnNewProfile);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(profileBar, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
+                    .addComponent(configPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(btnOk)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 68, Short.MAX_VALUE)
@@ -142,9 +206,10 @@ public class PreferencesDialog extends javax.swing.JDialog {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 196, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
+                .addComponent(profileBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(configPane, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnOk)
                     .addComponent(btnCancel)
@@ -166,10 +231,11 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		tblConfig.setModel(mModel);
 		sorter.sort();
 
-		twitz.TwitzMainView.fixJScrollPaneBarsSize(jScrollPane1);
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(configPane);
 
 		WindowListener wl = new WindowAdapter() {
 
+			@Override
 			public void windowActivated(WindowEvent e)
 			{
 				btnApply.setEnabled(false);
@@ -177,6 +243,30 @@ public class PreferencesDialog extends javax.swing.JDialog {
 
 		};
 		this.addWindowListener(wl);
+		currentSession = cmbProfile.getSelectedItem();
+		cmbProfile.removeAllItems();
+		try
+		{
+			sessions = DBM.lookupSessions();
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getLocalizedMessage(), e);
+		}
+		if(null != sessions)
+		{
+			for(int i=0,max = sessions.size(); i < max; i++)
+			{
+				Map<String, Object> map = sessions.get(i);
+				cmbProfile.addItem(map.get(DBManager.SESSION_NAME));
+				int def = (Integer)map.get(DBManager.SESSION_DEFAULT);
+				if(def == 1)
+				{
+					cmbProfile.setSelectedItem(map.get(DBManager.SESSION_NAME));
+					chkDefault.setSelected((def == 1));
+				}
+			}
+		}
 	}//}}}
 
 	private TableRowSorter getTableRowSorter(DefaultTableModel model) {
@@ -213,6 +303,33 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		//s.sort();
 
 		return s;
+	}
+
+	private void loadProfileCombo()
+	{
+		try
+		{
+			sessions = DBM.lookupSessions();
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getLocalizedMessage(), e);
+		}
+		if(null != sessions)
+		{
+			cmbProfile.removeAllItems();
+			for(int i=0,max = sessions.size(); i < max; i++)
+			{
+				Map<String, Object> map = sessions.get(i);
+				cmbProfile.addItem(map.get(DBManager.SESSION_NAME));
+				int def = (Integer)map.get(DBManager.SESSION_DEFAULT);
+				if(def == 1)
+				{
+					cmbProfile.setSelectedItem(map.get(DBManager.SESSION_NAME));
+					chkDefault.setSelected((def == 1));
+				}
+			}
+		}
 	}
 
 	public void loadTable() {
@@ -260,6 +377,54 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	{
 		saveChanges();
 		dispose();
+	}
+
+	@Action
+	public void createProfile()
+	{
+		JOptionPane pane = new JOptionPane("Enter a name for the new profile");
+		pane.setWantsInput(true);
+		JDialog dialog = pane.createDialog(this, "Create Profile");
+		dialog.setVisible(true);
+		if(pane.getValue() == null) //User closed
+			return;
+		if(pane.getValue() == JOptionPane.UNINITIALIZED_VALUE)
+			return;
+		String profile = (String) pane.getValue();
+
+		if(!"".equals(profile))
+		{
+			boolean success = false;
+			try
+			{
+				success = DBM.populateDefaultSettingsTable(profile);
+			}
+			catch(Exception e)
+			{
+				logger.error("Unable to add new profile "+profile, e);
+				JOptionPane.showMessageDialog(this, "Unable to add new profile "+profile+"\n"+ e.getLocalizedMessage(), "Profile Error", JOptionPane.ERROR_MESSAGE);
+			}
+			if(success)
+			{
+				//TODO put in code to load up the profile or whatever
+			}
+		}
+		else
+		{
+			JOptionPane.showMessageDialog(this, "You must enter a valid name", "Profile Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	@Action
+	public void loadProfile()
+	{
+
+	}
+
+	@Action
+	public void setDefaultProfile()
+	{
+		
 	}
 
 	//@SuppressWarnings("empty-statement")
@@ -318,17 +483,15 @@ public class PreferencesDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnApply;
     private javax.swing.JButton btnCancel;
+    private javax.swing.JButton btnLoadProfile;
+    private javax.swing.JButton btnNewProfile;
     private javax.swing.JButton btnOk;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JCheckBox chkDefault;
+    private javax.swing.JComboBox cmbProfile;
+    private javax.swing.JScrollPane configPane;
+    private javax.swing.JToolBar profileBar;
     private javax.swing.JTable tblConfig;
     // End of variables declaration//GEN-END:variables
-	private SettingsManager config = SettingsManager.getInstance();
-	private Vector vHeaders = new Vector();
-	private TableRowSorter sorter;
-	private TwitzApp mainApp;
-	private boolean updateSkin = false;
-	private boolean updateLogin = false;
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
-	private final boolean logdebug = logger.isDebugEnabled();
-	protected Properties undo = new Properties();
+
+	public TitledBorder cfgBorder = BorderFactory.createTitledBorder("Default");
 }

@@ -7,8 +7,7 @@ package twitz.util;
 
 import java.util.List;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 import org.tmatesoft.sqljet.core.SqlJetException;
 import twitter4j.User;
 
@@ -18,9 +17,9 @@ import twitter4j.User;
  */
 public class UserStore {
 
-	private static Vector<User> users = new Vector<User>();
 	private static UserStore instance;
 	private static final DBManager DBM = DBManager.getInstance();
+	private static final Logger logger = Logger.getLogger(UserStore.class.getName());
 
 	private UserStore()
 	{
@@ -35,46 +34,41 @@ public class UserStore {
 		return instance;
 	}
 
-	public void registerUser(User user)
+	public synchronized void registerUser(User user)
 	{
 		try
 		{
 			DBM.registerUser(user);
-			//if(!users.contains(user))
-			//	users.addElement(user);
 		}
-		catch (SqlJetException ex)
+		catch (Exception ex)
 		{
-			Logger.getLogger(UserStore.class.getName()).log(Level.SEVERE, null, ex);
+			logger.error("Error while registering user", ex);
 		}
-		//if(!users.contains(user))
-		//	users.addElement(user);
 	}
 
-	public Vector<User> getRegisteredUsers()
+	public synchronized Vector<User> getRegisteredUsers()
 	{
 		Vector<User> v = new Vector<User>();
 		try
 		{
-			//return (Vector<User>)users.clone();
 			v = DBM.getRegisteredUsers();
 		}
-		catch (SqlJetException ex)
+		catch (Exception ex)
 		{
-			Logger.getLogger(UserStore.class.getName()).log(Level.SEVERE, null, ex);
+			logger.error("Error while fetching user from database", ex);
 		}
 		return v;
 	}
 
-	public List<User> getRegisteredUsersAsList()
+	public synchronized List<User> getRegisteredUsersAsList()
 	{
 		try
 		{
 			return DBM.getRegisteredUsersAsList();
 		}
-		catch (SqlJetException ex)
+		catch (Exception ex)
 		{
-			Logger.getLogger(UserStore.class.getName()).log(Level.SEVERE, null, ex);
+			logger.error("Error while fetching user from database", ex);
 			return null;
 		}
 	}

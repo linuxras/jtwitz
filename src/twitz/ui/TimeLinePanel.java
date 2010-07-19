@@ -205,10 +205,15 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	{
 		String user = null;
 		int type = cmbTimelineType.getSelectedIndex();
+		Map map = Collections.synchronizedMap(new TreeMap());
+		ArrayList args = new ArrayList();
 		switch(type)
 		{
 			case 0: //Home timeline
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime()));
+				map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime(), map));
 				break;
 			case 1: //User
 				if(txtTimelineUser.getSelectedItem() instanceof User)
@@ -221,29 +226,44 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 				}
 				if(user != null && !user.equals(""))
 				{
-					Map map = Collections.synchronizedMap(new TreeMap());
+					map = Collections.synchronizedMap(new TreeMap());
 					map.put("async", true);
 					map.put("caller", this);
-					ArrayList args = new ArrayList();
+					args = new ArrayList();
 					args.add(user);
 					map.put("arguments", args);
 					fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_TIMELINE, new java.util.Date().getTime(), map));
 				}
 				break;
 			case 2: //Public
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.PUBLIC_TIMELINE, new java.util.Date().getTime()));
+				map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.PUBLIC_TIMELINE, new java.util.Date().getTime(), map));
 				break;
 			case 3: //Retweet by me
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_BY_ME, new java.util.Date().getTime()));
+				map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_BY_ME, new java.util.Date().getTime(), map));
 				break;
 			case 4: //Retweets to me
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_TO_ME, new java.util.Date().getTime()));
+				map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_TO_ME, new java.util.Date().getTime(), map));
 				break;
 			case 5: //Retweet of
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETS_OF_ME, new java.util.Date().getTime()));
+				map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETS_OF_ME, new java.util.Date().getTime(), map));
 				break;
 			case 6: //Mentions
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.MENTIONS, new java.util.Date().getTime()));
+				map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.MENTIONS, new java.util.Date().getTime(), map));
 				break;
 		}
 	}
