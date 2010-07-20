@@ -61,6 +61,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		TwitzEventModel, ActionListener
 {
     /** Creates new form UserListPanel */
+	@SuppressWarnings("LeakingThisInConstructor")
     public UserListPanel() {
 		resourceMap = TwitzApp.getContext().getResourceMap(UserListPanel.class);
 		actionMap = TwitzApp.getContext().getActionMap(UserListPanel.class, this);
@@ -417,7 +418,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		contactsList1.addUser(user);
 	}
 	
-	public void addUser(Vector<User> user) {
+	public void addUser(@SuppressWarnings("UseOfObsoleteCollectionType") Vector<User> user) {
 		contactsList1.addUser(user);
 	}
 
@@ -446,25 +447,32 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		return list;
 	}
 
-	public void updateList(final PagableResponseList<User> users)//{{{
+	public boolean isUser(Object u)
+	{
+		return (u instanceof User);
+	}
+
+	public void updateList(final PagableResponseList users)//{{{
 	{
 		if(users != null)
 		{
 			SwingWorker<ContactsListModel, Object> worker = new SwingWorker<ContactsListModel, Object>()
 			{
-				PagableResponseList<User> res = users;
+				//PagableResponseList<User> res = users;
 
 				public ContactsListModel doInBackground()
 				{
 					ContactsListModel clm = new ContactsListModel();
 					//clm.clear();
-					for(User u : res)
+					for(Object o  : users)
 					{
-						clm.addElement(u);
+						if(isUser(o))
+							clm.addElement((User)o);
 					}
 					return clm;
 				}
 
+				@Override
 				public void done()
 				{
 					try

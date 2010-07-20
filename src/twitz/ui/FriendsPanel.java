@@ -309,7 +309,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 		User[] selections = getContactsList().getSelectedValues();
 		map.put("selections", selections);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter.id"));
+		args.add(config.getString("twitter_id"));
 		args.add(nextPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
@@ -322,7 +322,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 		map.put("caller", this);
 		map.put("async", true);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter.id"));
+		args.add(config.getString("twitter_id"));
 		args.add(prevPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
@@ -360,7 +360,12 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 		contactsList1.addUser(user);
 	}
 
-	public void updateList(final PagableResponseList<User> users)//{{{
+	private boolean isUser(Object o)
+	{
+		return (o instanceof User);
+	}
+
+	public void updateList(final PagableResponseList users)//{{{
 	{
 		if(users != null)
 		{
@@ -371,13 +376,15 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 				public ContactsListModel doInBackground()
 				{
 					ContactsListModel clm = new ContactsListModel();
-					for(User u : users)
+					for(Object u : users)
 					{
-						clm.addElement(u);
+						if(isUser(u))
+							clm.addElement((User)u);
 					}
 					return clm;
 				}
 
+				@Override
 				public void done()
 				{
 					try

@@ -66,10 +66,10 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	static boolean logdebug = false;
 	TwitzTrayIcon tray = null;
 	private static TwitzMainView view;
-	private boolean hidden;// = config.getBoolean("minimize.startup");
+	private boolean hidden;// = config.getBoolean("minimize_startup");
 	private ResourceMap resources = null;
 	//Image splash = getIcon("resources/splash.png");
-	//JFrame splashFrame = new JFrame();
+	JFrame mainFrame;
 	private static final LAFUpdater themer = new LAFUpdater();
 	private SplashScreen splash; //= SplashScreen.getSplashScreen();
 	private Graphics2D gap = null; //splash.createGraphics();
@@ -133,12 +133,21 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 	@Override
 	protected void configureTopLevel(JFrame top) {//{{{
+		if(logdebug)
+			logger.debug("Inside configureTopLevel....");
 		if(splash != null) {
-			renderSplashFrame(gap, "main components");
-			splash.update();
+			try
+			{
+				renderSplashFrame(gap, "top level window");
+				splash.update();
+			}
+			catch(Exception e)
+			{
+				logger.warn(e.getLocalizedMessage());
+			}
 		}
 
-		top.setUndecorated(config.getBoolean("twitz.undecorated"));
+		top.setUndecorated(config.getBoolean("twitz_undecorated"));
 		resources = getContext().getResourceMap(TwitzApp.class);
 		Point c = getDesktopCenter();
 		Rectangle bound = new Rectangle();
@@ -166,33 +175,32 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		top.addWindowListener(wl);
 		top.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		top.setTitle(getContext().getResourceMap().getString("Application.title"));
-		top.setVisible(true);
+		mainFrame = top;//top.setVisible(true);
 		
 		if(logdebug)
-			logger.debug("Inside configureTopLevel....");
+			logger.debug("Leaving configureTopLevel....");
 	}//}}}
 
     @Override
 	protected  Component createMainComponent() {//{{{
-		
-		view = TwitzMainView.getInstance(this);
-		try
-		{
-			tray = new TwitzTrayIcon(this, view);
-		}
-		catch (Exception ex)
-		{
-			logger.error("Fatal Error: ",ex);
-			JOptionPane.showMessageDialog(null, ex.getMessage(), "Critical Error", JOptionPane.ERROR_MESSAGE);
-			exit();
-		}
-		view.addPropertyChangeListener("POPUP", tray);
-		if(splash != null) {
-			renderSplashFrame(gap, "main components");
-			splash.update();
-		}
 		if(logdebug)
 			logger.debug("Inside createMainComponent");
+		
+		view = TwitzMainView.getInstance(this);
+		if(splash != null) {
+			try
+			{
+				renderSplashFrame(gap, "main components");
+				splash.update();
+			}
+			catch(Exception e){
+				logger.warn(e.getLocalizedMessage());
+			}
+		}
+		
+		
+		if(logdebug)
+			logger.debug("Leaving createMainComponent");
 		return view;
     }//}}}
 
@@ -201,11 +209,23 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
      */
 	@Override
 	protected void startup() {//{{{
+		if(logdebug)
+			logger.debug("Inside Startup");
+		if(splash != null) {
+			try
+			{
+				renderSplashFrame(gap, "final startup");
+				splash.update();
+			}
+			catch(Exception e){
+				logger.warn(e.getLocalizedMessage());
+			}
+		}
 		getMainTopLevel().setJMenuBar(view.getMenuBar());
 		ComponentListener sizeListener = new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
 				if(!view.isMiniMode())
-					config.setProperty("twitz.last.height", getMainTopLevel().getHeight()+"");
+					config.setProperty("twitz_last_height", getMainTopLevel().getHeight()+"");
 			}
 		};
 		getMainTopLevel().addComponentListener(sizeListener);
@@ -235,16 +255,46 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		if(hidden)
 			toggleWindowView("down");
 		UIManager.addPropertyChangeListener(this);
-		if(splash != null)
-			splash.close();
+		try
+		{
+			if(splash != null)
+			{
+				splash.close();
+			}
+		}
+		catch(Exception e){
+			logger.warn(e.getLocalizedMessage());
+		}
+		try
+		{
+			tray = new TwitzTrayIcon(this, view);
+		}
+		catch (Exception ex)
+		{
+			logger.error("Fatal Error: ",ex);
+			JOptionPane.showMessageDialog(null, ex.getMessage(), "Critical Error", JOptionPane.ERROR_MESSAGE);
+			exit();
+		}
+		view.addPropertyChangeListener("POPUP", tray);
+		mainFrame.setVisible(true);
 		if(logdebug)
-			logger.debug("Inside Startup");
+			logger.debug("Leaving Startup");
 		//logger.debug(getEnv());
 	}//}}}
 
 	@Override
 	protected JMenuBar createJMenuBar() {
 		System.out.println("Inside createJMenuBar");
+		if(splash != null) {
+			try
+			{
+				renderSplashFrame(gap, "menu bar");
+				splash.update();
+			}
+			catch(Exception e){
+				logger.warn(e.getLocalizedMessage());
+			}
+		}
         return null;
     }
 
@@ -261,15 +311,19 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			logger.debug("Inside initialize...");
 		splash = SplashScreen.getSplashScreen();
 		if(splash != null) {
-			gap = splash.createGraphics();
-			renderSplashFrame(gap, "initialization");
-			splash.update();
+			try
+			{
+				gap = splash.createGraphics();
+				renderSplashFrame(gap, "initialization");
+				splash.update();
+			}
+			catch(Exception e){logger.warn(e.getLocalizedMessage(), e);}
 		} else {
 			if(logdebug)
 				logger.debug("Splash is null");
 		}
 		config = SettingsManager.getInstance();
-		hidden = config.getBoolean("minimize.startup");
+		hidden = config.getBoolean("minimize_startup");
 		DBM = DBManager.getInstance();
 		themer.addPropertyChangeListener(this);
 		setLAFFromSettings(false, true);
@@ -289,7 +343,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 	}
 
-	private final static Logger getLogger() {
+	private static Logger getLogger() {
 		return logger;
 	}
 
@@ -499,7 +553,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 
 		public void run() {
-			String skin = config.getString("twitz.skin");
+			String skin = config.getString("twitz_skin");
 			//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
 			String currentSkin = "";
 			LookAndFeel laf = UIManager.getLookAndFeel();

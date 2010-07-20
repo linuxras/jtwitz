@@ -47,8 +47,8 @@ import twitz.util.SettingsManager;
 public class PreferencesDialog extends javax.swing.JDialog {
 
 	private SettingsManager config = SettingsManager.getInstance();
-	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(PreferencesDialog.class);
-	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(PreferencesDialog.class, this);
+	//org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(PreferencesDialog.class);
+	//javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(PreferencesDialog.class, this);
 	private Vector vHeaders = new Vector();
 	private TableRowSorter sorter;
 	private TwitzApp mainApp;
@@ -98,6 +98,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
         btnNewProfile = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(PreferencesDialog.class);
         setTitle(resourceMap.getString("Form.title")); // NOI18N
         setName("Form"); // NOI18N
 
@@ -135,6 +136,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
         tblConfig.setRowHeight(20);
         configPane.setViewportView(tblConfig);
 
+        javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(PreferencesDialog.class, this);
         btnOk.setAction(actionMap.get("btnOkClicked")); // NOI18N
         btnOk.setIcon(resourceMap.getIcon("btnOk.icon")); // NOI18N
         btnOk.setText(resourceMap.getString("btnOk.text")); // NOI18N
@@ -162,6 +164,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
         chkDefault.setAction(actionMap.get("setDefaultProfile")); // NOI18N
         chkDefault.setText(resourceMap.getString("chkDefault.text")); // NOI18N
         chkDefault.setToolTipText(resourceMap.getString("chkDefault.toolTipText")); // NOI18N
+        chkDefault.setEnabled(false);
         chkDefault.setFocusable(false);
         chkDefault.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
         chkDefault.setName("chkDefault"); // NOI18N
@@ -259,7 +262,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			{
 				Map<String, Object> map = sessions.get(i);
 				cmbProfile.addItem(map.get(DBManager.SESSION_NAME));
-				int def = (Integer)map.get(DBManager.SESSION_DEFAULT);
+				long defl = (Long)map.get(DBManager.SESSION_DEFAULT);
+				int def = (int)defl;
 				if(def == 1)
 				{
 					cmbProfile.setSelectedItem(map.get(DBManager.SESSION_NAME));
@@ -322,7 +326,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			{
 				Map<String, Object> map = sessions.get(i);
 				cmbProfile.addItem(map.get(DBManager.SESSION_NAME));
-				int def = (Integer)map.get(DBManager.SESSION_DEFAULT);
+				long defl = (Long)map.get(DBManager.SESSION_DEFAULT);
+				int def = (int)defl;
 				if(def == 1)
 				{
 					cmbProfile.setSelectedItem(map.get(DBManager.SESSION_NAME));
@@ -362,10 +367,10 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	@Action
 	public void cancelEdit()
 	{
-		String oldSkin = config.getString("twitz.skin");
+		String oldSkin = config.getString("twitz_skin");
 		config.setProperties(undo);
 		if(updateSkin) {
-			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz.skin"));
+			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz_skin"));
 		}
 		updateSkin = false;
 		updateLogin = false;
@@ -390,7 +395,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			return;
 		if(pane.getValue() == JOptionPane.UNINITIALIZED_VALUE)
 			return;
-		String profile = (String) pane.getValue();
+		System.out.println("Return code: "+pane.getValue()+"\nInput value: "+pane.getInputValue());
+		String profile = (String) pane.getInputValue();
 
 		if(!"".equals(profile))
 		{
@@ -401,7 +407,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			}
 			catch(Exception e)
 			{
-				logger.error("Unable to add new profile "+profile, e);
+				logger.error("Unable to add new profile "+profile+"\n"+e.getLocalizedMessage());
 				JOptionPane.showMessageDialog(this, "Unable to add new profile "+profile+"\n"+ e.getLocalizedMessage(), "Profile Error", JOptionPane.ERROR_MESSAGE);
 			}
 			if(success)
@@ -439,13 +445,13 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			String key = row.get(0)+"";
 			String value = row.get(2)+"";
 			p.setProperty(key, value);
-			if(key.equals("twitz.skin")) {
+			if(key.equals("twitz_skin")) {
 				if(!value.equals(config.getString(key))) {
 					updateSkin = true;
 					oldSkin = config.getString(key);
 				}
 			}
-			if(key.equals("twitter.id") || key.equals("twitter.password")) {
+			if(key.equals("twitter_id") || key.equals("twitter_password")) {
 				if(!value.equals(config.getString(key))) {
 					//logger.debug(key+" value: "+value);
 					//Tell TwitterManager to update itself.
@@ -468,7 +474,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			updateLogin = false;
 		}
 		if(updateSkin) {
-			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz.skin"));
+			firePropertyChange("lookAndFeelChange", oldSkin, config.getString("twitz_skin"));
 			//mainApp.setLAFFromSettings();
 		}
 		//updateSkin = false;

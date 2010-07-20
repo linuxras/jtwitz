@@ -42,8 +42,8 @@ public class TwitterManager extends DefaultTwitzEventModel {
 		this.view = twitz.TwitzMainView.getInstance();
 		resource = twitz.TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
 		baseConfig = buildConfiguration();
-		this.twitter = new TwitterFactory(baseConfig).getInstance(config.getString("twitter.id"), config.getString("twitter.password"));
-		this.atwitter = new AsyncTwitterFactory(baseConfig, view).getInstance(config.getString("twitter.id"),config.getString("twitter.password"));
+		this.twitter = new TwitterFactory(baseConfig).getInstance(config.getString("twitter_id"), config.getString("twitter_password"));
+		this.atwitter = new AsyncTwitterFactory(baseConfig, view).getInstance(config.getString("twitter_id"),config.getString("twitter_password"));
 	}
 
 	private Configuration buildConfiguration() {
@@ -54,13 +54,13 @@ public class TwitterManager extends DefaultTwitzEventModel {
 		builder.setClientVersion(resource.getString("CLIENT.VERSION"));
 		builder.setUseSSL(true);
 		builder.setAsyncNumThreads(resource.getInteger("CLIENT.MAX.THREADS"));
-		if(config.getBoolean("twitter.use_proxy")) {
-			builder.setHttpProxyPort(config.getInteger("twitter.proxy_port"));
-			builder.setHttpProxyHost(config.getString("twitter.proxy_host"));
-			if(config.getString("twitter.proxy_password") != null && !config.getString("twitter.proxy_password").equals(""))
-				builder.setHttpProxyPassword(config.getString("twitter.proxy_password"));
-			if(config.getString("twitter.proxy_user") != null && !config.getString("twitter.proxy_user").equals(""))
-				builder.setHttpProxyUser(config.getString("twitter.proxy_user"));
+		if(config.getBoolean("twitter_use_proxy")) {
+			builder.setHttpProxyPort(config.getInteger("twitter_proxy_port"));
+			builder.setHttpProxyHost(config.getString("twitter_proxy_host"));
+			if(config.getString("twitter_proxy_password") != null && !config.getString("twitter_proxy_password").equals(""))
+				builder.setHttpProxyPassword(config.getString("twitter_proxy_password"));
+			if(config.getString("twitter_proxy_user") != null && !config.getString("twitter_proxy_user").equals(""))
+				builder.setHttpProxyUser(config.getString("twitter_proxy_user"));
 		}
 		return builder.build();
 	}
@@ -78,8 +78,8 @@ public class TwitterManager extends DefaultTwitzEventModel {
 
 	public void login() {
 		baseConfig = buildConfiguration();
-		twitter = new TwitterFactory(baseConfig).getInstance(config.getString("twitter.id"),config.getString("twitter.password"));
-		atwitter = new AsyncTwitterFactory(baseConfig, view).getInstance(config.getString("twitter.id"),config.getString("twitter.password"));
+		twitter = new TwitterFactory(baseConfig).getInstance(config.getString("twitter_id"),config.getString("twitter_password"));
+		atwitter = new AsyncTwitterFactory(baseConfig, view).getInstance(config.getString("twitter_id"),config.getString("twitter_password"));
 		//view.loadAllPanels();
 	}
 

@@ -257,5 +257,4 @@ public class UserTest implements User{
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
-
 }

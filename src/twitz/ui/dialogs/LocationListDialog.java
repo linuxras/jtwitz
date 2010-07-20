@@ -230,24 +230,33 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		citiesList.setModel(lm);
 	}
 
-	public void setLocations(ResponseList<Location> locals) {
+	public boolean isLocation(Object o)
+	{
+		return (o instanceof Location);
+	}
+
+	public void setLocations(ResponseList locals) {
 		LocationListModel countryModel = new LocationListModel();
 		LocationListModel cityModel = new LocationListModel();
 		countries.clear();
 		cities.clear();
 		//Twitter.com does not provide Worldwide as a Location 
 		countries.add("Worldwide");
-		for(Location l : locals)
+		for(Object o : locals)
 		{
-			if(!countries.contains(l.getCountryName()))
+			if (isLocation(o))
 			{
-				countryModel.addLocation(l);
-				countries.add(l.getCountryName());
-			}
-			if(!cities.contains(l.getPlaceName()))
-			{
-				cityModel.addLocation(l);
-				cities.add(l.getPlaceName());
+				Location l = (Location) o;
+				if (!countries.contains(l.getCountryName()))
+				{
+					countryModel.addLocation(l);
+					countries.add(l.getCountryName());
+				}
+				if (!cities.contains(l.getPlaceName()))
+				{
+					cityModel.addLocation(l);
+					cities.add(l.getPlaceName());
+				}
 			}
 		}
 		countryModel.insertLocation(new LocationTest("Worldwide", "WW", "", 0, 1), 0);

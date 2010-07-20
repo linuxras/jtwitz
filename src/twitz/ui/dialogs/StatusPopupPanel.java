@@ -283,9 +283,9 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 
 	private void fixButtons(Status s)//{{{
 	{
-		btnDelete.setEnabled(s.getUser().getScreenName().equals(config.getString("twitter.id")));
-		btnRetweet.setEnabled(s.getUser().getScreenName().equals(config.getString("twitter.id")));
-		btnReplyTo.setEnabled(!s.getUser().getScreenName().equals(config.getString("twitter.id")));
+		btnDelete.setEnabled(s.getUser().getScreenName().equals(config.getString("twitter_id")));
+		btnRetweet.setEnabled(s.getUser().getScreenName().equals(config.getString("twitter_id")));
+		btnReplyTo.setEnabled(!s.getUser().getScreenName().equals(config.getString("twitter_id")));
 		lblRetweet.setEnabled(s.isRetweet());
 		lblFav.setEnabled(s.isFavorited());
 	}//}}}

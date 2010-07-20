@@ -190,7 +190,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 		map.put("async", true);
 		map.put("caller", this);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter.id"));//screenName
+		args.add(config.getString("twitter_id"));//screenName
 		args.add(nextPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
@@ -203,7 +203,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 		map.put("async", true);
 		map.put("caller", this);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter.id"));//screenName
+		args.add(config.getString("twitter_id"));//screenName
 		args.add(prevPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
@@ -303,7 +303,12 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 		return panel;
 	}//}}}
 
-	public void addUserList(final PagableResponseList<UserList> userLists)//{{{
+	public boolean  isUserList(Object o)
+	{
+		return (o instanceof UserList);
+	}
+
+	public void addUserList(final PagableResponseList userLists)//{{{
 	{
 		if(userLists != null)
 		{
@@ -323,10 +328,12 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 				@Override
 				public List<UserList> doInBackground()
 				{
-					for(UserList list : userLists)
+					for(Object o : userLists)
 					{
-						//addUserList(list);
-						publish(list);
+						if(isUserList(o))
+						{
+							publish((UserList)o);
+						}
 					}
 					return null;
 				}

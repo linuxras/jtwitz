@@ -35,6 +35,7 @@ public class SettingsManager extends Properties{
 	private static DBManager DBM;
 	private String currentSession = "Default";
 	private boolean autosave = true;
+	private boolean settingsLoaded = false;
 
 	public static enum OS {
 		WINDOWS,
@@ -451,15 +452,18 @@ public class SettingsManager extends Properties{
 	@Override
 	public Object setProperty(String property, String value) {//{{{
 		Object rv = super.setProperty(property, value);
-		Properties p = new Properties();
-		p.setProperty(property, value);
+		//Properties p = new Properties();
+		//p.setProperty(property, value);
+		if(settingsLoaded)
+		{
 		try
 		{
-			DBM.updateSettings(currentSession, p);
+			DBM.updateSettings(currentSession, this);
 		}
 		catch (Exception ex)
 		{
 			logger.error("Fatal error while saving record", ex);
+		}
 		}
 		//saveSettingsToDb();
 		return rv;
@@ -471,6 +475,7 @@ public class SettingsManager extends Properties{
 			setProperty(key, list.getProperty(key));
 			//System.out.println("got: "+key+" = "+ list.getProperty(key));
 		}
+		settingsLoaded = true;
 		if(autosave)
 			saveSettingsToDb();
 			//saveSettings();

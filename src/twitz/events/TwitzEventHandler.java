@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import twitter4j.*;
 import org.apache.log4j.Logger;
+import org.jdesktop.application.Task;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventType;
 import twitz.twitter.TwitterManager;
@@ -274,7 +275,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 						});
 				break;
 			case USER_LISTS:
-				if(args != null && args.size() != 0)
+				if(args != null && !args.isEmpty())
 				{
 					tm.getAsyncTwitterInstance().getUserLists((String)args.get(0), (Long)args.get(1));;
 				}
@@ -603,7 +604,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				tm.getAsyncTwitterInstance().getAvailableTrends();
 				break;
 			case LOCATION_TRENDS:
-				if(args != null && args.size() != 0)
+				if(args != null && !args.isEmpty())
 				{
 					tm.getAsyncTwitterInstance().getLocationTrends((Integer)args.get(0));
 				}
@@ -633,6 +634,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		return rv;
 	}//}}}
 
+	@Override
 	public void done()
 	{
 		if(error)

@@ -303,7 +303,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 		return this.prevCursor;
 	}
 
-	public void updateStatus(ResponseList<Status> statuses)
+	public void updateStatus(ResponseList statuses)
 	{
 		statusPanel.updateStatus(statuses);
 	}

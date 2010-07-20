@@ -191,7 +191,12 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 		return this.statusList;
 	}
 
-	public void updateStatus(final ResponseList<Status> statuses)
+	private boolean isStatus(Object o)
+	{
+		return (o instanceof Status);
+	}
+
+	public void updateStatus(final ResponseList statuses)
 	{
 		if(statuses != null)
 		{
@@ -202,11 +207,15 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 				@Override
 				public List<Status> doInBackground()
 				{
-					for(Status s: statuses)
+					for(Object o: statuses)
 					{
-						publish(s);
-						store.registerUser(s.getUser());
-						model.addStatus(s);
+						if(isStatus(o))
+						{
+							Status s = (Status)o;
+							publish(s);
+							store.registerUser(s.getUser());
+							model.addStatus(s);
+						}
 					}
 					return null;//I wont be using get() to process anything
 				}

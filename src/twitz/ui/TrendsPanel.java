@@ -237,7 +237,7 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 	 * name in the LocationListDialog to update the country and city lists.
 	 * @param locals A <code>ResponseList</code> of <code>Location</code> objects
 	 */
-	public void setLocations(ResponseList<Location> locals) {
+	public void setLocations(ResponseList locals) {
 		if(locations == null)
 			buildLocationBox();
 		locations.setLocations(locals);

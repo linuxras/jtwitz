@@ -35,6 +35,7 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.models.TweetListModel;
+import twitz.util.UserStore;
 
 /**
  *
@@ -328,6 +329,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private String lastSearch = "";
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
+	private final UserStore store = UserStore.getInstance();
 
 	@Action
 	public void doSearch()//{{{
@@ -466,6 +468,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 					return tlm;
 				}
 
+				@Override
 				public void done()
 				{
 					try
@@ -482,7 +485,12 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		}
 	}//}}}
 
-	public void updateUsersList(final ResponseList<User> results)//{{{
+	private boolean isUser(Object o)
+	{
+		return (o instanceof User);
+	}
+
+	public void updateUsersList(final ResponseList results)//{{{
 	{
 		if(results != null)
 		{
@@ -496,13 +504,19 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 				public ContactsListModel doInBackground()
 				{
 					ContactsListModel clm = new ContactsListModel();
-					for(User u : results)
+					for(Object o : results)
 					{
-						clm.addElement(u);
+						if(isUser(o))
+						{
+							User u = (User)o;
+							clm.addElement(u);
+							store.registerUser(u);
+						}
 					}
 					return clm;
 				}
 
+				@Override
 				public void done()
 				{
 					try
