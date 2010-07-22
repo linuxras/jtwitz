@@ -31,6 +31,7 @@ import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import twitter4j.Location;
 import twitter4j.ResponseList;
+import twitz.TwitzMainView;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
@@ -38,16 +39,20 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.testing.LocationTest;
 import twitz.ui.models.LocationListModel;
+import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
  * @author mistik1
  */
 public class LocationListDialog extends JDialog implements TwitzEventModel {
+	private SettingsManager config;
 
     /** Creates new form LocationListDialog */
-    public LocationListDialog(Frame topLevel, JPanel caller) {
+    public LocationListDialog(Frame topLevel, JPanel caller, String session) {
 		super(topLevel, true);
+		setSessionName(session);
 		this.topLevel = topLevel;
 		this.caller = caller;
         initComponents();
@@ -96,7 +101,7 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 			{
 			}
 		});
-		if(!twitz.TwitzMainView.getInstance().isConnected())
+		if(!view.isConnected())
 			addSampleData();
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(cityScrollPane);
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(countryScrollPane);
@@ -228,6 +233,20 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 		}
 		countriesList.setModel(cm);
 		citiesList.setModel(lm);
+	}
+
+	public final void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
 	}
 
 	public boolean isLocation(Object o)
@@ -368,5 +387,7 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 	private String oldLocation = "WorldWide";
 	private List<String> countries = Collections.synchronizedList(new ArrayList<String>());
 	private List<String> cities = Collections.synchronizedList(new ArrayList<String>());
-
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 }

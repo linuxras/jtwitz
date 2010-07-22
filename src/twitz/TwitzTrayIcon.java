@@ -35,16 +35,14 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
 	private static TwitzApp mainApp;
 	org.jdesktop.application.ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(TwitzTrayIcon.class);
 	org.jdesktop.application.ResourceMap viewResource = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
-	private TwitzMainView mainView;
 	private Logger logger = Logger.getLogger(TwitzTrayIcon.class.getName());
 	private boolean menuVisible = false;
 
 
-	public TwitzTrayIcon(TwitzApp app, TwitzMainView view) throws Exception
+	public TwitzTrayIcon(TwitzApp app) throws Exception
 	{
 		popup = new TwitzPopup(app);
 		mainApp = app;
-		mainView = view;
 		if(!initComponents()) {
 			throw new IllegalStateException("System Tray is not supported on your platform");
 		}

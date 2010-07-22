@@ -27,6 +27,7 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.TweetListModel;
 import twitz.ui.renderers.TweetListRenderer;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
@@ -35,7 +36,10 @@ import twitz.ui.renderers.TweetListRenderer;
 public class TweetList extends JList implements MouseListener, ActionListener, TwitzEventModel{
 
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
-	private TweetListModel model = new TweetListModel();;
+	private TweetListModel model = new TweetListModel();
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 
 	public TweetList() {
 		this(new TweetListModel());
@@ -44,6 +48,20 @@ public class TweetList extends JList implements MouseListener, ActionListener, T
 	public TweetList(ListModel model) {
 		super(model);
 		super.setCellRenderer(new TweetListRenderer());
+	}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
 	}
 
 	/**
@@ -156,7 +174,7 @@ public class TweetList extends JList implements MouseListener, ActionListener, T
 						list.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					TwitzMainView.getInstance().getActionsMenu(this).show(list, p.x, p.y);
+					view.getActionsMenu(this).show(list, p.x, p.y);
 				}
 
 			}

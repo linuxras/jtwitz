@@ -35,6 +35,7 @@ import twitter4j.Paging;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.UserList;
+import twitz.TwitzMainView;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
@@ -117,6 +118,20 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 		statusList.addHotSpot(retweet);
 		if(!inTimeline)
 			statusList.addMouseListener(this);
+	}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
 	}
 
 	public void setUserList(UserList list)
@@ -292,7 +307,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					twitz.TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
+					view.getActionsMenu(this).show(this, p.x, p.y);
 				}
 
 			}
@@ -322,5 +337,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 	private boolean inTimeline = false;
 	private UserList userlist = null;
 	private UserStore store = UserStore.getInstance();
-
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 }

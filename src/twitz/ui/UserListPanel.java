@@ -51,6 +51,8 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.renderers.ContactsRenderer;
+import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 
 /**
@@ -60,6 +62,7 @@ import twitz.ui.renderers.ContactsRenderer;
 public class UserListPanel extends javax.swing.JPanel implements MouseListener, FocusListener, 
 		TwitzEventModel, ActionListener
 {
+	private SettingsManager config;
     /** Creates new form UserListPanel */
 	@SuppressWarnings("LeakingThisInConstructor")
     public UserListPanel() {
@@ -189,7 +192,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	//
 	private void requestListStatus()//{{{
 	{
-		if(TwitzMainView.getInstance().isConnected())
+		if(view.isConnected())
 		{
 			Map map = Collections.synchronizedMap(new TreeMap());
 			map.put("async", true);
@@ -263,7 +266,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		toolbar.addMouseListener(toolbarListener);
 		listName.addMouseListener(toolbarListener);
 		contactsList1.addMouseListener(this);
-		//addTwitzListener(TwitzMainView.getInstance());
+		//addTwitzListener(view);
 		setFocusable(true);
 		addMouseListener(this);
 		addFocusListener(this);
@@ -295,6 +298,20 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	//	btnCollapse.setAction(toggle);
 	//	btnCollapse.setText("");
 	}//}}}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
 
 	@Action
 	public void toggleCollapsed()
@@ -427,7 +444,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		if(userList != null)
 		{
 			this.list = userList;
-			if(twitz.TwitzMainView.getInstance().isConnected())//if this is false we are in offline testing mode
+			if(view.isConnected())//if this is false we are in offline testing mode
 			{
 				Map map = Collections.synchronizedMap(new TreeMap());
 				map.put("async", true);
@@ -511,7 +528,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
+					view.getActionsMenu(this).show(this, p.x, p.y);
 				}
 
 			}
@@ -621,6 +638,9 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	boolean logdebug = logger.isDebugEnabled();
 	boolean loginfo = logger.isInfoEnabled();
 	private boolean inactive = true;
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 
 	private long prevPage = -1;
 	private long nextPage = -1;

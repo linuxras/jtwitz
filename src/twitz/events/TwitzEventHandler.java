@@ -3,16 +3,14 @@ package twitz.events;
 import java.awt.Component;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import twitter4j.*;
 import org.apache.log4j.Logger;
-import org.jdesktop.application.Task;
-import twitz.events.TwitzEvent;
-import twitz.events.TwitzEventType;
+import twitz.TwitzMainView;
 import twitz.twitter.TwitterManager;
+import twitz.util.TwitzSessionManager;
 
 
 public class TwitzEventHandler extends SwingWorker<String, Object> {
@@ -26,13 +24,24 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	private boolean logdebug = logger.isDebugEnabled();
 	private Vector<String> names = new Vector<String>();
     private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
+	private final String sessionName;
+	private final TwitzMainView view;
+	//private PropertyChangeSupport pcs = new EDTPropertyChangeSupport(this);
 
-	public TwitzEventHandler(TwitzEvent event, TwitterManager tmanager)
+	public TwitzEventHandler(TwitzEvent event, String session)
 	{
 		this.mainEvent = event;
-		this.tm = tmanager;
+		this.sessionName = session;
+		this.view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		this.tm = view.getTwitterManager();
 	}
 
+	public void exec()
+	{
+		firePropertyChange("started", null, null);
+		execute();
+	}
+	
 	public String doInBackground() //{{{
 	{
 		String rv = "";
@@ -57,6 +66,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		}
 				//run action performed
 		TwitzEventType type = mainEvent.getEventType();
+		firePropertyChange("message", null, "Performing task - "+type.name());
 		switch(type) {
 			case UPDATE_FRIENDS_TWEETS_LIST:
 				//TODO Replace this test code with more checks
@@ -639,7 +649,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	{
 		if(error)
 		{
-			twitz.TwitzMainView.getInstance().onException(errorT, errorMethod);
+			view.onException(errorT, errorMethod);
 			return;
 		}
 		String value = "";
@@ -650,6 +660,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		catch(Exception ignore){/*ignore this for now*/}
 		if(!value.equals(""))
 			JOptionPane.showMessageDialog(null, value, resourceMap.getString("ERROR_TITLE.TEXT"), JOptionPane.ERROR_MESSAGE);
+		firePropertyChange("done", null, null);
 	}
 
 	private String getScreenNameFromMap(Object obj) {//{{{

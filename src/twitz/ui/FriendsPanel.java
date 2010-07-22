@@ -51,6 +51,7 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.renderers.ContactsRenderer;
+import twitz.util.TwitzSessionManager;
 
 
 /**
@@ -59,6 +60,7 @@ import twitz.ui.renderers.ContactsRenderer;
  */
 public class FriendsPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel, ActionListener
 {
+
     /** Creates new form FriendsPanel */
     public FriendsPanel() {
 		resourceMap = TwitzApp.getContext().getResourceMap(FriendsPanel.class);
@@ -175,7 +177,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 	//
 	private void requestTimelineForUser(User user)//{{{
 	{
-		if(TwitzMainView.getInstance().isConnected())
+		if(view.isConnected())
 		{
 			if(user != null)
 			{
@@ -193,7 +195,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 		} 
 		else
 		{
-			TwitzMainView.getInstance().addSampleFriends();
+			view.addSampleFriends();
 		}
 	}//}}}
 
@@ -276,6 +278,20 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 		btnPrev.setEnabled(false);
 		btnNext.setEnabled(false);
 	}//}}}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
 
 	@Action
 	public void addListUser() {
@@ -432,7 +448,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
+					view.getActionsMenu(this).show(this, p.x, p.y);
 				}
 
 			}
@@ -495,8 +511,10 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 	private Border defaultBorder, selectedBorder;
 	private javax.swing.Action toggle;
 	private JPanel contentPanel = new JPanel(new BorderLayout());
-	private twitz.util.SettingsManager config = twitz.util.SettingsManager.getInstance();
-
+	private TwitzSessionManager tsm = TwitzSessionManager.getInstance();
+	private twitz.util.SettingsManager config;
+	private TwitzMainView view;
+	private String sessionName;
 	boolean collapsed = false;
 	int boxHeight = 350;
 	//final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -511,5 +529,6 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 
 	public static final int MAX_HEIGHT = 300;
 	public static final int MIN_HEIGHT = 50;
+	public static final String SESSION_PROPERTY = "sessionName";
 
 }

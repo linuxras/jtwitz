@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import twitz.TwitzMainView;
 import twitz.events.*;
 import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 
 /**
@@ -63,6 +64,9 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 	private Map<String,UserList> userlists = Collections.synchronizedMap(new TreeMap<String, UserList>());
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 
 	private long nextPage = -1;
 	private long prevPage = -1;
@@ -71,6 +75,20 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 	{
 		super();
 		initLayout();
+	}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
 	}
 
 	@Override
@@ -248,10 +266,11 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 	 */
 	public UserListPanel addUserList(User[] users, String listName) {//{{{
 		UserListPanel panel = new UserListPanel();
+		panel.setSessionName(sessionName);
 		panel.addUser(users);
 		panel.setTitle(listName);
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
-		panel.addTwitzListener(TwitzMainView.getInstance());
+		panel.addTwitzListener(view);
 		panel.addPropertyChangeListener("collapsed", this);
 		addPanel(panel);
 		panels.put(listName, panel);
@@ -267,9 +286,10 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 	 */
 	public UserListPanel addUserList(String listName) {//{{{
 		UserListPanel panel = new UserListPanel();
+		panel.setSessionName(sessionName);
 		panel.setTitle(listName);
 		//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
-		panel.addTwitzListener(TwitzMainView.getInstance());
+		panel.addTwitzListener(view);
 		panel.addPropertyChangeListener("collapsed", this);
 		addPanel(panel);
 		panels.put(listName, panel);
@@ -283,10 +303,11 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 		try
 		{
 			panel = new UserListPanel();
+			panel.setSessionName(sessionName);
 			panel.setTitle(list.getName());
 			//Lets make sure that the TwitzMainView is a TwitzEventListener for this and all panels
 			//We add it first here because setUserList causes a TwitzEvent to be fired to get the list users
-			panel.addTwitzListener(TwitzMainView.getInstance());
+			panel.addTwitzListener(view);
 			panel.addPropertyChangeListener("collapsed", this);
 			
 			panel.setUserList(list);

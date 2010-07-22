@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
-<Form version="1.6" maxVersion="1.7" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+<Form version="1.6" maxVersion="1.7" type="org.netbeans.modules.form.forminfo.JInternalFrameFormInfo">
   <NonVisualComponents>
     <Container class="javax.swing.JPopupMenu" name="contextMenu">
       <Properties>
@@ -405,8 +405,15 @@
     </Component>
   </NonVisualComponents>
   <Properties>
-    <Property name="name" type="java.lang.String" value="Form" noResource="true"/>
+    <Property name="closable" type="boolean" value="true"/>
+    <Property name="iconifiable" type="boolean" value="true"/>
+    <Property name="resizable" type="boolean" value="true"/>
+    <Property name="name" type="java.lang.String" value="TwitzMainView" noResource="true"/>
+    <Property name="selected" type="boolean" value="true"/>
   </Properties>
+  <SyntheticProperties>
+    <SyntheticProperty name="formSizePolicy" type="int" value="2"/>
+  </SyntheticProperties>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="2"/>
     <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="true"/>
@@ -422,174 +429,205 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="statusPanel" alignment="1" max="32767" attributes="0"/>
-          <Group type="102" alignment="0" attributes="0">
-              <EmptySpace max="-2" attributes="0"/>
-              <Component id="tabPane" pref="491" max="32767" attributes="0"/>
-              <EmptySpace max="-2" attributes="0"/>
-          </Group>
+          <Component id="mainPanel" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="1" attributes="0">
-              <EmptySpace max="-2" attributes="0"/>
-              <Component id="tabPane" pref="512" max="32767" attributes="0"/>
-              <EmptySpace min="-2" pref="68" max="-2" attributes="0"/>
-              <Component id="statusPanel" min="-2" max="-2" attributes="0"/>
-          </Group>
+          <Component id="mainPanel" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Container class="javax.swing.JTabbedPane" name="tabPane">
+    <Container class="javax.swing.JPanel" name="mainPanel">
       <Properties>
-        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-          <Border info="org.netbeans.modules.form.compat2.border.SoftBevelBorderInfo">
-            <BevelBorder/>
-          </Border>
-        </Property>
-        <Property name="inheritsPopupMenu" type="boolean" value="true"/>
-        <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-          <Dimension value="[200, 37]"/>
-        </Property>
-        <Property name="name" type="java.lang.String" value="tabPane" noResource="true"/>
-      </Properties>
-      <Events>
-        <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="tabPaneKeyReleased"/>
-      </Events>
-
-      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
-      <SubComponents>
-        <Container class="javax.swing.JPanel" name="recentPane">
-          <Properties>
-            <Property name="name" type="java.lang.String" value="recentPane" noResource="true"/>
-          </Properties>
-          <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="" toolTip="Tweets">
-                <Property name="tabTitle" type="java.lang.String" resourceKey="recentPane.TabConstraints.tabTitle"/>
-                <Property name="tabIcon" type="javax.swing.Icon" resourceKey="icon.comments"/>
-                <Property name="tabToolTip" type="java.lang.String" resourceKey="recentPane.TabConstraints.tabToolTip"/>
-              </JTabbedPaneConstraints>
-            </Constraint>
-          </Constraints>
-
-          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
-          <SubComponents>
-            <Container class="javax.swing.JSplitPane" name="timelineTrendsPane">
-              <Properties>
-                <Property name="dividerLocation" type="int" value="160"/>
-                <Property name="dividerSize" type="int" value="8"/>
-                <Property name="name" type="java.lang.String" value="timelineTrendsPane" noResource="true"/>
-              </Properties>
-              <Constraints>
-                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
-                  <BorderConstraints direction="Center"/>
-                </Constraint>
-              </Constraints>
-
-              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout"/>
-            </Container>
-          </SubComponents>
-        </Container>
-        <Container class="javax.swing.JSplitPane" name="friendsPanel">
-          <Properties>
-            <Property name="dividerLocation" type="int" value="180"/>
-            <Property name="dividerSize" type="int" value="4"/>
-            <Property name="name" type="java.lang.String" value="friendsPanel" noResource="true"/>
-          </Properties>
-          <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="" toolTip="Friends">
-                <Property name="tabTitle" type="java.lang.String" resourceKey="friendsPanel.TabConstraints.tabTitle"/>
-                <Property name="tabIcon" type="javax.swing.Icon" resourceKey="friendsPanel.TabConstraints.tabIcon"/>
-                <Property name="tabToolTip" type="java.lang.String" resourceKey="friendsPanel.TabConstraints.tabToolTip"/>
-              </JTabbedPaneConstraints>
-            </Constraint>
-          </Constraints>
-
-          <Layout class="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout"/>
-          <SubComponents>
-            <Container class="javax.swing.JTabbedPane" name="friendsPane">
-              <Properties>
-                <Property name="tabLayoutPolicy" type="int" value="1"/>
-                <Property name="tabPlacement" type="int" value="2"/>
-                <Property name="name" type="java.lang.String" value="friendsPane" noResource="true"/>
-              </Properties>
-              <Constraints>
-                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout$JSplitPaneConstraintsDescription">
-                  <JSplitPaneConstraints position="left"/>
-                </Constraint>
-              </Constraints>
-
-              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
-            </Container>
-          </SubComponents>
-        </Container>
-      </SubComponents>
-    </Container>
-    <Container class="javax.swing.JPanel" name="statusPanel">
-      <Properties>
-        <Property name="name" type="java.lang.String" value="statusPanel" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="mainPanel" noResource="true"/>
       </Properties>
 
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="statusPanelSeparator" alignment="0" pref="515" max="32767" attributes="0"/>
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="statusMessageLabel" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="331" max="32767" attributes="0"/>
-                  <Component id="progressBar" min="-2" max="-2" attributes="0"/>
+                  <Component id="tabPane" pref="491" max="32767" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="statusAnimationLabel" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
+              </Group>
+              <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <Component id="statusPanel" max="32767" attributes="0"/>
+                      <EmptySpace min="-2" pref="0" max="-2" attributes="0"/>
+                  </Group>
               </Group>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
-                  <Component id="statusPanelSeparator" min="-2" pref="2" max="-2" attributes="0"/>
-                  <EmptySpace max="32767" attributes="0"/>
-                  <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="statusMessageLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="statusAnimationLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="progressBar" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="tabPane" pref="512" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" pref="93" max="-2" attributes="0"/>
+              </Group>
+              <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace pref="586" max="32767" attributes="0"/>
+                      <Component id="statusPanel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace min="-2" pref="3" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
       </Layout>
       <SubComponents>
-        <Component class="javax.swing.JSeparator" name="statusPanelSeparator">
+        <Container class="javax.swing.JTabbedPane" name="tabPane">
           <Properties>
-            <Property name="name" type="java.lang.String" value="statusPanelSeparator" noResource="true"/>
+            <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+              <Border info="org.netbeans.modules.form.compat2.border.SoftBevelBorderInfo">
+                <BevelBorder/>
+              </Border>
+            </Property>
+            <Property name="inheritsPopupMenu" type="boolean" value="true"/>
+            <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[200, 37]"/>
+            </Property>
+            <Property name="name" type="java.lang.String" value="tabPane" noResource="true"/>
           </Properties>
-          <AuxValues>
-            <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
-            <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
-          </AuxValues>
-        </Component>
-        <Component class="javax.swing.JLabel" name="statusMessageLabel">
+          <Events>
+            <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="tabPaneKeyReleased"/>
+          </Events>
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
+          <SubComponents>
+            <Container class="javax.swing.JPanel" name="recentPane">
+              <Properties>
+                <Property name="name" type="java.lang.String" value="recentPane" noResource="true"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                  <JTabbedPaneConstraints tabName="" toolTip="Tweets">
+                    <Property name="tabTitle" type="java.lang.String" resourceKey="recentPane.TabConstraints.tabTitle"/>
+                    <Property name="tabIcon" type="javax.swing.Icon" resourceKey="icon.comments"/>
+                    <Property name="tabToolTip" type="java.lang.String" resourceKey="recentPane.TabConstraints.tabToolTip"/>
+                  </JTabbedPaneConstraints>
+                </Constraint>
+              </Constraints>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
+              <SubComponents>
+                <Container class="javax.swing.JSplitPane" name="timelineTrendsPane">
+                  <Properties>
+                    <Property name="dividerLocation" type="int" value="160"/>
+                    <Property name="dividerSize" type="int" value="8"/>
+                    <Property name="name" type="java.lang.String" value="timelineTrendsPane" noResource="true"/>
+                  </Properties>
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+                      <BorderConstraints direction="Center"/>
+                    </Constraint>
+                  </Constraints>
+
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout"/>
+                </Container>
+              </SubComponents>
+            </Container>
+            <Container class="javax.swing.JSplitPane" name="friendsPanel">
+              <Properties>
+                <Property name="dividerLocation" type="int" value="180"/>
+                <Property name="dividerSize" type="int" value="4"/>
+                <Property name="name" type="java.lang.String" value="friendsPanel" noResource="true"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                  <JTabbedPaneConstraints tabName="" toolTip="Friends">
+                    <Property name="tabTitle" type="java.lang.String" resourceKey="friendsPanel.TabConstraints.tabTitle"/>
+                    <Property name="tabIcon" type="javax.swing.Icon" resourceKey="friendsPanel.TabConstraints.tabIcon"/>
+                    <Property name="tabToolTip" type="java.lang.String" resourceKey="friendsPanel.TabConstraints.tabToolTip"/>
+                  </JTabbedPaneConstraints>
+                </Constraint>
+              </Constraints>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout"/>
+              <SubComponents>
+                <Container class="javax.swing.JTabbedPane" name="friendsPane">
+                  <Properties>
+                    <Property name="tabLayoutPolicy" type="int" value="1"/>
+                    <Property name="tabPlacement" type="int" value="2"/>
+                    <Property name="name" type="java.lang.String" value="friendsPane" noResource="true"/>
+                  </Properties>
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout$JSplitPaneConstraintsDescription">
+                      <JSplitPaneConstraints position="left"/>
+                    </Constraint>
+                  </Constraints>
+
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
+                </Container>
+              </SubComponents>
+            </Container>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="statusPanel">
           <Properties>
-            <Property name="name" type="java.lang.String" value="statusMessageLabel" noResource="true"/>
+            <Property name="name" type="java.lang.String" value="statusPanel" noResource="true"/>
           </Properties>
-        </Component>
-        <Component class="javax.swing.JLabel" name="statusAnimationLabel">
-          <Properties>
-            <Property name="horizontalAlignment" type="int" value="2"/>
-            <Property name="name" type="java.lang.String" value="statusAnimationLabel" noResource="true"/>
-          </Properties>
-        </Component>
-        <Component class="javax.swing.JProgressBar" name="progressBar">
-          <Properties>
-            <Property name="name" type="java.lang.String" value="progressBar" noResource="true"/>
-          </Properties>
-        </Component>
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="statusPanelSeparator" alignment="0" pref="515" max="32767" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="statusMessageLabel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="331" max="32767" attributes="0"/>
+                      <Component id="progressBar" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="statusAnimationLabel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="statusPanelSeparator" min="-2" pref="2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="statusMessageLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="statusAnimationLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="progressBar" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="3" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Component class="javax.swing.JSeparator" name="statusPanelSeparator">
+              <Properties>
+                <Property name="name" type="java.lang.String" value="statusPanelSeparator" noResource="true"/>
+              </Properties>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
+                <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
+              </AuxValues>
+            </Component>
+            <Component class="javax.swing.JLabel" name="statusMessageLabel">
+              <Properties>
+                <Property name="name" type="java.lang.String" value="statusMessageLabel" noResource="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="statusAnimationLabel">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="2"/>
+                <Property name="name" type="java.lang.String" value="statusAnimationLabel" noResource="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JProgressBar" name="progressBar">
+              <Properties>
+                <Property name="name" type="java.lang.String" value="progressBar" noResource="true"/>
+              </Properties>
+            </Component>
+          </SubComponents>
+        </Container>
       </SubComponents>
     </Container>
   </SubComponents>

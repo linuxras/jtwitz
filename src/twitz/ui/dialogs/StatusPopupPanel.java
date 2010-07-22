@@ -49,6 +49,7 @@ import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
@@ -65,6 +66,9 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private boolean logdebug = logger.isDebugEnabled();
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 
     /** Creates new form StatusPopupPanel */
     public StatusPopupPanel() {
@@ -207,6 +211,20 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 		twitz.TwitzApp.fixLocation(this);
 	}
 
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
+
 	@Action
 	public void retweetStatus()//{{{
 	{
@@ -327,7 +345,7 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 		setStatus(s);
 
 		fixButtons(s);
-		addTwitzListener(TwitzMainView.getInstance());
+		addTwitzListener(view);
 	}//}}}
 
 	public void popupBox(int x, int y) {

@@ -52,6 +52,7 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.renderers.ContactsRenderer;
+import twitz.util.TwitzSessionManager;
 
 
 /**
@@ -176,7 +177,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 	//
 	private void requestTimelineForUser(User user)//{{{
 	{
-		if(TwitzMainView.getInstance().isConnected())
+		if(view.isConnected())
 		{
 			if(user != null)
 			{
@@ -194,7 +195,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 		}
 		else
 		{
-			TwitzMainView.getInstance().addSampleFriends();
+			view.addSampleFriends();
 		}
 	}//}}}
 
@@ -261,7 +262,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 	//	toolbar.addMouseListener(toolbarListener);
 	//	listName.addMouseListener(toolbarListener);
 		contactsList1.addMouseListener(this);
-		//addTwitzListener(TwitzMainView.getInstance());
+		//addTwitzListener(view);
 		setFocusable(true);
 		addMouseListener(this);
 		//addFocusListener(this);
@@ -414,6 +415,20 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 		return contactsList1.getSelectedIndex();
 	}
 
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
+
 	//MouseListener
 	public void mouseClicked(MouseEvent e) {//{{{
 		if (e.getButton() == MouseEvent.BUTTON3)
@@ -431,7 +446,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
+					view.getActionsMenu(this).show(this, p.x, p.y);
 				}
 
 			}
@@ -491,7 +506,10 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 	private Border defaultBorder, selectedBorder;
 	private javax.swing.Action toggle;
 	private JPanel contentPanel = new JPanel(new BorderLayout());
-	private twitz.util.SettingsManager config = twitz.util.SettingsManager.getInstance();
+	private twitz.util.SettingsManager config;
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 
 	boolean collapsed = false;
 	int boxHeight = 350;

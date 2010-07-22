@@ -49,7 +49,8 @@ import twitz.util.*;
  * @author mistik1
  */
 public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel, ActionListener, MouseListener{
-
+	private String sessionName;
+	public static final String SESSION_PROPERTY = "sessionName";
     /** Creates new form TimeLinePanel */
     public TimeLinePanel() {
 		 resourceMap = twitz.TwitzApp.getContext().getResourceMap(TimeLinePanel.class);
@@ -199,6 +200,19 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 		//AutoCompleteDecorator.decorate(list, textField);txtTimelineUser
 		//twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
 	}//}}}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
 
 	@Action
 	public void doSearch()
@@ -390,7 +404,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					twitz.TwitzMainView.getInstance().getActionsMenu(this).show(this, p.x, p.y);
+					TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName).getActionsMenu(this).show(this, p.x, p.y);
 				}
 
 			}

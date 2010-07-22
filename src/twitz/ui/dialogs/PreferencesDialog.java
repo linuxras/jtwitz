@@ -39,6 +39,7 @@ import twitz.twitter.TwitterManager;
 import twitz.ui.renderers.PreferencesTableCellRenderer;
 import twitz.util.DBManager;
 import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
@@ -364,6 +365,20 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		tblConfig.getColumnModel().getColumn(2).setCellEditor(new BrowseCellEditor());
 	}
 
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
+
 	@Action
 	public void cancelEdit()
 	{
@@ -464,13 +479,13 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		{
 			try
 			{
-				TwitterManager tm = TwitterManager.getInstance();
+				TwitterManager tm = view.getTwitterManager();
 				tm.login();
 				//Any calls made to TwitterManager after this will be using the new login info.
 				//TODO: need to call Twitter.verifyCredentials() here
 			}
 			catch(Exception ignore) {}
-			twitz.TwitzMainView.getInstance().initTwitter();
+			view.initTwitter();
 			updateLogin = false;
 		}
 		if(updateSkin) {
@@ -500,4 +515,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
     // End of variables declaration//GEN-END:variables
 
 	public TitledBorder cfgBorder = BorderFactory.createTitledBorder("Default");
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 }

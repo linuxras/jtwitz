@@ -28,11 +28,15 @@ import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
 import java.io.Serializable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -45,6 +49,7 @@ import org.apache.log4j.Logger;
 import org.jdesktop.application.ResourceMap;
 import org.jdesktop.application.SingleFrameApplication;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import twitz.ui.TwitzDesktopFrame;
 import twitz.util.DBManager;
 import twitz.util.SettingsManager;
 import twitz.util.TwitzSessionManager;
@@ -66,70 +71,108 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	static boolean logdebug = false;
 	TwitzTrayIcon tray = null;
 	private static TwitzMainView view;
+	private TwitzDesktopFrame mainFrame;
+	private TwitzSessionManager session;
 	private boolean hidden;// = config.getBoolean("minimize_startup");
 	private ResourceMap resources = null;
 	//Image splash = getIcon("resources/splash.png");
-	JFrame mainFrame;
+	//JFrame mainFrame;
 	private static final LAFUpdater themer = new LAFUpdater();
 	private SplashScreen splash; //= SplashScreen.getSplashScreen();
 	private Graphics2D gap = null; //splash.createGraphics();
-
-	static void renderSplashFrame(Graphics2D g, String comp) {
-        //final String[] comps = {"foo", "bar", "baz"};
-        g.setComposite(AlphaComposite.Clear);
-        g.fillRect(120,140,200,40);
-        g.setPaintMode();
-        g.setColor(Color.BLACK);
-        g.drawString("Loading "+comp+"...", 120, 150);
-    }
+	public static enum OS {
+		WINDOWS,
+		OSX,
+		UNIX
+	};
+	//END variable declarations
 	
-	private void buildSplash() {
-	}
-
-	private Point getDesktopCenter() {
-		return GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
-	}
-
-	public static Rectangle getDesktopCenter(java.awt.Component comp) {//{{{
-		Rectangle rv = new Rectangle();
-		Point c = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
-		int w = comp.getWidth();
-		int h = comp.getHeight();
-		rv.setSize(w, h);
-		rv.setLocation((c.x - (w / 2)), (c.y - (h / 2)));
-		return rv;
-	}//}}}
-
-	public static void fixLocation(Component comp) {//{{{
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		Rectangle frame = comp.getBounds();
-		Rectangle desktop = ge.getMaximumWindowBounds();
-//		logger.debug("Width of desktop: " + desktop.toString());
-//		logger.debug("Width of frame: " + frame.toString());
-		boolean up = false;
-		boolean down = false;
-		boolean left = false;
-		boolean right = false;
-		//Check if we intersect with the Desktop rectangle before we process
-		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
-			int x = frame.x;//(desktop.width - frame.width);
-			int y = frame.y;//(desktop.height - frame.height) - 32;
-			if((frame.x+frame.width) > desktop.width)
-				left = true;
-			if(desktop.x > frame.x) //Frame top should be less than desktop
-				right = true;
-			if(desktop.y > frame.y)
-				down = true;
-			if((frame.y+frame.height) > desktop.height) //Frame bottom should be less than desktop
-				up = true;
-			if(left) x = (desktop.width - frame.width);
-			if(right) x = desktop.x;
-			if(down) y = desktop.y;
-			if(up) y = (desktop.height - frame.height) - 32;//-32 is to make up for most OS toolbars
-			//System.out.println("X: " + x + " Y: " + y);
-			comp.setLocation(x, y);
+	//SingleFrameApplication overrides
+	@Override
+	protected void initialize(String[] args) {//{{{
+		String s = getConfigDirectory().getAbsolutePath();
+		System.setProperty("storage.dir", s);
+		System.out.println("Storage dir found: "+s);
+		logger = Logger.getLogger(TwitzApp.class.getName());
+		logdebug = logger.isDebugEnabled();
+		if(logdebug)
+		{
+			logger.debug("Inside initialize...");
+			logger.debug("This is the storage dir: "+s);
 		}
+		DBM = DBManager.getInstance();
+		session = TwitzSessionManager.getInstance(this);
+		splash = SplashScreen.getSplashScreen();
+		if(splash != null) {
+			try
+			{
+				gap = splash.createGraphics();
+				renderSplashFrame(gap, "initialization");
+				splash.update();
+			}
+			catch(Exception e){logger.warn(e.getLocalizedMessage(), e);}
+		} else {
+			if(logdebug)
+				logger.debug("Splash is null");
+		}
+		config = SettingsManager.getInstance();
+		hidden = config.getBoolean("minimize_startup");
+		
+		themer.addPropertyChangeListener(this);
+		setLAFFromSettings(false, true);
+		if(logdebug)
+			logger.debug("Leaving initialize...");
 	}//}}}
+
+	@Override
+	protected JMenuBar createJMenuBar() {
+		System.out.println("Inside createJMenuBar");
+		if(splash != null) {
+			try
+			{
+				renderSplashFrame(gap, "menu bar");
+				splash.update();
+			}
+			catch(Exception e){
+				logger.warn(e.getLocalizedMessage());
+			}
+		}
+        return null;
+    }
+
+	@Override
+	protected JFrame createTopLevel()
+	{
+		System.out.println("Inside createTopLevel");
+		TwitzDesktopFrame top = TwitzDesktopFrame.getInstance(this);
+		//top.setUndecorated(config.getBoolean("twitz_undecorated"));
+		configureRootPane(top.getRootPane());
+		mainFrame = top;
+		configureTopLevel(top);
+		return top;
+	}
+
+	@Override
+	protected  Component createMainComponent() {//{{{
+		if(logdebug)
+			logger.debug("Inside createMainComponent");
+
+		if(splash != null) {
+			try
+			{
+				renderSplashFrame(gap, "default sessions");
+				splash.update();
+			}
+			catch(Exception e){
+				logger.warn(e.getLocalizedMessage());
+			}
+		}
+		view = new TwitzMainView(this, "Default");
+
+		if(logdebug)
+			logger.debug("Leaving createMainComponent");
+		return view;
+    }//}}}
 
 	@Override
 	protected void configureTopLevel(JFrame top) {//{{{
@@ -147,7 +190,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			}
 		}
 
-		top.setUndecorated(config.getBoolean("twitz_undecorated"));
+		//top.setUndecorated(config.getBoolean("twitz_undecorated"));
 		resources = getContext().getResourceMap(TwitzApp.class);
 		Point c = getDesktopCenter();
 		Rectangle bound = new Rectangle();
@@ -175,34 +218,11 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		top.addWindowListener(wl);
 		top.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		top.setTitle(getContext().getResourceMap().getString("Application.title"));
-		mainFrame = top;//top.setVisible(true);
+		//mainFrame = top;//top.setVisible(true);
 		
 		if(logdebug)
 			logger.debug("Leaving configureTopLevel....");
 	}//}}}
-
-    @Override
-	protected  Component createMainComponent() {//{{{
-		if(logdebug)
-			logger.debug("Inside createMainComponent");
-		
-		view = TwitzMainView.getInstance(this);
-		if(splash != null) {
-			try
-			{
-				renderSplashFrame(gap, "main components");
-				splash.update();
-			}
-			catch(Exception e){
-				logger.warn(e.getLocalizedMessage());
-			}
-		}
-		
-		
-		if(logdebug)
-			logger.debug("Leaving createMainComponent");
-		return view;
-    }//}}}
 
     /**
      * At startup create and show the main frame of the application.
@@ -223,6 +243,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 		getMainTopLevel().setJMenuBar(view.getMenuBar());
 		ComponentListener sizeListener = new ComponentAdapter() {
+			@Override
 			public void componentResized(ComponentEvent e) {
 				if(!view.isMiniMode())
 					config.setProperty("twitz_last_height", getMainTopLevel().getHeight()+"");
@@ -267,7 +288,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 		try
 		{
-			tray = new TwitzTrayIcon(this, view);
+			tray = new TwitzTrayIcon(this);
 		}
 		catch (Exception ex)
 		{
@@ -275,87 +296,21 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			JOptionPane.showMessageDialog(null, ex.getMessage(), "Critical Error", JOptionPane.ERROR_MESSAGE);
 			exit();
 		}
-		view.addPropertyChangeListener("POPUP", tray);
+		//session.addTwitzMainView("Default", view);
+		mainFrame.addView(view);
+		//view.addPropertyChangeListener("POPUP", tray);
 		mainFrame.setVisible(true);
 		if(logdebug)
 			logger.debug("Leaving Startup");
 		//logger.debug(getEnv());
 	}//}}}
+	//END overrides
 
-	@Override
-	protected JMenuBar createJMenuBar() {
-		System.out.println("Inside createJMenuBar");
-		if(splash != null) {
-			try
-			{
-				renderSplashFrame(gap, "menu bar");
-				splash.update();
-			}
-			catch(Exception e){
-				logger.warn(e.getLocalizedMessage());
-			}
-		}
-        return null;
-    }
-
-
-	@Override
-	protected void initialize(String[] args) {//{{{
-		String s = SettingsManager.getConfigDirectory().getAbsolutePath();
-		//
-		System.out.println("This is the storage dir: "+s);
-		System.setProperty("storage.dir", s);
-		logger = Logger.getLogger(TwitzApp.class.getName());
-		logdebug = logger.isDebugEnabled();
-		if(logdebug)
-			logger.debug("Inside initialize...");
-		splash = SplashScreen.getSplashScreen();
-		if(splash != null) {
-			try
-			{
-				gap = splash.createGraphics();
-				renderSplashFrame(gap, "initialization");
-				splash.update();
-			}
-			catch(Exception e){logger.warn(e.getLocalizedMessage(), e);}
-		} else {
-			if(logdebug)
-				logger.debug("Splash is null");
-		}
-		config = SettingsManager.getInstance();
-		hidden = config.getBoolean("minimize_startup");
-		DBM = DBManager.getInstance();
-		themer.addPropertyChangeListener(this);
-		setLAFFromSettings(false, true);
-		if(logdebug)
-			logger.debug("Leaving initialize...");
-	}//}}}
-
-	private void loadAvailableSessions()
-	{
-		try
-		{
-			Vector<Map<String, Object>> sess = DBM.lookupSessions();
-		}
-		catch (Exception e)
-		{
-			logger.error(e.getLocalizedMessage());
-		}
-	}
-
-	private static Logger getLogger() {
-		return logger;
-	}
-
-	public static void setLAFFromSettings(boolean background)
-	{
-		setLAFFromSettings(background, false);
-	}
-
+	//Static methods
 	/**
-	 * Set a new look and feel 
+	 * Set a new look and feel
 	 * @param background Should we run on the EDT or not.
-	 * Defaults to true, the only time it should be false is when called 
+	 * Defaults to true, the only time it should be false is when called
 	 * from the <code>initialize</code> method at startup.
 	 */
 	private static void setLAFFromSettings(boolean background, boolean... init) {//{{{
@@ -372,17 +327,178 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			{
 				SwingUtilities.invokeAndWait(themer);
 			}
-			catch(Exception e) 
+			catch(Exception e)
 			{
 				logger.error(e.getMessage(), e);
 			}
 		}
 	}//}}}
 
-	public java.awt.Window getMainWindow() {
-		return window;
+	/**
+	 * This method uses privilaged  access to calculate the current operating system
+	 * @return An Enum representing the OS
+	 */
+	private static OS getOS() {//{{{
+		PrivilegedAction<String> doOSLookup = new PrivilegedAction<String>() {
+			public String run() {
+				return System.getProperty("user.home");
+			}
+		};
+
+		//I'n a linux guy i'll default to UNIX
+		OS rv = OS.UNIX;
+		//Do the lookup
+		String os = AccessController.doPrivileged(doOSLookup);
+        if (os != null) {
+            if (os.toLowerCase().startsWith("mac os x")) {
+                rv = OS.OSX;
+            } else if (os.contains("Windows")) {
+                rv = OS.WINDOWS;
+            }
+        }
+		return rv;
+	}//}}}
+
+	static void renderSplashFrame(Graphics2D g, String comp) {
+        //final String[] comps = {"foo", "bar", "baz"};
+        g.setComposite(AlphaComposite.Clear);
+        g.fillRect(120,140,200,40);
+        g.setPaintMode();
+        g.setColor(Color.BLACK);
+        g.drawString("Loading "+comp+"...", 120, 150);
+    }
+
+	private static Logger getLogger() {
+		return logger;
 	}
 
+	public static Rectangle getDesktopCenter(java.awt.Component comp) {//{{{
+		Rectangle rv = new Rectangle();
+		Point c = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+		int w = comp.getWidth();
+		int h = comp.getHeight();
+		rv.setSize(w, h);
+		rv.setLocation((c.x - (w / 2)), (c.y - (h / 2)));
+		return rv;
+	}//}}}
+
+	public static void fixLocation(Component comp) {//{{{
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		Rectangle frame = comp.getBounds();
+		Rectangle desktop = ge.getMaximumWindowBounds();
+//		logger.debug("Width of desktop: " + desktop.toString());
+//		logger.debug("Width of frame: " + frame.toString());
+		boolean up = false;
+		boolean down = false;
+		boolean left = false;
+		boolean right = false;
+		//Check if we intersect with the Desktop rectangle before we process
+		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
+			int x = frame.x;//(desktop.width - frame.width);
+			int y = frame.y;//(desktop.height - frame.height) - 32;
+			if((frame.x+frame.width) > desktop.width)
+				left = true;
+			if(desktop.x > frame.x) //Frame top should be less than desktop
+				right = true;
+			if(desktop.y > frame.y)
+				down = true;
+			if((frame.y+frame.height) > desktop.height) //Frame bottom should be less than desktop
+				up = true;
+			if(left) x = (desktop.width - frame.width);
+			if(right) x = desktop.x;
+			if(down) y = desktop.y;
+			if(up) y = (desktop.height - frame.height) - 32;//-32 is to make up for most OS toolbars
+			//System.out.println("X: " + x + " Y: " + y);
+			comp.setLocation(x, y);
+		}
+	}//}}}
+
+	public static void setLAFFromSettings(boolean background)
+	{
+		setLAFFromSettings(background, false);
+	}
+
+	//public
+	/**
+	 * This method is borrowed from org.jdesktop.application.LocalStorage
+	 * @return
+	 */
+	public static File getConfigDirectory() {//{{{
+		ResourceMap resource = null;
+		String appId = null;//resource.getString("Application.id");
+		String vendorId = null;//resource.getString("Application.venderId");
+		try
+		{
+			resource = getContext().getResourceMap(TwitzApp.class);
+			appId = resource.getString("Application.id");
+			vendorId = resource.getString("Application.venderId");
+		}
+		catch(Exception e)
+		{
+			java.util.logging.Logger.getLogger(TwitzApp.class.getName()).log(Level.WARNING, "Error while looking up resource");
+		}
+		if(appId == null) {
+			appId = "Twitz";//TwitzApp.getContext().getApplicationClass().getSimpleName();
+		}
+		if (vendorId == null)
+		{
+			vendorId = "Andrew Williams";
+		}
+
+		File directory = null;
+		String userHome = null;
+		try
+		{
+			userHome = System.getProperty("user.home");
+		}
+		catch (SecurityException ignore)
+		{
+		}
+		if (userHome != null)
+		{
+			OS osId = getOS();
+			if (osId == OS.WINDOWS)
+			{
+				File appDataDir = null;
+				try
+				{
+					String appDataEV = System.getenv("APPDATA");
+					if ((appDataEV != null) && (appDataEV.length() > 0))
+					{
+						appDataDir = new File(appDataEV);
+					}
+				}
+				catch (SecurityException ignore)
+				{
+				}
+				if ((appDataDir != null) && appDataDir.isDirectory())
+				{
+					// ${APPDATA}\{vendorId}\${applicationId}
+					String path = vendorId + "\\" + appId + "\\";
+					directory = new File(appDataDir, path);
+				}
+				else
+				{
+					// ${userHome}\Application Data\${vendorId}\${applicationId}
+					String path = "Application Data\\" + vendorId + "\\" + appId + "\\";
+					directory = new File(userHome, path);
+				}
+			}
+			else if (osId == OS.OSX)
+			{
+				// ${userHome}/Library/Application Support/${applicationId}
+				String path = "Library/Application Support/" + appId + "/";
+				directory = new File(userHome, path);
+			}
+			else
+			{
+				// ${userHome}/.${applicationId}/
+				String path = "." + appId + "/";
+				directory = new File(userHome, path);
+			}
+		}
+		return directory;
+	}//}}}
 
     /**
      * Main method launching the application.
@@ -390,6 +506,26 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
     public static void main(String[] args) {
         launch(TwitzApp.class, args);
     }
+	//END static methods
+	
+	private void loadAvailableSessions()
+	{
+		try
+		{
+			Vector<Map<String, Object>> sess = DBM.lookupSessions();
+		}
+		catch (Exception e)
+		{
+			logger.error(e.getLocalizedMessage());
+		}
+	}
+
+	private void buildSplash() {
+	}
+
+	private Point getDesktopCenter() {
+		return GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+	}
 
 	public Image getIcon(String path) {//{{{
 
@@ -476,26 +612,71 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			}
 		}
 	}//}}}
-
-	public static void fixTables() {
-		view.fixTables();
-	}
 	
 	public TwitzTrayIcon getTrayIcon()
 	{
 		return this.tray;
 	}
 
+	public JFrame getMainFrame()
+	{
+		return this.mainFrame;
+	}
+
+	public void fixIFrameLocation(Component comp) {//{{{
+//		java.awt.Dimension dim = mainFrame.getDesktop().getMaximumSize();
+//		dim.
+//		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		Rectangle frame = comp.getBounds();
+		Rectangle desktop = mainFrame.getDesktop().getBounds();//ge.getMaximumWindowBounds();
+//		logger.debug("Width of desktop: " + desktop.toString());
+//		logger.debug("Width of frame: " + frame.toString());
+		boolean up = false;
+		boolean down = false;
+		boolean left = false;
+		boolean right = false;
+		boolean resizeH = false;
+		if(frame.height > desktop.height)
+		{
+			comp.setSize(comp.getWidth(), (desktop.height - 32));
+			frame = comp.getBounds();
+		}
+		if(frame.width > desktop.width)
+		{
+			comp.setSize(desktop.width, comp.getHeight());
+			frame = comp.getBounds();
+		}
+		//Check if we intersect with the Desktop rectangle before we process
+		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
+			int x = frame.x;//(desktop.width - frame.width);
+			int y = frame.y;//(desktop.height - frame.height) - 32;
+			if((frame.x+frame.width) > desktop.width)
+				left = true;
+			if(desktop.x > frame.x) //Frame top should be less than desktop
+				right = true;
+			if(desktop.y > frame.y)
+				down = true;
+			if((frame.y+frame.height) > desktop.height) //Frame bottom should be less than desktop
+				up = true;
+			
+			if(left) x = (desktop.width - frame.width);
+			if(right) x = desktop.x;
+			if(down) y = desktop.y;
+			if(up) y = (desktop.height - frame.height) - 49;//-32 is to make up for most OS toolbars
+			//System.out.println("X: " + x + " Y: " + y);
+			comp.setLocation(x, y);
+		}
+	}//}}}
+
 	public void propertyChange(PropertyChangeEvent e) {//{{{
 		if(e.getPropertyName().equals("lookAndFeelChange")) {
 			setLAFFromSettings(true);
 		}
 		else if(e.getPropertyName().equals("skinChange")) {
-			if(view != null)
-				fixTables(); //update the view so all the tables have correct sizing
+			//
 		}
-		if(logdebug)
-			logger.debug("PropertyChangeEvent recieved: "+e.getPropertyName());
+		//if(logdebug)
+		//	logger.debug("PropertyChangeEvent recieved: "+e.getPropertyName());
 	}//}}}
 
 	public void actionPerformed(ActionEvent e) {//{{{

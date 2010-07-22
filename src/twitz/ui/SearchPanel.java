@@ -35,6 +35,7 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.ui.models.ContactsListModel;
 import twitz.ui.models.TweetListModel;
+import twitz.util.TwitzSessionManager;
 import twitz.util.UserStore;
 
 /**
@@ -330,6 +331,9 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	private String lastSearch = "";
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final UserStore store = UserStore.getInstance();
+	private String sessionName;
+	public static final String SESSION_PROPERTY = "sessionName";
+	twitz.TwitzMainView view;
 
 	@Action
 	public void doSearch()//{{{
@@ -396,6 +400,20 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 			doSearch();
 		}
 	}//}}}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
 
 	public void setCurrentPage(int page)
 	{

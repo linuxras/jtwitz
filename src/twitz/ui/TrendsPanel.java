@@ -32,12 +32,17 @@ import twitz.events.TwitzEventType;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzListener;
 import twitz.testing.*;
+import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
  * @author mistik1
  */
 public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeListener, TwitzEventModel {
+	private String sessionName;
+	public static final String SESSION_PROPERTY = "sessionName";
+	twitz.TwitzMainView view;
 
     /** Creates new form TrendsPanel */
     public TrendsPanel() {
@@ -191,6 +196,20 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 		trendsList.addListSelectionListener(lsl);
 	}
 
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
+
 	private void callSearchOnTrend(Trend trend)
 	{
 		Map map = Collections.synchronizedMap(new TreeMap());
@@ -204,8 +223,9 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 
 	private void buildLocationBox() {
 		if(locations == null) {
-			twitz.TwitzMainView view = twitz.TwitzMainView.getInstance();
-			locations = new LocationListDialog(view.getMainFrame(), this);
+			//view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+			locations = new LocationListDialog(view.getMainFrame(), this, sessionName);
+			locations.setSessionName(sessionName);
 			locations.addTwitzListener(view);
 			locations.addPropertyChangeListener(this);
 		}
@@ -286,4 +306,5 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 	javax.swing.ActionMap actionMap;
 	org.jdesktop.application.ResourceMap resourceMap;
 	LocationListDialog locations;
+	SettingsManager config;
 }

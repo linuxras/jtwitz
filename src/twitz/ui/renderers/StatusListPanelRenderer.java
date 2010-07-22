@@ -52,6 +52,7 @@ import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
 import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
@@ -68,6 +69,8 @@ public class StatusListPanelRenderer extends JPanel implements TwitzEventModel, 
 	private SubstanceDefaultListCellRenderer uiPainter = new SubstanceDefaultListCellRenderer();
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private boolean logdebug = logger.isDebugEnabled();
+	private String sessionName;
+	public static final String SESSION_PROPERTY = "sessionName";
 
     /** Creates new form StatusListPanelRenderer */
     public StatusListPanelRenderer() {
@@ -225,6 +228,18 @@ public class StatusListPanelRenderer extends JPanel implements TwitzEventModel, 
     private javax.swing.JPanel timePanel;
     // End of variables declaration//GEN-END:variables
 
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
 	@Action
 	public void retweetStatus()//{{{
 	{
@@ -378,7 +393,7 @@ public class StatusListPanelRenderer extends JPanel implements TwitzEventModel, 
 		fixButtons(s);
 		setForeground(uiPainter.getForeground());
 		setBackground(uiPainter.getBackground());
-		addTwitzListener(TwitzMainView.getInstance());
+		addTwitzListener(TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName));
 		return this;
 	}//}}}
 

@@ -31,12 +31,15 @@ import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
+import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
  * @author mistik1
  */
 public class TweetBox extends javax.swing.JPanel implements ActionListener, TwitzEventModel {
+	private SettingsManager config;
 
 
     /** Creates new form TweetBox */
@@ -142,6 +145,9 @@ public class TweetBox extends javax.swing.JPanel implements ActionListener, Twit
 	boolean logdebug = logger.isDebugEnabled();
 	DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private Status replyToStatus;
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 
 	private void initDefaults()
 	{
@@ -149,10 +155,24 @@ public class TweetBox extends javax.swing.JPanel implements ActionListener, Twit
 		btnTweet.addActionListener(this);
 	}
 
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
+
 	@Action
 	public void showMiniMode()
 	{
-		TwitzMainView.getInstance().showMiniMode();
+		view.showMiniMode();
 	}
 
 	@Action
@@ -165,10 +185,10 @@ public class TweetBox extends javax.swing.JPanel implements ActionListener, Twit
 				break;
 			case KeyEvent.VK_M:
 				if(evt.isControlDown())
-					TwitzMainView.getInstance().showMiniMode();
+					view.showMiniMode();
 				break;
 			case KeyEvent.VK_ESCAPE:
-				TwitzMainView.getInstance().getMainApp().toggleWindowView("down");
+				view.getMainApp().toggleWindowView("down");
 				break;
 		//	default:
 		//		int c = txtTweet.getDocument().getLength();

@@ -41,6 +41,7 @@ import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.models.StatusListModel;
 import twitz.ui.renderers.StatusListRenderer;
 import twitz.util.ListHotSpot;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
@@ -54,6 +55,9 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 	private boolean logdebug = logger.isDebugEnabled();
 	private Map<String, Rectangle> hotspots = Collections.synchronizedMap(new TreeMap<String, Rectangle>());
 	private Vector<ListHotSpot> hotzone = new Vector<ListHotSpot>();
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
 
 	public StatusList() {
 		this(new StatusListModel());
@@ -107,7 +111,21 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 
 	private void showMenu(StatusList list, Point p)
 	{
-		TwitzMainView.getInstance().getActionsMenu(this).show(list, p.x, p.y);
+		view.getActionsMenu(this).show(list, p.x, p.y);
+	}
+
+	public void setSessionName(String name)
+	{
+		String old = this.sessionName;
+		this.sessionName = name;
+		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//firePropertyChange(SESSION_PROPERTY, old, name);
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
 	}
 
 	public void addHotSpot(ListHotSpot spot)

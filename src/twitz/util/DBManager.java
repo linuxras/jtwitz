@@ -24,6 +24,7 @@ import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.ISqlJetTransaction;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 import twitter4j.User;
+import twitz.TwitzApp;
 import twitz.testing.UserTest;
 
 /**
@@ -93,7 +94,7 @@ public class DBManager {
 
 	private static final String DBFILE = "twitz.db";
 
-	private static final File FILE_DIR = SettingsManager.getConfigDirectory();
+	private static final File FILE_DIR = TwitzApp.getConfigDirectory();
 	private static File dbFile = new File(FILE_DIR, DBFILE);
 	private boolean firstrun = !dbFile.exists();
 	private final SqlJetDb db = new SqlJetDb(dbFile, true);
