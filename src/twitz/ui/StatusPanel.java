@@ -94,11 +94,6 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 
 	private void initDefaults()
 	{
-	//	StatusTableModel model = new StatusTableModel();
-	//	model.addColumn("Tweets");
-	//	status = new javax.swing.JTable(model);
-	//	status.setDefaultRenderer(Status.class, new twitz.ui.renderers.StatusTablePanelRenderer());
-	//	status.setDefaultEditor(Status.class, new twitz.ui.editors.StatusTablePanelEditor());
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
 	//	statusScrollPane.setViewportView(status);
 	//	status.setFillsViewportHeight(true);
@@ -218,10 +213,14 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 			SwingWorker<List<Status>, Status> worker = new SwingWorker<List<Status>, Status>()
 			{
 				StatusListModel model = new StatusListModel();
+				int total = -1;
+				int count = 1;
 
 				@Override
 				public List<Status> doInBackground()
 				{
+					total = statuses.size();
+					firePropertyChange("started", null, "processing status list");
 					for(Object o: statuses)
 					{
 						if(isStatus(o))
@@ -240,8 +239,10 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 				{
 					for(Status s: part)
 					{
+						firePropertyChange("message", null, String.format("Processing %d of %d records. Please wait...", count, total));
 						store.registerUser(s.getUser());
 						model.addStatus(s);
+						count++;
 					}
 				}
 
@@ -249,8 +250,10 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 				protected void done()
 				{
 					getStatusList().setModel(model);
+					firePropertyChange("done", null, null);
 				}
 			};
+			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.execute();
 		}
 	}

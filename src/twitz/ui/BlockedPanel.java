@@ -375,11 +375,15 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 			{
 				public ContactsListModel doInBackground()
 				{
+					firePropertyChange("started", null, "proccessing blocked users list");
+					int total = users.size(), count = 1;
 					ContactsListModel clm = new ContactsListModel();
 					for(Object u : users)
 					{
 						if(isUser(u))
 							clm.addElement((User)u);
+						firePropertyChange("message", null, String.format("loading %d of %d blocked users. please wait...", count, total));
+						count ++;
 					}
 					return clm;
 				}
@@ -395,8 +399,10 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 					{
 						logger.error("Error while loading search results", e);//TODO needs I18N
 					}
+					firePropertyChange("done", null, null);
 				}
 			};
+			firePropertyChange("done", null, null);
 			worker.execute();
 		}
 	//	ContactsListModel clm = contactsList1.getModel();

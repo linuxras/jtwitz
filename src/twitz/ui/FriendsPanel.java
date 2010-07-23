@@ -391,11 +391,15 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 
 				public ContactsListModel doInBackground()
 				{
+					firePropertyChange("started", null, "proccessing friends list");
+					int total = users.size(), count = 1;
 					ContactsListModel clm = new ContactsListModel();
 					for(Object u : users)
 					{
 						if(isUser(u))
 							clm.addElement((User)u);
+						firePropertyChange("message", null, String.format("loading %d of %d friends. please wait...", count, total));
+						count++;
 					}
 					return clm;
 				}
@@ -411,8 +415,10 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 					{
 						logger.error("Error while loading search results", e);//TODO needs I18N
 					}
+					firePropertyChange("done", null, null);
 				}
 			};
+			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.execute();
 			prevPage = users.getPreviousCursor();
 			nextPage = users.getNextCursor();

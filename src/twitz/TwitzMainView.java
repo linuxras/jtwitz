@@ -126,7 +126,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
         initComponents();
 		System.out.println("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
 
-		init();
+		initDefaults();
 		System.out.println("000000000000000000000000000000000000000000000000000000000000");
 		updateLayout();
 		System.out.println("22222222222222222222222222222222222222222222222222222222222222");
@@ -693,30 +693,31 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		}
 	}//}}}
 
-	private void init() {//{{{
+	private void initDefaults() {//{{{
 		//Make the scrollbar very thin in the user list tab
 		fixJScrollPaneBarsSize(followersPane);
 		fixJScrollPaneBarsSize(blockedPane);
 		fixJScrollPaneBarsSize(followingPane);
-		
-		System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCcc");
+		this.setFrameIcon(resourceMap.getIcon("icon.user"));
+		setJMenuBar(menuBar);
+		logger.debug("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCcc");
 		blockedList = new ContactsList();
 		tweetBox = new TweetBox();
 		tweetBox.setSessionName(sessionName);
-		System.out.println("ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
+		logger.debug("ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
 		blocked = new BlockedPanel();
 		blocked.setSessionName(sessionName);
-		System.out.println("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		logger.debug("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 		followers = new FollowersPanel();
 		followers.setSessionName(sessionName);
-		System.out.println("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+		logger.debug("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 		friends = new FriendsPanel();
 		friends.setSessionName(sessionName);
-		System.out.println("friends----------------------------------------------");
+		logger.debug("friends----------------------------------------------");
 		userListMainPanel1 = new twitz.ui.UserListMainPanel();
 		userListMainPanel1.setName("userListMainPanel1"); // NOI18N
 		userListMainPanel1.setSessionName(sessionName);
-		System.out.println("userlistmainpanel=============================================");
+		logger.debug("userlistmainpanel=============================================");
 		friendsStatusPanel = new StatusPanel();
 		friendsStatusPanel.setSessionName(sessionName);
 		this.friendsPanel.setRightComponent(friendsStatusPanel);
@@ -1040,6 +1041,11 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	public TwitterManager getTwitterManager()
 	{
 		return twitterManager;
+	}
+
+	public java.beans.PropertyChangeListener getStatusListener()
+	{
+		return statusListener;
 	}
 
 	public String getSessionName()
@@ -1690,6 +1696,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			prefs = new PreferencesDialog(getMainFrame(), true, mainApp);
 			prefs.addPropertyChangeListener(mainApp);
 			prefs.setLocationRelativeTo(getMainFrame());
+			prefs.setSessionName(sessionName);
 		}
 		prefs.setVisible(true);
 	}//}}}

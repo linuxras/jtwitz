@@ -58,6 +58,7 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 	public static final String SESSION_PROPERTY = "sessionName";
 	private String sessionName;
 	private TwitzMainView view;
+	private HierarchyBoundsListener sizeListener;
 
 	public StatusList() {
 		this(new StatusListModel());
@@ -107,6 +108,31 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 			}
 		};
 		addMouseListener(clickListener);
+		sizeListener = new HierarchyBoundsListener(){
+
+			public void ancestorMoved(HierarchyEvent e)
+			{
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			public void ancestorResized(HierarchyEvent e)
+			{
+				java.awt.Component p = getParent();
+				java.awt.Component c = e.getChanged();
+				if((c != null && p != null) && c.equals(p))
+				{
+					StatusListModel mod = getModel();
+					if(!mod.isEditing() && !mod.isEmpty())
+					{
+						logger.debug("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpppppppppppppppppppppppppp");
+						Vector<Status> stat = mod.getDataVector();
+						mod.setDataVector(stat);
+					}
+				}
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+		};
+		addHierarchyBoundsListener(sizeListener);
 	} //}}}
 
 	private void showMenu(StatusList list, Point p)

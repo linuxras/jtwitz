@@ -345,10 +345,12 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 
 			SwingWorker<List<UserList>, UserList> worker = new SwingWorker<List<UserList>, UserList>()
 			{
-				
+				int total = -1, count = 1;
 				@Override
 				public List<UserList> doInBackground()
 				{
+					total = userLists.size();
+					firePropertyChange("started", null, "processing UserLists");
 					for(Object o : userLists)
 					{
 						if(isUserList(o))
@@ -370,9 +372,14 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 				protected void process(List<UserList> part)
 				{
 					for(UserList u : part)
+					{
+						firePropertyChange("message", null, String.format("Processing %d of %d UserLists. Please wait...", count, total));
 						addUserList(u);
+						count++;
+					}
 				}
 			};
+			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.execute();
 			nextPage = userLists.getNextCursor();
 			prevPage = userLists.getPreviousCursor();

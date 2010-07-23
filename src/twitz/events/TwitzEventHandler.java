@@ -39,6 +39,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	public void exec()
 	{
 		firePropertyChange("started", null, null);
+		firePropertyChange("message", null, String.format("Performing task - %s", resourceMap.getString(mainEvent.getEventType().name())));
 		execute();
 	}
 	
@@ -66,7 +67,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		}
 				//run action performed
 		TwitzEventType type = mainEvent.getEventType();
-		firePropertyChange("message", null, "Performing task - "+type.name());
+		
 		switch(type) {
 			case UPDATE_FRIENDS_TWEETS_LIST:
 				//TODO Replace this test code with more checks
@@ -660,6 +661,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		catch(Exception ignore){/*ignore this for now*/}
 		if(!value.equals(""))
 			JOptionPane.showMessageDialog(null, value, resourceMap.getString("ERROR_TITLE.TEXT"), JOptionPane.ERROR_MESSAGE);
+		firePropertyChange("message", null, String.format("Completed task - %s",resourceMap.getString(mainEvent.getEventType().name())));
 		firePropertyChange("done", null, null);
 	}
 

@@ -28,6 +28,7 @@ import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.Serializable;
 import java.io.IOException;
@@ -167,7 +168,9 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				logger.warn(e.getLocalizedMessage());
 			}
 		}
-		view = new TwitzMainView(this, "Default");
+		session.loadAvailableSessions();
+		view = session.getDefaultSession();
+		//view = new TwitzMainView(this, "Default");
 
 		if(logdebug)
 			logger.debug("Leaving createMainComponent");
@@ -241,27 +244,27 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 				logger.warn(e.getLocalizedMessage());
 			}
 		}
-		getMainTopLevel().setJMenuBar(view.getMenuBar());
-		ComponentListener sizeListener = new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				if(!view.isMiniMode())
-					config.setProperty("twitz_last_height", getMainTopLevel().getHeight()+"");
-			}
-		};
-		getMainTopLevel().addComponentListener(sizeListener);
+		//getMainTopLevel().setJMenuBar(view.getMenuBar());
+//		ComponentListener sizeListener = new ComponentAdapter() {
+//			@Override
+//			public void componentResized(ComponentEvent e) {
+//				if(!view.isMiniMode())
+//					config.setProperty("twitz_last_height", getMainTopLevel().getHeight()+"");
+//			}
+//		};
+//		getMainTopLevel().addComponentListener(sizeListener);
 
-		getMainTopLevel().addWindowFocusListener(new WindowFocusListener() {
-
-			public void windowGainedFocus(WindowEvent e)
-			{
-				view.getTweetField().requestFocusInWindow();
-			}
-
-			public void windowLostFocus(WindowEvent e)
-			{
-			}
-		});
+//		getMainTopLevel().addWindowFocusListener(new WindowFocusListener() {
+//
+//			public void windowGainedFocus(WindowEvent e)
+//			{
+//				view.getTweetField().requestFocusInWindow();
+//			}
+//
+//			public void windowLostFocus(WindowEvent e)
+//			{
+//			}
+//		});
 		if(config.getBoolean("minimode")) //We closed in minimode
 		{
 			view.fullTwitz(); //Go full first so all the layout gets done before we shrink
@@ -273,8 +276,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			view.miniTwitz(true);
 		}
 		view.initTwitter();
-		if(hidden)
-			toggleWindowView("down");
+		//if(hidden)
+		//	toggleWindowView("down");
 		UIManager.addPropertyChangeListener(this);
 		try
 		{
@@ -298,8 +301,22 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 		//session.addTwitzMainView("Default", view);
 		mainFrame.addView(view);
+		try
+		{
+			view.setMaximum(true);
+		}
+		catch (PropertyVetoException ex)
+		{
+			logger.error(ex.getLocalizedMessage());
+		}
+		for(TwitzMainView v : session.getAutoLoadingViews())
+		{
+			mainFrame.addView(v);
+			v.initTwitter();
+		}
 		//view.addPropertyChangeListener("POPUP", tray);
 		mainFrame.setVisible(true);
+		mainFrame.fixFrameSizes();
 		if(logdebug)
 			logger.debug("Leaving Startup");
 		//logger.debug(getEnv());
@@ -507,18 +524,6 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
         launch(TwitzApp.class, args);
     }
 	//END static methods
-	
-	private void loadAvailableSessions()
-	{
-		try
-		{
-			Vector<Map<String, Object>> sess = DBM.lookupSessions();
-		}
-		catch (Exception e)
-		{
-			logger.error(e.getLocalizedMessage());
-		}
-	}
 
 	private void buildSplash() {
 	}
@@ -734,7 +739,8 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 
 		public void run() {
-			String skin = config.getString("twitz_skin");
+			SettingsManager sm = TwitzSessionManager.getInstance().getSettingsManagerForSession("Default");
+			String skin = sm.getString("twitz_skin");
 			//org.pushingpixels.substance.api.skin.SubstanceTwilightLookAndFeel
 			String currentSkin = "";
 			LookAndFeel laf = UIManager.getLookAndFeel();

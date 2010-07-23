@@ -31,19 +31,16 @@ import twitz.TwitzMainView;
  */
 public class TwitzSessionManager {
 
-	//this needs to be moved to where it can be checked for SecurityException
-	//String configFile = System.getProperty("user.home")+"/.Twitz/user_prefs.ini";
-	String configFile = "user_prefs.ini";
-	File config;
 	static Logger logger;
 	private static TwitzSessionManager instance;
 	private static DBManager DBM;
 	private String currentSession = "Default";
 	private boolean autosave = true;
-	private Vector<SettingsManager> vsessions = new Vector<SettingsManager>();
+	private Vector<TwitzMainView> autoLoad = new Vector<TwitzMainView>();
 	protected Map<String, SettingsManager> sessions = Collections.synchronizedMap(new TreeMap<String, SettingsManager>());
 	private Map<String, TwitzMainView> views = Collections.synchronizedMap(new TreeMap<String, TwitzMainView>());
 	private final TwitzApp mainApp;
+	private TwitzMainView defaultSession;
 
 
 	public static enum OS {
@@ -104,6 +101,60 @@ public class TwitzSessionManager {
 			views.put(sessionName, v);
 			//sessions.put(sessionName, null);
 		}
+	}
+
+	public void loadAvailableSessions()
+	{
+		Vector<Map<String, Object>> sess = null;
+		try
+		{
+			sess = DBM.lookupSessions();
+		}
+		catch (Exception e)
+		{
+			logger.error(e.getLocalizedMessage());
+		}
+		if(sess != null)
+		{
+			for(int i=0, max = sess.size(); i<max; i++)
+			{
+				Map<String, Object> map = sess.get(i);
+				String name = (String) map.get(DBManager.SESSION_NAME);
+				boolean def = (Boolean)map.get(DBManager.SESSION_DEFAULT);
+				boolean autoload = (Boolean)map.get(DBManager.SESSION_AUTOLOAD);
+				TwitzMainView view = new TwitzMainView(mainApp, name);
+				view.setTitle(name);
+				view.setMaximizable(true);
+				view.setName(name.replaceAll(" ", "_").replaceAll("\\W", ""));
+				System.out.println(view.getName());
+				if(name.equals("Default"))
+				{
+					defaultSession = view;
+					view.setClosable(false);
+				}
+				else
+				{
+					//if(autoload)
+						autoLoad.add(view);
+				}
+				//addTwitzMainView(name, view);
+			}
+		}
+	}
+
+	public TwitzMainView getDefaultSession()
+	{
+		return this.defaultSession;
+	}
+
+	public Vector<TwitzMainView> getAutoLoadingViews()
+	{
+		return autoLoad;
+	}
+
+	public Map<String, TwitzMainView> getLoadedViews()
+	{
+		return this.views;
 	}
 
 	private void setDefaults() {//{{{

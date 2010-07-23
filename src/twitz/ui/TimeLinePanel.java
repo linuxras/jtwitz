@@ -356,8 +356,8 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 				@Override
 				public void done()
 				{
-					if(logdebug)
-						logger.info("Updating timeline ComboBox");
+					//if(logdebug)
+					//	logger.info("Updating timeline ComboBox");
 					try
 					{
 						txtTimelineUser.setModel(get());

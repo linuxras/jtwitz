@@ -17,6 +17,7 @@ import twitter4j.Status;
 public class StatusListModel extends AbstractListModel {
 
 	Vector<Status> status = new Vector<Status>();
+	private boolean isEditing = false;
 
 	public StatusListModel() {
 
@@ -33,9 +34,11 @@ public class StatusListModel extends AbstractListModel {
 	}
 
 	public void addStatus(Status l) {
+		this.isEditing = true;
 		int index = getSize();
 		status.addElement(l);
 		fireIntervalAdded(this, index, index);
+		this.isEditing = false;
 	}
 
 	public void insertStatus(Status l, int index)
@@ -58,19 +61,22 @@ public class StatusListModel extends AbstractListModel {
 
 	public void removeStatus(int index)
 	{
+		this.isEditing = true;
 		if(index < getSize()) {
 			status.removeElementAt(index);
 			fireIntervalRemoved(this, index, index);
 		}
-
+		this.isEditing = false;
 	}
 
 	public void clear()
 	{
+		this.isEditing = true;
 		int index = status.size();
 		status.clear();
 		if(index > 0)
 			fireIntervalRemoved(this, 0, index-1);
+		this.isEditing = false;
 	}
 
 	public int indexOf(Status l)
@@ -95,6 +101,7 @@ public class StatusListModel extends AbstractListModel {
 
 	public void setDataVector(Vector<Status> data)
 	{
+		this.isEditing = true;
 		int index = getSize();
 		if(data != null)
 		{
@@ -102,6 +109,7 @@ public class StatusListModel extends AbstractListModel {
 			this.status = data;
 			fireIntervalAdded(this, 0, getSize()-1);
 		}
+		this.isEditing = false;
 	}
 
 	public int size()
@@ -130,5 +138,10 @@ public class StatusListModel extends AbstractListModel {
 		Status[] rv = new Status[getSize()];
 		status.copyInto(rv);
 		return rv;
+	}
+
+	public boolean isEditing()
+	{
+		return isEditing;
 	}
 }

@@ -679,7 +679,8 @@ public class DBManager {
 						{
 							map = Collections.synchronizedMap(new TreeMap<String, Object>());
 							map.put(SESSION_NAME, sc.getString(SESSION_NAME));
-							map.put(SESSION_DEFAULT, sc.getInteger(SESSION_DEFAULT));
+							map.put(SESSION_DEFAULT, (sc.getInteger(SESSION_DEFAULT) == 1));
+							map.put(SESSION_AUTOLOAD, (sc.getInteger(SESSION_AUTOLOAD) == 1));
 							map.put("sessionid", sc.getRowId());
 							rv.addElement(map);
 						}

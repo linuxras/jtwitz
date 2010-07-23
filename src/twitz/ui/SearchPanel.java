@@ -475,6 +475,8 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 			{
 				public TweetListModel doInBackground()
 				{
+					int total = tweets.size(), count = 1;
+					firePropertyChange("started", null, "Loading search results");
 					double completedIn = results.getCompletedIn();
 					//do something with tweets.
 					TweetListModel tlm = new TweetListModel();
@@ -482,6 +484,8 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 					for(Tweet t : tweets)
 					{
 						tlm.addTweet(t);
+						firePropertyChange("message", null, String.format("Loading %d of %d results. Please wait...", count, total));
+						count++;
 					}
 					return tlm;
 				}
@@ -497,8 +501,10 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 					{
 						logger.error("Error while loading search results", e);//TODO needs I18N
 					}
+					firePropertyChange("done", null, null);
 				}
 			};
+			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.execute();
 		}
 	}//}}}
@@ -521,6 +527,8 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 
 				public ContactsListModel doInBackground()
 				{
+					int total = results.size(), count = 1;
+					firePropertyChange("started", null, "Loading search results");
 					ContactsListModel clm = new ContactsListModel();
 					for(Object o : results)
 					{
@@ -529,6 +537,8 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 							User u = (User)o;
 							clm.addElement(u);
 							store.registerUser(u);
+							firePropertyChange("message", null, String.format("Loading %d of %d results. Please wait...", count, total));
+							count++;
 						}
 					}
 					return clm;
@@ -545,8 +555,10 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 					{
 						logger.error("Error while loading search results", e);//TODO needs I18N
 					}
+					firePropertyChange("done", null, null);
 				}
 			};
+			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.execute();
 		}
 	}//}}}

@@ -479,12 +479,17 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 				public ContactsListModel doInBackground()
 				{
+					int total = users.size(), count = 1;
+
+					firePropertyChange("start", null, String.format("Loading list users for %s", getUserList().getName()));
 					ContactsListModel clm = new ContactsListModel();
 					//clm.clear();
 					for(Object o  : users)
 					{
 						if(isUser(o))
 							clm.addElement((User)o);
+						firePropertyChange("message", null, String.format("Loading user %d of %d", count, total));
+						count++;
 					}
 					return clm;
 				}
@@ -500,8 +505,10 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 					{
 						logger.error("Error while populating UserList", e); //TODO needs I18N
 					}
+					firePropertyChange("done", null, null);
 				}
 			};
+			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.execute();
 		
 			prevPage = users.getPreviousCursor();
