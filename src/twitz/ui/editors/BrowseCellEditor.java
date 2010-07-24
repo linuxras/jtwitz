@@ -34,8 +34,9 @@ import org.pushingpixels.substance.api.skin.SkinInfo;
  */
 public class BrowseCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-	public BrowseCellEditor(/*twitz.util.SettingsManager c*/) {
+	public BrowseCellEditor(String sessionName) {
 		//config = c;
+		this.sessionName = sessionName;
 		initComponents();
 		cmbSkins.addActionListener(new ActionListener() {
 
@@ -304,6 +305,8 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	}
 
 	// Variables declaration - do not modify
+	public static final String SESSION_PROPERTY = "sessionChanged";
+	private String sessionName = "Default";
     private javax.swing.JButton btnBrowse;
     private javax.swing.JTextField txtPath;
 	private javax.swing.JTextField txtString = new javax.swing.JTextField();
@@ -315,7 +318,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	//private javax.swing.JComboBox cmbSkins = new SubstanceSkinComboSelector();
 	private String boolModel[] = {"true", "false"};
 	private javax.swing.JSpinner boolEditor = new javax.swing.JSpinner(new javax.swing.SpinnerListModel(boolModel));
-	private twitz.util.SettingsManager config = twitz.util.SettingsManager.getInstance();
+	private twitz.util.SettingsManager config = twitz.util.TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);//twitz.util.SettingsManager.getInstance();
 	private String currentEditor = null;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private boolean logdebug = logger.isDebugEnabled();

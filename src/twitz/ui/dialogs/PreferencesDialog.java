@@ -55,6 +55,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	private TwitzApp mainApp;
 	private boolean updateSkin = false;
 	private boolean updateLogin = false;
+	private boolean singleSessionMode = false;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final boolean logdebug = logger.isDebugEnabled();
 	protected Properties undo = new Properties();
@@ -62,6 +63,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	private Vector<Map<String, Object>> sessions;
 	private Map<String, Object> sessionMap;
 	private String currentSession = "Default";
+	public static final String SINGLE_SESSION_PROPERTY = "singleSessionMode";
 
     /** Creates new form PreferencesDialog */
     public PreferencesDialog(java.awt.Frame parent, boolean modal, TwitzApp app) {
@@ -172,7 +174,9 @@ public class PreferencesDialog extends javax.swing.JDialog {
         chkDefault.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         profileBar.add(chkDefault);
 
+        chkAutoload.setAction(actionMap.get("setAutoLoad")); // NOI18N
         chkAutoload.setText(resourceMap.getString("chkAutoload.text")); // NOI18N
+        chkAutoload.setToolTipText(resourceMap.getString("chkAutoload.toolTipText")); // NOI18N
         chkAutoload.setFocusable(false);
         chkAutoload.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
         chkAutoload.setName("chkAutoload"); // NOI18N
@@ -366,15 +370,26 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				vConfig.add(row);
 				undo.setProperty(key, value);
 			}
+			if(key.equals(DBManager.SESSION_AUTOLOAD))
+			{
+				this.chkAutoload.setSelected(config.getBoolean(key));
+			}
+			if(key.equals(DBManager.SESSION_DEFAULT))
+			{
+				this.chkDefault.setSelected(config.getBoolean(key));
+			}
 		}
 		DefaultTableModel model = (DefaultTableModel)tblConfig.getModel();
 		model.setDataVector(vConfig, vHeaders);
 		//tblConfig.getColumnModel().getColumn(2).setCellEditor(new BrowseCellEditor());
 		DefaultTableColumnModel cModel = (DefaultTableColumnModel)tblConfig.getColumnModel();
 		cModel.getColumn(0).setMaxWidth(10);
-		cModel.getColumn(2).setCellEditor(new BrowseCellEditor());
-		if(sorter != null) //null if called from the ctor
-			sorter.sort();
+		cModel.getColumn(2).setCellEditor(new BrowseCellEditor(sessionName));
+		sorter = this.getTableRowSorter(model);
+		tblConfig.setRowSorter(sorter);
+		tblConfig.setModel(model);
+		sorter.sort();
+		
 	}
 
 	public void setSessionName(String name)
@@ -384,14 +399,32 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		this.currentSession = name;
 		cmbProfile.setSelectedItem(name);
 		cfgBorder.setTitle(name);
+		configPane.setBorder(cfgBorder);
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
 		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		chkDefault.setEnabled(!name.equals("Default"));
+
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
 	public String getSessionName()
 	{
 		return this.sessionName;
+	}
+
+	public void setSingleSessionMode(boolean val)
+	{
+		boolean old = this.singleSessionMode;
+		this.singleSessionMode = val;
+		this.btnLoadProfile.setEnabled(!val);
+		this.btnNewProfile.setEnabled(!val);
+		this.cmbProfile.setEnabled(!val);
+		firePropertyChange(SINGLE_SESSION_PROPERTY, old, val);
+	}
+
+	public boolean isSingleSessionMode()
+	{
+		return this.singleSessionMode;
 	}
 
 	@Action
@@ -445,6 +478,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				loadProfileCombo();
 				cmbProfile.setSelectedItem(profile);
 				loadProfile();
+				TwitzSessionManager.getInstance().addNewSession(profile);
 				//TODO put in code to load up the profile or whatever
 			}
 		}
@@ -466,7 +500,15 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	@Action
 	public void setDefaultProfile()
 	{
-		
+		if(!sessionName.equals("Default") && !btnApply.isEnabled())
+			btnApply.setEnabled(config.getBoolean(DBManager.SESSION_DEFAULT) == chkDefault.isSelected());
+	}
+
+	@Action
+	public void setAutoLoad()
+	{
+		if(!btnApply.isEnabled())
+			btnApply.setEnabled(config.getBoolean(DBManager.SESSION_AUTOLOAD) == chkAutoload.isSelected());
 	}
 
 	//@SuppressWarnings("empty-statement")
@@ -495,6 +537,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				}
 			}
 		}
+		p.setProperty(DBManager.SESSION_AUTOLOAD, chkAutoload.isSelected()+"");
+		p.setProperty(DBManager.SESSION_DEFAULT, chkDefault.isSelected()+"");
 		config.setProperties(p);
 		if(updateLogin)
 		{

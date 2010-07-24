@@ -142,7 +142,7 @@ public class ListHotSpot implements Serializable
 					box = new Rectangle(rect.x + pos, ypos, dim.width, dim.height);
 					//addHotspot("Actions", new Rectangle(45, 25, 20, 20));
 //					System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
-					if (box.contains(loc))
+					if (box.contains(loc) && isEnabled())
 					{
 //						System.out.println("Got the click spot");
 						this.pcs.firePropertyChange(key, null, e); //We send the MouseEvent along
@@ -154,7 +154,7 @@ public class ListHotSpot implements Serializable
 					box = new Rectangle(rect.x + pos, rect.y + ypos, dim.width, dim.height);
 					//addHotspot("Actions", new Rectangle(45, 25, 20, 20));
 //					System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
-					if (box.contains(loc))
+					if (box.contains(loc) && isEnabled())
 					{
 //						System.out.println("Got the click spot");
 						this.pcs.firePropertyChange(key, null, e); //We send the MouseEvent along

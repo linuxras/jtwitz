@@ -5,6 +5,7 @@
 
 package twitz.util;
 
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,8 +30,10 @@ import twitz.TwitzMainView;
  *
  * @author mistik1
  */
-public class TwitzSessionManager {
-
+public class TwitzSessionManager extends PropertyChangeSupport
+{
+	public static final String LOADED_PROPERTY = "sessionsLoaded";
+	public static final String ADDED_PROPERTY = "sessionsAdded";
 	static Logger logger;
 	private static TwitzSessionManager instance;
 	private static DBManager DBM;
@@ -50,6 +53,7 @@ public class TwitzSessionManager {
 	};
 
 	private TwitzSessionManager(TwitzApp app) {//{{{
+		super(app);
 		this.mainApp = app;
 		DBM = DBManager.getInstance();
 		logger  = Logger.getLogger(TwitzSessionManager.class.getName());
@@ -88,7 +92,7 @@ public class TwitzSessionManager {
 		TwitzMainView rv = null;
 		if(views.containsKey(sessionName))
 			return views.get(sessionName);
-		System.out.println("creating new view for session: "+sessionName+" =========================");
+		//System.out.println("creating new view for session: "+sessionName+" =========================");
 		rv = new TwitzMainView(mainApp, sessionName);
 		views.put(sessionName, rv);
 		return rv;
@@ -96,10 +100,20 @@ public class TwitzSessionManager {
 
 	public synchronized void addTwitzMainView(String sessionName, TwitzMainView v)
 	{
-		if(!views.containsKey(sessionName))
-		{
+		//if(!views.containsKey(sessionName))
+		//{
 			views.put(sessionName, v);
 			//sessions.put(sessionName, null);
+		//}
+	}
+
+	public void addNewSession(String sname)
+	{
+		boolean hasview = views.containsKey(sname);
+		if(!hasview)
+		{
+			TwitzMainView v = getTwitMainViewForSession(sname);
+			firePropertyChange(ADDED_PROPERTY, null, v);
 		}
 	}
 
@@ -126,7 +140,7 @@ public class TwitzSessionManager {
 				view.setTitle(name);
 				view.setMaximizable(true);
 				view.setName(name.replaceAll(" ", "_").replaceAll("\\W", ""));
-				System.out.println(view.getName());
+				//System.out.println(view.getName()+" views size(): "+views.size());
 				if(name.equals("Default"))
 				{
 					defaultSession = view;
@@ -134,12 +148,13 @@ public class TwitzSessionManager {
 				}
 				else
 				{
-					//if(autoload)
+					if(def)
 						autoLoad.add(view);
 				}
 				//addTwitzMainView(name, view);
 			}
 		}
+		firePropertyChange(LOADED_PROPERTY, null, views);
 	}
 
 	public TwitzMainView getDefaultSession()
@@ -147,14 +162,14 @@ public class TwitzSessionManager {
 		return this.defaultSession;
 	}
 
-	public Vector<TwitzMainView> getAutoLoadingViews()
+	public Vector<TwitzMainView> getAutoLoadingSessions()
 	{
 		return autoLoad;
 	}
 
-	public Map<String, TwitzMainView> getLoadedViews()
+	public Map<String, TwitzMainView> getSessions()
 	{
-		return this.views;
+		return views;
 	}
 
 	private void setDefaults() {//{{{

@@ -72,7 +72,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	static boolean logdebug = false;
 	TwitzTrayIcon tray = null;
 	private static TwitzMainView view;
-	private TwitzDesktopFrame mainFrame;
+	private static TwitzDesktopFrame mainFrame;
 	private TwitzSessionManager session;
 	private boolean hidden;// = config.getBoolean("minimize_startup");
 	private ResourceMap resources = null;
@@ -116,7 +116,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			if(logdebug)
 				logger.debug("Splash is null");
 		}
-		config = SettingsManager.getInstance();
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession("Default");
 		hidden = config.getBoolean("minimize_startup");
 		
 		themer.addPropertyChangeListener(this);
@@ -275,7 +275,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			}catch(Exception ignore){}
 			view.miniTwitz(true);
 		}
-		view.initTwitter();
+		
 		//if(hidden)
 		//	toggleWindowView("down");
 		UIManager.addPropertyChangeListener(this);
@@ -309,18 +309,41 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		{
 			logger.error(ex.getLocalizedMessage());
 		}
-		for(TwitzMainView v : session.getAutoLoadingViews())
+		for(TwitzMainView v : session.getAutoLoadingSessions())
 		{
 			mainFrame.addView(v);
-			v.initTwitter();
+			//v.initTwitter();
 		}
 		//view.addPropertyChangeListener("POPUP", tray);
 		mainFrame.setVisible(true);
+		mainFrame.initSessions();
+		try
+		{
+			getContext().getSessionStorage().restore(mainFrame, "session.xml");
+		}
+		catch (IOException ex)
+		{
+			logger.error(ex.getLocalizedMessage());
+		}
 		mainFrame.fixFrameSizes();
+		//view.initTwitter();
 		if(logdebug)
 			logger.debug("Leaving Startup");
 		//logger.debug(getEnv());
 	}//}}}
+
+	@Override
+	protected void shutdown()
+	{
+		try
+		{
+			getContext().getSessionStorage().save(mainFrame, "session.xml");
+		}
+		catch (IOException ex)
+		{
+			logger.error(ex.getLocalizedMessage());
+		}
+	}
 	//END overrides
 
 	//Static methods
@@ -429,6 +452,60 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			comp.setLocation(x, y);
 		}
 	}//}}}
+
+	/**
+	 * <strong>Warning:</strong> Although this method is static it must NOT be
+	 * called before this class has been initialized as it depends on the
+	 * {@link TwitzDesktopFrame} to be created. It is safe to call this after
+	 * {@link #createTopLevel()} is called.
+	 * This method will resize JInternalFrame so they fit into this Twitz desktop
+	 * @param comp The component to resize.
+	 */
+	public static void fixIFrameLocation(Component comp) {//{{{
+//		java.awt.Dimension dim = mainFrame.getDesktop().getMaximumSize();
+//		dim.
+//		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		Rectangle frame = comp.getBounds();
+		Rectangle desktop = mainFrame.getDesktop().getBounds();//ge.getMaximumWindowBounds();
+//		logger.debug("Width of desktop: " + desktop.toString());
+//		logger.debug("Width of frame: " + frame.toString());
+		boolean up = false;
+		boolean down = false;
+		boolean left = false;
+		boolean right = false;
+		boolean resizeH = false;
+		if(frame.height > desktop.height)
+		{
+			comp.setSize(comp.getWidth(), (desktop.height - 32));
+			frame = comp.getBounds();
+		}
+		if(frame.width > desktop.width)
+		{
+			comp.setSize(desktop.width, comp.getHeight());
+			frame = comp.getBounds();
+		}
+		//Check if we intersect with the Desktop rectangle before we process
+		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
+			int x = frame.x;//(desktop.width - frame.width);
+			int y = frame.y;//(desktop.height - frame.height) - 32;
+			if((frame.x+frame.width) > desktop.width)
+				left = true;
+			if(desktop.x > frame.x) //Frame top should be less than desktop
+				right = true;
+			if(desktop.y > frame.y)
+				down = true;
+			if((frame.y+frame.height) > desktop.height) //Frame bottom should be less than desktop
+				up = true;
+
+			if(left) x = (desktop.width - frame.width);
+			if(right) x = desktop.x;
+			if(down) y = desktop.y;
+			if(up) y = (desktop.height - frame.height) - 49;//-32 is to make up for most OS toolbars
+			//System.out.println("X: " + x + " Y: " + y);
+			comp.setLocation(x, y);
+		}
+	}//}}}
+
 
 	public static void setLAFFromSettings(boolean background)
 	{
@@ -628,51 +705,6 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		return this.mainFrame;
 	}
 
-	public void fixIFrameLocation(Component comp) {//{{{
-//		java.awt.Dimension dim = mainFrame.getDesktop().getMaximumSize();
-//		dim.
-//		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		Rectangle frame = comp.getBounds();
-		Rectangle desktop = mainFrame.getDesktop().getBounds();//ge.getMaximumWindowBounds();
-//		logger.debug("Width of desktop: " + desktop.toString());
-//		logger.debug("Width of frame: " + frame.toString());
-		boolean up = false;
-		boolean down = false;
-		boolean left = false;
-		boolean right = false;
-		boolean resizeH = false;
-		if(frame.height > desktop.height)
-		{
-			comp.setSize(comp.getWidth(), (desktop.height - 32));
-			frame = comp.getBounds();
-		}
-		if(frame.width > desktop.width)
-		{
-			comp.setSize(desktop.width, comp.getHeight());
-			frame = comp.getBounds();
-		}
-		//Check if we intersect with the Desktop rectangle before we process
-		if(!desktop.contains(frame.x, frame.y, frame.width, frame.height)) {
-			int x = frame.x;//(desktop.width - frame.width);
-			int y = frame.y;//(desktop.height - frame.height) - 32;
-			if((frame.x+frame.width) > desktop.width)
-				left = true;
-			if(desktop.x > frame.x) //Frame top should be less than desktop
-				right = true;
-			if(desktop.y > frame.y)
-				down = true;
-			if((frame.y+frame.height) > desktop.height) //Frame bottom should be less than desktop
-				up = true;
-			
-			if(left) x = (desktop.width - frame.width);
-			if(right) x = desktop.x;
-			if(down) y = desktop.y;
-			if(up) y = (desktop.height - frame.height) - 49;//-32 is to make up for most OS toolbars
-			//System.out.println("X: " + x + " Y: " + y);
-			comp.setLocation(x, y);
-		}
-	}//}}}
-
 	public void propertyChange(PropertyChangeEvent e) {//{{{
 		if(e.getPropertyName().equals("lookAndFeelChange")) {
 			setLAFFromSettings(true);
@@ -694,10 +726,10 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			exit(e);
 		}
 		else if(cmd.equals("About")) {
-			view.showAboutBox();
+			mainFrame.showAboutBox();
 		}
 		else if(cmd.equals("PrefsDlg")) {
-			view.showPrefsBox();
+			mainFrame.showPrefsBox();
 		}
 	}//}}}
 

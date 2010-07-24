@@ -11,18 +11,20 @@
 
 package twitz.ui;
 
-import java.awt.BorderLayout;
 import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JDialog;
 import javax.swing.JMenuItem;
@@ -34,15 +36,20 @@ import org.jdesktop.application.Action;
 import org.jdesktop.application.ResourceMap;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
+import twitz.ui.dialogs.MessageDialog;
 import twitz.ui.dialogs.PreferencesDialog;
 import twitz.ui.dialogs.TwitzAboutBox;
+import twitz.util.DBManager;
+import twitz.util.SettingsManager;
 import twitz.util.TwitzSessionManager;
 
 /**
  *
  * @author mistik1
  */
-public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListener, InternalFrameListener {
+public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListener, 
+		InternalFrameListener, PropertyChangeListener
+{
 
 	public static final String DESKTOP_PROPERTY = "desktopChanged";
 	public static final String VIEWS_ADDED_PROPERTY = "viewAdded";
@@ -60,6 +67,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 	private Logger logger = Logger.getLogger(TwitzDesktopFrame.class.getName());
 	private Map<String, JToggleButton> taskBarButtons = Collections.synchronizedMap(new TreeMap<String, JToggleButton>());
 	private Map<String, JMenuItem> profileMenus = Collections.synchronizedMap(new TreeMap<String, JMenuItem>());
+	private TwitzSessionManager sessions = TwitzSessionManager.getInstance();
 
     /** Creates new form TwitzDesktopFrame */
     private TwitzDesktopFrame(TwitzApp app) {
@@ -128,7 +136,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 
         
         exitItem.setAction(actionMap.get("quit")); // NOI18N
-        exitItem.setIcon(null);
+        exitItem.setIcon(resourceMap.getIcon("exitItem.icon")); // NOI18N
         exitItem.setName("exitItem"); // NOI18N
         fileMenu.add(exitItem);
 
@@ -138,7 +146,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
         editMenu.setName("editMenu"); // NOI18N
 
         prefsMenuItem1.setAction(actionMap.get("showPrefsBox")); // NOI18N
-        prefsMenuItem1.setIcon(null);
+        prefsMenuItem1.setIcon(resourceMap.getIcon("showPrefsBox.Action.icon")); // NOI18N
         prefsMenuItem1.setText(resourceMap.getString("prefsMenuItem1.text")); // NOI18N
         prefsMenuItem1.setName("prefsMenuItem1"); // NOI18N
         editMenu.add(prefsMenuItem1);
@@ -153,12 +161,13 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
         helpMenu.setName("helpMenu"); // NOI18N
 
         aboutMenuItem1.setAction(actionMap.get("showAboutBox")); // NOI18N
-        aboutMenuItem1.setIcon(null);
+        aboutMenuItem1.setIcon(resourceMap.getIcon("aboutMenuItem1.icon")); // NOI18N
+        aboutMenuItem1.setText(resourceMap.getString("aboutMenuItem1.text")); // NOI18N
         aboutMenuItem1.setName("aboutMenuItem1"); // NOI18N
         helpMenu.add(aboutMenuItem1);
 
         logsMenuItem1.setAction(actionMap.get("viewHTMLLog")); // NOI18N
-        logsMenuItem1.setIcon(null);
+        logsMenuItem1.setIcon(resourceMap.getIcon("logsMenuItem1.icon")); // NOI18N
         logsMenuItem1.setText(resourceMap.getString("logsMenuItem1.text")); // NOI18N
         logsMenuItem1.setName("logsMenuItem1"); // NOI18N
         helpMenu.add(logsMenuItem1);
@@ -172,7 +181,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(desktop, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
-            .addComponent(taskBar, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(taskBar, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -192,31 +201,12 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 		btnDefault.addActionListener(this);
 		taskBarButtons.put("Default", btnDefault);
 		setPreferredSize(new java.awt.Dimension(640, 480));
+		sessions.addPropertyChangeListener(TwitzSessionManager.ADDED_PROPERTY, this);
+		sessions.addPropertyChangeListener(TwitzSessionManager.LOADED_PROPERTY, this);
+		//buildProfilesMenu();
 		//throw new UnsupportedOperationException("Not yet implemented");
 	}
-
-	private void buildProfilesMenu()
-	{
-		ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
-		Map<String, TwitzMainView> vmap = TwitzSessionManager.getInstance().getLoadedViews();
-		Set<String> set = vmap.keySet();
-		Iterator<String> iter = set.iterator();
-		while(iter.hasNext())
-		{
-			String tname = iter.next();
-			TwitzMainView v = vmap.get(tname);
-			boolean selected = views.containsKey(tname);
-
-			JMenuItem item = new JMenuItem(tname);
-			item.setIcon(res.getIcon("icon.user_comment"));
-			item.setEnabled(selected);
-			item.setActionCommand(tname);
-			item.addActionListener(this);
-			profilesMenu.add(item);
-			profileMenus.put(tname, item);
-		}
-	}
-
+	
 	@Action
     public void showAboutBox() {//{{{
         if (aboutBox == null) {
@@ -236,8 +226,34 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 			prefs.addPropertyChangeListener(mainApp);
 			prefs.setLocationRelativeTo(this);
 			prefs.setSessionName("Default");
+			prefs.setSingleSessionMode(false);
 		}
 		prefs.setVisible(true);
+	}//}}}
+
+	@Action
+	public void viewHTMLLog()//{{{
+	{
+		ResourceMap res = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
+		MessageDialog msg = new MessageDialog(this, false);
+		msg.setContentType("text/html");
+		try
+		{
+			URI spec = twitz.TwitzApp.getConfigDirectory().toURI();
+			String s = spec.toString()+"/logs/index.html";
+			URL path = new URL(s);
+			msg.setMessage(path);
+			msg.setResizable(true);
+			msg.setTitle(res.getString("LOG_WINDOW_TITLE.TEXT"));
+			msg.setSize(640, 480);
+			msg.setVisible(true);
+			//InputStream is = this.getClass().getResourceAsStream(path);
+		}
+		catch (IOException ex)
+		{
+			logger.error(ex.getMessage(), ex);
+		}
+		//InputStream is = this.getClass().getResourceAsStream(path);
 	}//}}}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -251,6 +267,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
     private javax.swing.JToolBar taskBar;
     private javax.swing.ButtonGroup taskBarGroup;
     // End of variables declaration//GEN-END:variables
+
 
 	public void setDesktop(JDesktopPane desk)
 	{
@@ -266,6 +283,52 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 	public JDesktopPane getDesktop()
 	{
 		return this.desktop;
+	}
+
+	private void buildProfilesMenu()
+	{
+		ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
+		Map<String, TwitzMainView> vmap = TwitzSessionManager.getInstance().getSessions();
+		Set<String> set = vmap.keySet();
+		Iterator<String> iter = set.iterator();
+		profilesMenu.removeAll();
+		profileMenus.clear();
+		//logger.debug(vmap.size()+" '''''''''''''''''''''''''''''''''''''''''''''");
+		while(iter.hasNext())
+		{
+			String tname = iter.next();
+			if(tname.equals("Default"))
+				continue;
+			TwitzMainView v = vmap.get(tname);
+			boolean selected = views.containsKey(tname);
+
+			JMenuItem item = new JMenuItem(tname);
+			item.setIcon(res.getIcon("icon.user_comment"));
+			item.setEnabled(true);
+			item.setActionCommand(tname);
+			item.addActionListener(this);
+			profilesMenu.add(item);
+			profileMenus.put(tname, item);
+		}
+	}
+
+	public void initSessions()
+	{
+		Set<String> set = views.keySet();
+		Iterator<String> iter = set.iterator();
+		while(iter.hasNext())
+		{
+			String sname = iter.next();
+			TwitzMainView v = views.get(sname);
+			if(v != null)
+			{
+				SettingsManager sm = TwitzSessionManager.getInstance().getSettingsManagerForSession(sname);
+				if(sm.getBoolean(DBManager.SESSION_AUTOLOAD))
+				{
+					v.initTwitter();
+				}
+			}
+		}
 	}
 
 	/**
@@ -289,7 +352,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 				view.addInternalFrameListener(this);
 				try
 				{
-				getDesktop().add(view, javax.swing.JDesktopPane.DEFAULT_LAYER);
+					getDesktop().add(view, javax.swing.JDesktopPane.DEFAULT_LAYER);
 				}
 				catch(Exception ex)
 				{
@@ -301,7 +364,6 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 				if(!sessionName.equals("Default")) //default is created stat
 				{
 					JToggleButton btnD = new JToggleButton();
-					taskBarGroup.add(btnD);
 
 					btnD.setIcon(resourceMap.getIcon("btnDefault.icon")); // NOI18N
 					btnD.setText(sessionName); // NOI18N
@@ -309,18 +371,22 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 					btnD.setIconTextGap(2);
 					btnD.setMargin(new java.awt.Insets(2, 2, 2, 2));
 					btnD.setName(sessionName.replaceAll(" ", "_").replaceAll("\\W", "")); // NOI18N
-					btnD.setPreferredSize(new java.awt.Dimension(76, 22));
+					btnD.setPreferredSize(new java.awt.Dimension(0, 22));
 					btnD.setActionCommand(sessionName);
 					btnD.addActionListener(this);
+					btnD.setSelected(true);
+					taskBarGroup.add(btnD);
 					taskBar.add(btnD);
 					taskBarButtons.put(sessionName, btnD);
-					JMenuItem item = new JMenuItem(sessionName);
-					item.setIcon(res.getIcon("icon.user_comment"));
-					item.setEnabled(false);
-					item.setActionCommand(sessionName);
-					item.addActionListener(this);
-					profilesMenu.add(item);
-					profileMenus.put(sessionName, item);
+
+					twitz.TwitzApp.fixIFrameLocation(view);
+//					JMenuItem item = new JMenuItem(sessionName);
+//					item.setIcon(res.getIcon("icon.user_comment"));
+//					item.setEnabled(false);
+//					item.setActionCommand(sessionName);
+//					item.addActionListener(this);
+//					profilesMenu.add(item);
+//					profileMenus.put(sessionName, item);
 				}
 				
 //				firePropertyChange(VIEWS_ADDED_PROPERTY, null, view);
@@ -404,6 +470,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 					{
 						try
 						{
+							v.toFront();
 							v.setSelected(true);
 						}
 						catch (PropertyVetoException ex)
@@ -417,19 +484,33 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 		else if(e.getSource() instanceof JMenuItem)
 		{
 			JMenuItem item = (JMenuItem)e.getSource();
-			if(views.containsKey(e.getActionCommand()))
+			String sname = e.getActionCommand();
+			if(sname != null && views.containsKey(sname))
 			{
-				TwitzMainView v = views.get(e.getActionCommand());;
+				TwitzMainView v = views.get(sname);
 				if(v.isClosed())
 				{
+					//v.setClosed(false);
+					//add(v);
+					logger.debug("lllllllllllllllllllllllllllllllllllllllllllllllllllllllll");
+					getDesktop().add(v, javax.swing.JDesktopPane.DEFAULT_LAYER);
+					v.setVisible(true);
 					try
 					{
-						v.setClosed(false);
-						item.setEnabled(false);
+						v.setSelected(true);
 					}
 					catch (PropertyVetoException ex)
 					{
-						logger.debug(ex.getLocalizedMessage());
+						logger.error(ex.getLocalizedMessage());
+					}
+					item.setEnabled(false);
+					JToggleButton btn = taskBarButtons.get(sname);
+					if (btn != null)
+					{
+						logger.debug("Enabling JButton " + sname + " in taskBar");
+						//taskBar.remove(btn);
+						//taskBar.revalidate();
+						btn.setVisible(true);
 					}
 				}
 			}
@@ -450,10 +531,18 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 			String sname = f.getSessionName();
 			JMenuItem item = profileMenus.get(sname);
 			if(item != null)
+			{
+				logger.debug("Disabling JMenuItem "+sname);
 				item.setEnabled(true);
+			}
 			JToggleButton btn = taskBarButtons.get(sname);
 			if(btn != null)
-				taskBar.remove(btn);
+			{
+				logger.debug("Removing JButton "+sname+" from taskBar");
+				//taskBar.remove(btn);
+				//taskBar.revalidate();
+				btn.setVisible(false);
+			}
 		}
 
     }
@@ -500,7 +589,8 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 			if (views.containsValue(v))
 			{
 				JToggleButton btn = taskBarButtons.get(v.getSessionName());
-				btn.setSelected(true);
+				if(btn != null)
+					btn.setSelected(true);
 			}
 		}
         //displayMessage("Internal frame activated", e);
@@ -524,6 +614,25 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
         String s = prefix;// + ": " + e.getSource();
         logger.debug(s);
     }
+
+	public void propertyChange(PropertyChangeEvent evt)
+	{
+		if(evt.getPropertyName().equals(TwitzSessionManager.ADDED_PROPERTY))
+		{
+			TwitzMainView v = (TwitzMainView)evt.getNewValue();
+			SettingsManager sm = sessions.getSettingsManagerForSession(v.getSessionName());
+			if(sm.getBoolean(DBManager.SESSION_AUTOLOAD))
+			{
+				addView(v);
+			}
+			buildProfilesMenu();
+		}
+		else if(evt.getPropertyName().equals(TwitzSessionManager.LOADED_PROPERTY))
+		{
+			buildProfilesMenu();
+		}
+		//throw new UnsupportedOperationException("Not supported yet.");
+	}
 
 	
 }

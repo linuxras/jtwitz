@@ -72,15 +72,15 @@ public class SettingsManager extends Properties{
 //		loadSettings();
 //	}//}}}
 
-	/**
-	 * Default way to get a SettingsManager instance
-	 * @return SettingsManager singleton
-	 */
-	public static synchronized SettingsManager getInstance() {//{{{
-		if(instance == null)
-			instance = new SettingsManager();
-		return instance;
-	}//}}}
+//	/**
+//	 * Default way to get a SettingsManager instance
+//	 * @return SettingsManager singleton
+//	 */
+//	public static synchronized SettingsManager getInstance() {//{{{
+//		if(instance == null)
+//			instance = new SettingsManager();
+//		return instance;
+//	}//}}}
 
 	private void setDefaults() {//{{{
 		setProperty("twitter.id", "changeme");

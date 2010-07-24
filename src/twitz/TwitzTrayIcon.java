@@ -31,7 +31,7 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
 
 	private TrayIcon trayIcon = null;
 	private TwitzPopup popup = null;
-	private SettingsManager config = SettingsManager.getInstance();
+	//private SettingsManager config = SettingsManager.getInstance();
 	private static TwitzApp mainApp;
 	org.jdesktop.application.ResourceMap resourceMap = TwitzApp.getContext().getResourceMap(TwitzTrayIcon.class);
 	org.jdesktop.application.ResourceMap viewResource = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
@@ -127,6 +127,7 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
 		}
 	}
 
+	@Override
 	public void mousePressed(MouseEvent e)
 	{
 		//if (e.isPopupTrigger()) {

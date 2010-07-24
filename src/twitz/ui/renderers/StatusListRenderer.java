@@ -5,47 +5,33 @@ import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.MediaTracker;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.Date;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.ListCellRenderer;
-import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.SoftBevelBorder;
-import org.jdesktop.application.ResourceMap;
-import twitz.testing.*;
 import org.pushingpixels.substance.api.*;
 import org.pushingpixels.substance.api.renderers.*;
 import twitter4j.Place;
 import twitter4j.Status;
 import twitter4j.User;
 import twitter4j.util.TimeSpanUtil;
-import twitz.TwitzApp;
-import twitz.TwitzMainView;
-import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.StatusList;
+import twitz.util.DBManager;
 import twitz.util.ListHotSpot;
+import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	
@@ -58,16 +44,21 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	private boolean focused = false;
 	private Status status = null;
 	private String spotTip = "";
+	private final String sessionName;
+	private SettingsManager config;
 
-	public StatusListRenderer()
+	public StatusListRenderer(String session)
 	{
 		super();
+		this.sessionName = session;
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
 		this.putClientProperty(SubstanceLookAndFeel.COLORIZATION_FACTOR, 1.0);
 	}
 	
 	private void updateBorder(boolean selected)//{{{
 	{
-		border = BorderFactory.createTitledBorder(new SoftBevelBorder(selected ? BevelBorder.LOWERED : BevelBorder.RAISED), statusTitle, TitledBorder.LEADING, TitledBorder.BELOW_TOP);
+		//border = BorderFactory.createTitledBorder(new SoftBevelBorder(selected ? BevelBorder.LOWERED : BevelBorder.RAISED), statusTitle, TitledBorder.LEADING, TitledBorder.BELOW_TOP);
+		border = new SoftBevelBorder(selected ? BevelBorder.LOWERED : BevelBorder.RAISED);
 		setBorder(border);
 	}//}}}
 
@@ -85,19 +76,19 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		selected = isSelected;
 
 		setFont(new Font("Arial", Font.BOLD, 10)); //TODO: put this in the resourceMap so its not hard coded
-		URL imgURI = u.getProfileImageURL();
-		ImageIcon icon = new ImageIcon(imgURI);
-		int status = icon.getImageLoadStatus();
-		Image img = null;
-		if(status == MediaTracker.ERRORED) {
-			//ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
-			icon = resourceMap.getImageIcon("icon.comments");
-			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
-		}
-		else {
-			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
-		}
-		icon = new ImageIcon(img);
+//		URL imgURI = u.getProfileImageURL();
+//		ImageIcon icon = new ImageIcon(imgURI);
+//		int stat = icon.getImageLoadStatus();
+//		Image img = null;
+//		if(stat == MediaTracker.ERRORED) {
+//			//ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
+//			icon = resourceMap.getImageIcon("icon.comments");
+//			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+//		}
+//		else {
+//			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+//		}
+//		icon = new ImageIcon(img);
 		//getScaledInstance(int width, int height, int hints)
 
 	//	StringBuffer tbuf = new StringBuffer();
@@ -113,19 +104,20 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	//		tbuf.append("</em></center></p>");
 	//	}
 
-		setIcon(icon);
+		//setIcon(icon);
 	//	setToolTipText("<html>"+tableWrap(tbuf.toString(), 200));
 	//	//setToolTipText("<html>"+tableWrap(buf.toString(), 250));
 		int width = list.getWidth()-50;
 		//System.out.println("List width: "+width);
 		if(list.getParent() != null)
 		{
-			width = list.getParent().getWidth()-85;
+			width = list.getParent().getWidth()-10;//85;
 			//System.out.println("Parent found using width: "+width);
 		}
 		
 		statusTitle = s.getUser().getScreenName();
 		setText("<html>"+tableWrap(s, width));
+		//setText("<html>"+tableWrap(s, list.getWidth()-20));
 		setVerticalAlignment(TOP);
 		setHorizontalAlignment(CENTER);
 		updateBorder(isSelected);
@@ -134,8 +126,8 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 
 	private String tableWrap(String source, int width) //{{{
 	{
-		StringBuffer table = new StringBuffer("<table border=0 width=");
-		table.append(width+"");
+		StringBuilder table = new StringBuilder("<table border=0 width=");
+		table.append(width);
 		table.append("><tr><td>");
 		table.append(source);
 		table.append("</td></tr></table>");
@@ -146,35 +138,109 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		User u = stat.getUser();
 		Place p = stat.getPlace();
 		Date d = stat.getCreatedAt();
+		Vector<ListHotSpot> hotzone = source.getHotSpot();
 
-		String filename = resourceMap.getResourcesDir() + resourceMap.getString(stat.isRetweet() ? "icon.arrow_rotate_clockwise" : "icon.arrow_rotate_clockwise_off" );
+		String resourcesDir = resourceMap.getResourcesDir();
+
+		String filename = resourcesDir + resourceMap.getString(stat.isRetweet() ? "icon.arrow_rotate_clockwise" : "icon.arrow_rotate_clockwise_off" );
 		//logger.debug(filename);
 		URL retweet = resourceMap.getClassLoader().getResource(filename);
 
-		filename = resourceMap.getResourcesDir() + resourceMap.getString(stat.isFavorited() ? "icon.heart" : "icon.heart_off");
+		filename = resourcesDir + resourceMap.getString(stat.isFavorited() ? "icon.heart" : "icon.heart_off");
 		URL fav = resourceMap.getClassLoader().getResource(filename);
 
-		filename = resourceMap.getResourcesDir() + resourceMap.getString("icon.comment_edit");
+		filename = resourcesDir + resourceMap.getString("icon.comment_edit");
 		URL action = resourceMap.getClassLoader().getResource(filename);
 
-		StringBuffer table = new StringBuffer("<table border=0 width=");
-		table.append(width+"");
-		table.append("><tr><td>");
+		filename = resourcesDir + resourceMap.getString("icon.picture_empty");
+		//filename = resourceMap.getResourcesDir() + resourceMap.getString("icon.comment");
+		URL altImg = resourceMap.getClassLoader().getResource(filename);
+
+		URL img = u.getProfileImageURL();
+
+		URLConnection fileCheck = null;
+		try
+		{
+			fileCheck = img.openConnection();
+			int size = fileCheck.getContentLength();
+			if(size <= 0)
+				img = altImg;
+		}
+		catch (IOException ioe)
+		{
+			System.out.println("wwooooooooooooooooooooooooooooooooooooooooooo");
+			img = altImg;
+		}
+
+		StringBuilder table = new StringBuilder("<table border=0 width=");
+		table.append(width).append(">");
+		table.append("<tr><td align='left'>");
+		table.append("<img src=\"").append(img.toString())
+				.append("\" border=0 width=32 height=32><br/>");
+		table.append("<b>").append(stat.getUser().getScreenName()).append("</b>");
+		table.append("</td><td>");
 		table.append(pretify(stat, stat.getText()));
 		table.append("</td></tr></table>");
-		StringBuffer tb = new StringBuffer("<table border=0 width=");
-		tb.append(width+"");
-		tb.append("><tr><td align='left'>");
-		tb.append(TimeSpanUtil.toTimeSpanString(d));
-		tb.append("</td><td align='right' width='16'>");
-		tb.append("<img border=0 src='"+retweet.toString()+"'>");
-		tb.append("</td><td align='right' width='16'>");
-		tb.append("<img border=0 src='"+fav.toString()+"'>");
-		tb.append("</td><td align='right' width='16'>");
-		tb.append("<img border=0 src='"+action.toString()+"'>");
-		tb.append("</td></tr></table>");
+		//HotSpot and time table
+		StringBuilder tb = new StringBuilder("<table border=0 width=");
+		tb.append(width).append("><tr>");
+		// <editor-fold defaultstate="collapsed" desc="Left to Right HotSpots">
+		for (ListHotSpot lhs : hotzone)
+		{
+			if (lhs.getDirection() == ListHotSpot.Direction.LEFT_TO_RIGHT)
+			{
+				boolean enabled = true;
+				tb.append("<td align='left' width='16'>");
+				if (lhs.getName().equals("Retweet"))
+				{
+					enabled = stat.isRetweet();
+				}
+				else if (lhs.getName().equals("Favorite"))
+				{
+					enabled = stat.isFavorited();
+				}
+				else if(lhs.getName().equals("Delete_Status"))
+				{
+					enabled = (config.getString(DBManager.SESSION_TWITTER_ID).equals(u.getScreenName()));
+				}
+				lhs.setEnabled(enabled);
+				tb.append("<img border=0 src='").append(enabled ? lhs.getIcon().toString() : lhs.getDisabledIcon().toString()).append("'></td>");
+			}
+		}// </editor-fold>
+		tb.append("<td align='left'>").append(TimeSpanUtil.toTimeSpanString(d)).append("</td>");
+		// <editor-fold defaultstate="collapsed" desc="Right to Left HotSpots">
+		for (int i=hotzone.size()-1; i >= 0 ;i--)
+		{
+			ListHotSpot rhs = hotzone.get(i);
+			if (rhs.getDirection() == ListHotSpot.Direction.RIGHT_TO_LEFT)
+			{
+				boolean enabled = true;
+				tb.append("<td align='right' width='16'>");
+				if (rhs.getName().equals("Retweet"))
+				{
+					enabled = stat.isRetweet();
+				}
+				else if (rhs.getName().equals("Favorite"))
+				{
+					enabled = stat.isFavorited();
+				}
+				else if(rhs.getName().equals("Delete_Status"))
+				{
+					enabled = (config.getString(DBManager.SESSION_TWITTER_ID).equals(u.getScreenName()));
+				}
+				rhs.setEnabled(enabled);
+				tb.append("<img border=0 src='").append(enabled ? rhs.getIcon().toString() : rhs.getDisabledIcon().toString()).append("'></td>");
+			}
+		}// </editor-fold>
+//		tb.append("<td align='right' width='16'>");
+//		tb.append("<img border=0 src='").append(retweet.toString()).append("'></td>");
+//		tb.append("<td align='right' width='16'>");
+//		tb.append("<img border=0 src='").append(fav.toString()).append("'></td>");
+//		tb.append("<td align='right' width='16'>");
+//		tb.append("<img border=0 src='").append(action.toString()).append("'></td>");
+		tb.append("</tr></table>");
 
-		table.append(tb);
+		table.append(tb.toString());
 		return table.toString();
 	}//}}}
 
@@ -215,7 +281,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		if(isActionSpot(e))
 		{
 			source.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			return resourceMap.getString(spotTip); 
+			return spotTip;//resourceMap.getString(spotTip);
 		}
 		source.setCursor(Cursor.getDefaultCursor());
 		return super.getToolTipText();
@@ -232,7 +298,7 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 			{
 				if(spot.isActionSpot(e, selection, source))
 				{
-					spotTip = "tooltip."+spot.getName();
+					spotTip = spot.getTooltipText();//"tooltip."+spot.getName();
 					rv = true;
 					break;
 				}

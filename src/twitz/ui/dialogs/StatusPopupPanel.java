@@ -59,7 +59,7 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 
 	private Status status;
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
-	private SettingsManager config = SettingsManager.getInstance();
+	private SettingsManager config;// = SettingsManager.getInstance();
 	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(StatusPopupPanel.class, this);
 	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(StatusPopupPanel.class);
 	private String statusTitle = resourceMap.getString("StatusListPanel.border.title");
@@ -71,7 +71,8 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 	private TwitzMainView view;
 
     /** Creates new form StatusPopupPanel */
-    public StatusPopupPanel() {
+    public StatusPopupPanel(String session) {
+		setSessionName(session);
         initComponents();
 		initDefaults();
     }
@@ -211,11 +212,11 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 		twitz.TwitzApp.fixLocation(this);
 	}
 
-	public void setSessionName(String name)
+	public final void setSessionName(String name)
 	{
 		String old = this.sessionName;
 		this.sessionName = name;
-		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
 		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}

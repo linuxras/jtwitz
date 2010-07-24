@@ -24,9 +24,7 @@
                 <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
                   <action class="org.jdesktop.application.Application" id="quit" methodName="quit"/>
                 </Property>
-                <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                  <Image iconType="0" name="null"/>
-                </Property>
+                <Property name="icon" type="javax.swing.Icon" resourceKey="exitItem.icon"/>
                 <Property name="name" type="java.lang.String" value="exitItem" noResource="true"/>
               </Properties>
               <AuxValues>
@@ -47,9 +45,7 @@
                 <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
                   <action class="twitz.ui.TwitzDesktopFrame" id="showPrefsBox" methodName="showPrefsBox"/>
                 </Property>
-                <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                  <Image iconType="0" name="null"/>
-                </Property>
+                <Property name="icon" type="javax.swing.Icon" resourceKey="showPrefsBox.Action.icon"/>
                 <Property name="text" type="java.lang.String" resourceKey="prefsMenuItem1.text"/>
                 <Property name="name" type="java.lang.String" value="prefsMenuItem1" noResource="true"/>
               </Properties>
@@ -80,9 +76,8 @@
                 <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
                   <action class="twitz.ATweetView" id="showAboutBox" methodName="showAboutBox"/>
                 </Property>
-                <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                  <Image iconType="0" name="null"/>
-                </Property>
+                <Property name="icon" type="javax.swing.Icon" resourceKey="aboutMenuItem1.icon"/>
+                <Property name="text" type="java.lang.String" resourceKey="aboutMenuItem1.text"/>
                 <Property name="name" type="java.lang.String" value="aboutMenuItem1" noResource="true"/>
               </Properties>
               <AuxValues>
@@ -95,9 +90,7 @@
                 <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
                   <action class="twitz.TwitzMainView" id="viewHTMLLog" methodName="viewHTMLLog"/>
                 </Property>
-                <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                  <Image iconType="0" name="null"/>
-                </Property>
+                <Property name="icon" type="javax.swing.Icon" resourceKey="logsMenuItem1.icon"/>
                 <Property name="text" type="java.lang.String" resourceKey="logsMenuItem1.text"/>
                 <Property name="name" type="java.lang.String" value="logsMenuItem1" noResource="true"/>
               </Properties>
@@ -131,7 +124,7 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Component id="desktop" pref="400" max="32767" attributes="0"/>
-          <Component id="taskBar" min="-2" pref="400" max="-2" attributes="0"/>
+          <Component id="taskBar" pref="400" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">

@@ -55,13 +55,13 @@ import twitz.util.SettingsManager;
 import twitz.util.TwitzSessionManager;
 
 /**
- *
+ * @deprecated This class was an experiment and will not and should not Ever be used
  * @author mistik1
  */
 public class StatusListPanelRenderer extends JPanel implements TwitzEventModel, ListCellRenderer {
 	private Status status;
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
-	private SettingsManager config = SettingsManager.getInstance();
+	private SettingsManager config = twitz.util.TwitzSessionManager.getInstance().getSettingsManagerForSession("Default");//SettingsManager.getInstance();
 	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(StatusListPanelRenderer.class, this);
 	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(StatusListPanelRenderer.class);
 	private String statusTitle = resourceMap.getString("StatusListPanel.border.title");

@@ -157,7 +157,11 @@
         </Component>
         <Component class="javax.swing.JCheckBox" name="chkAutoload">
           <Properties>
+            <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
+              <action class="twitz.ui.dialogs.PreferencesDialog" id="setAutoLoad" methodName="setAutoLoad"/>
+            </Property>
             <Property name="text" type="java.lang.String" resourceKey="chkAutoload.text"/>
+            <Property name="toolTipText" type="java.lang.String" resourceKey="chkAutoload.toolTipText"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="10"/>
             <Property name="name" type="java.lang.String" value="chkAutoload" noResource="true"/>

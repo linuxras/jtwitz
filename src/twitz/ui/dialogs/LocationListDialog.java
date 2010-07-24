@@ -288,41 +288,49 @@ public class LocationListDialog extends JDialog implements TwitzEventModel {
 	{
 		if(citiesList.getSelectedIndex() == -1 && countriesList.getSelectedIndex() == -1)
 		{
-			this.setVisible(false);
+			this.dispose();
 			return;
 		}
-		Map map = new TreeMap();
-		map.put("async", true);
-		map.put("caller", this);
-		ArrayList args = new ArrayList();
-		Location selected = null;
-		if(countriesList.getSelectedIndex() != -1)
+		try
 		{
-			//Get the woeid from the location in this list. maybe need a custom model here
-			int index = countriesList.getSelectedIndex();
-			LocationListModel model = (LocationListModel)countriesList.getModel();
-			//selected = (Location)countriesList.getSelectedValue();
-			selected = model.getLocationAt(index);
-			args.add(selected.getWoeid());
-			firePropertyChange("locationsChanged", oldLocation, selected.getCountryName());
-			oldLocation = selected.getCountryName();
+			Map map = new TreeMap();
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			Location selected = null;
+			if (countriesList.getSelectedIndex() != -1)
+			{
+				//Get the woeid from the location in this list. maybe need a custom model here
+				int index = countriesList.getSelectedIndex();
+				LocationListModel model = (LocationListModel) countriesList.getModel();
+				//selected = (Location)countriesList.getSelectedValue();
+				selected = model.getLocationAt(index);
+				args.add(selected.getWoeid());
+				firePropertyChange("locationsChanged", oldLocation, selected.getCountryName());
+				oldLocation = selected.getCountryName();
+			}
+			if (citiesList.getSelectedIndex() != -1)
+			{
+				//Get the woeid from the location in this list. maybe need a custom model here
+				int index = citiesList.getSelectedIndex();
+				LocationListModel model = (LocationListModel) citiesList.getModel();
+				//selected = (Location)citiesList.getSelectedValue();
+				selected = model.getLocationAt(index);
+				args.add(selected.getPlaceCode());
+				firePropertyChange("locationsChanged", oldLocation, selected.getPlaceName());
+				oldLocation = selected.getPlaceName();
+			}
+			if (selected != null)
+			{
+
+				map.put("arguments", args);
+				TwitzEvent te = new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new Date().getTime(), map);
+				fireTwitzEvent(te);
+			}
 		}
-		if(citiesList.getSelectedIndex() != -1)
+		catch (Exception e)
 		{
-			//Get the woeid from the location in this list. maybe need a custom model here
-			int index = citiesList.getSelectedIndex();
-			LocationListModel model = (LocationListModel)citiesList.getModel();
-			//selected = (Location)citiesList.getSelectedValue();
-			selected = model.getLocationAt(index);
-			args.add(selected.getPlaceCode());
-			firePropertyChange("locationsChanged", oldLocation, selected.getPlaceName());
-			oldLocation = selected.getPlaceName();
-		}
-		if(selected != null) {
-			
-			map.put("arguments", args);		
-			TwitzEvent te = new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new Date().getTime(), map);
-			fireTwitzEvent(te);
+			logger.error(e.getLocalizedMessage());
 		}
 		//oldLocation = selected.getName();
 		this.dispose();

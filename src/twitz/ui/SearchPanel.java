@@ -45,7 +45,8 @@ import twitz.util.UserStore;
 public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 
     /** Creates new form SearchPanel */
-    public SearchPanel() {
+    public SearchPanel(String session) {
+		setSessionName(session);
 		actionMap = twitz.TwitzApp.getContext().getActionMap(SearchPanel.class, this);
 		resourceMap = twitz.TwitzApp.getContext().getResourceMap(SearchPanel.class);
         initComponents();
@@ -83,7 +84,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
     private void initComponents() {
 
         contactsList = new twitz.ui.ContactsList();
-        statusList = new twitz.ui.StatusList();
+        statusList = new twitz.ui.StatusList(sessionName);
         tweetList = new twitz.ui.TweetList();
         searchPanel = new javax.swing.JPanel();
         searchBar = new javax.swing.JToolBar();
@@ -401,7 +402,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		}
 	}//}}}
 
-	public void setSessionName(String name)
+	public final void setSessionName(String name)
 	{
 		String old = this.sessionName;
 		this.sessionName = name;

@@ -56,7 +56,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
     private javax.swing.JScrollPane userListPane = new javax.swing.JScrollPane();
     private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.ui.UserListPanel.class);
 	private javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(UserListMainPanel.class, this);
-	private SettingsManager config = SettingsManager.getInstance();
+	private SettingsManager config;// = SettingsManager.getInstance();
 	private javax.swing.GroupLayout layout;
 	private ParallelGroup vgroup;
 	private SequentialGroup hgroup;
@@ -81,7 +81,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 	{
 		String old = this.sessionName;
 		this.sessionName = name;
-		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
 		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}

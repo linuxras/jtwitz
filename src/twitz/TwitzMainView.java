@@ -27,6 +27,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowFocusListener;
 import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Collections;
 import java.util.Date;
+import java.util.logging.Level;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
@@ -103,6 +105,7 @@ import twitz.ui.TweetBox;
 import twitz.ui.UserListMainPanel;
 import twitz.ui.renderers.StatusListRenderer;
 import twitz.ui.renderers.StatusListPanelRenderer;
+import twitz.util.DBManager;
 import twitz.util.TwitzSessionManager;
 
 /**
@@ -118,18 +121,18 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		this.sessionName = session;
 		TwitzSessionManager.getInstance().addTwitzMainView(sessionName, this);
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx");
+		//System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx");
 		startMode = config.getBoolean("minimode");
 		mainApp = (TwitzApp)app;
         actionMap = TwitzApp.getContext().getActionMap(TwitzMainView.class, this);
         resourceMap = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
         initComponents();
-		System.out.println("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
+		//System.out.println("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
 
 		initDefaults();
-		System.out.println("000000000000000000000000000000000000000000000000000000000000");
+		///System.out.println("000000000000000000000000000000000000000000000000000000000000");
 		updateLayout();
-		System.out.println("22222222222222222222222222222222222222222222222222222222222222");
+		//System.out.println("22222222222222222222222222222222222222222222222222222222222222");
 		//Add tab position menu
 		editMenu.add(createTabPositionMenu());
 
@@ -141,29 +144,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//setupDefaults();
 
     }//}}}
-
-//	/**
-//	 * This is the method to get a singleton instance of <code>TwitzMainView</code>
-//	 * This is called by <code>TwitzApp</code> when initializing Twitz
-//	 * @param app The TwitzApp or subclass caller.
-//	 */
-//	public synchronized static TwitzMainView getInstance(TwitzApp app) {
-//		if(instance == null) {
-//			instance = new TwitzMainView(app);
-//		}
-//		return instance;
-//	}
-//
-//	/**
-//	 * This is just a convenience method to access the singleton instance
-//	 * by other parts of the application.
-//	 * @throws IllegalStateException if the application has not yet been initialized
-//	 */
-//	public synchronized static TwitzMainView getInstance() {
-//		if(mainApp == null || instance == null)
-//			throw new IllegalStateException("Application has not been properly initialized");
-//		return instance;
-//	}
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -179,14 +159,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
         helpItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         exitItem = new javax.swing.JMenuItem();
-        actionPanel = new javax.swing.JPanel();
-        chkCOT = new javax.swing.JCheckBox();
-        btnTweet = new javax.swing.JButton();
-        btnMini = new javax.swing.JButton();
-        lblChars = new javax.swing.JLabel();
-        txtTweet = new javax.swing.JTextField();
         menuBar = new javax.swing.JMenuBar();
-        javax.swing.JMenu fileMenu = new javax.swing.JMenu();
+        fileMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
         editMenu = new javax.swing.JMenu();
         prefsMenuItem = new javax.swing.JMenuItem();
@@ -196,15 +170,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
         menuItemFollowing = new javax.swing.JCheckBoxMenuItem();
         menuItemFollowers = new javax.swing.JCheckBoxMenuItem();
         menuItemSearch = new javax.swing.JCheckBoxMenuItem();
-        actionsMenu = createActionsMenu();
         javax.swing.JMenu helpMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem aboutMenuItem = new javax.swing.JMenuItem();
         logsMenuItem = new javax.swing.JMenuItem();
-        blockedPane = new javax.swing.JScrollPane();
-        followingPane = new javax.swing.JScrollPane();
-        followingList = new javax.swing.JList();
-        followersPane = new javax.swing.JScrollPane();
-        followersList = new javax.swing.JList();
         recentList = new javax.swing.JTable();
         mainPanel = new javax.swing.JPanel();
         tabPane = new javax.swing.JTabbedPane();
@@ -248,79 +216,14 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
         exitItem.setName("exitItem"); // NOI18N
         contextMenu.add(exitItem);
 
-        actionPanel.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        actionPanel.setMinimumSize(new java.awt.Dimension(100, 50));
-        actionPanel.setName("actionPanel"); // NOI18N
-
-        chkCOT.setToolTipText(resourceMap.getString("chkCOT.toolTipText")); // NOI18N
-        chkCOT.setName("chkCOT"); // NOI18N
-
-        btnTweet.setText(resourceMap.getString("btnTweet.text")); // NOI18N
-        btnTweet.setToolTipText(resourceMap.getString("btnTweet.toolTipText")); // NOI18N
-        btnTweet.setName("btnTweet"); // NOI18N
-
-        btnMini.setAction(actionMap.get("showMiniMode")); // NOI18N
-        btnMini.setIcon(resourceMap.getIcon("btnMini.icon")); // NOI18N
-        btnMini.setText(resourceMap.getString("btnMini.text")); // NOI18N
-        btnMini.setToolTipText(resourceMap.getString("btnMini.toolTipText")); // NOI18N
-        btnMini.setMargin(new java.awt.Insets(2, 2, 2, 2));
-        btnMini.setName("btnMini"); // NOI18N
-
-        lblChars.setFont(resourceMap.getFont("lblChars.font")); // NOI18N
-        lblChars.setForeground(resourceMap.getColor("lblChars.foreground")); // NOI18N
-        lblChars.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblChars.setText(resourceMap.getString("lblChars.text")); // NOI18N
-        lblChars.setName("lblChars"); // NOI18N
-
-        txtTweet.setText(resourceMap.getString("txtTweet.text")); // NOI18N
-        txtTweet.setName("txtTweet"); // NOI18N
-        txtTweet.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtTweetKeyTyped(evt);
-            }
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                txtTweetKeyReleased(evt);
-            }
-        });
-
-        javax.swing.GroupLayout actionPanelLayout = new javax.swing.GroupLayout(actionPanel);
-        actionPanel.setLayout(actionPanelLayout);
-        actionPanelLayout.setHorizontalGroup(
-            actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblChars, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTweet, javax.swing.GroupLayout.DEFAULT_SIZE, 281, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkCOT)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnTweet)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnMini)
-                .addContainerGap())
-        );
-        actionPanelLayout.setVerticalGroup(
-            actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, actionPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(chkCOT)
-                    .addComponent(btnTweet)
-                    .addComponent(btnMini)
-                    .addGroup(actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(lblChars, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(txtTweet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-        );
-
         menuBar.setName("menuBar"); // NOI18N
 
         fileMenu.setText(resourceMap.getString("fileMenu.text")); // NOI18N
         fileMenu.setName("fileMenu"); // NOI18N
 
-        exitMenuItem.setAction(actionMap.get("quit")); // NOI18N
+        exitMenuItem.setAction(actionMap.get("closeFrame")); // NOI18N
         exitMenuItem.setIcon(resourceMap.getIcon("exitMenuItem.icon")); // NOI18N
+        exitMenuItem.setText(resourceMap.getString("exitMenuItem.text")); // NOI18N
         exitMenuItem.setName("exitMenuItem"); // NOI18N
         fileMenu.add(exitMenuItem);
 
@@ -402,10 +305,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
         menuBar.add(editMenu);
 
-        actionsMenu.setText(resourceMap.getString("actionsMenu.text")); // NOI18N
-        actionsMenu.setName("actionsMenu"); // NOI18N
-        menuBar.add(actionsMenu);
-
         helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
         helpMenu.setName("helpMenu"); // NOI18N
 
@@ -421,28 +320,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
         helpMenu.add(logsMenuItem);
 
         menuBar.add(helpMenu);
-
-        blockedPane.setName("blockedPane"); // NOI18N
-
-        followingPane.setName("followingPane"); // NOI18N
-
-        followingList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        followingList.setName("followingList"); // NOI18N
-        followingPane.setViewportView(followingList);
-
-        followersPane.setName("followersPane"); // NOI18N
-
-        followersList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        followersList.setName("followersList"); // NOI18N
-        followersPane.setViewportView(followersList);
 
         recentList.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -480,6 +357,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
         setClosable(true);
         setIconifiable(true);
+        setMaximizable(true);
         setResizable(true);
         setName("TwitzMainView"); // NOI18N
         try {
@@ -632,46 +510,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		keyReleased(evt);
 	}                                    
 
-	private void txtTweetKeyTyped(java.awt.event.KeyEvent evt)//GEN-FIRST:event_txtTweetKeyTyped
-	{//GEN-HEADEREND:event_txtTweetKeyTyped
-		keyTyped(evt);
-	}//GEN-LAST:event_txtTweetKeyTyped
-
-	private void updateLayout()//{{{
-	{
-		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(mainPanel);
-        mainPanel.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tabPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
-                    .addComponent(tweetBox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tweetBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(statusPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
-	}//}}}
-
-	public void fixTables() {
-		//tblSearch.setRowHeight(50);
-	}
-
-	public javax.swing.JTextField getTweetField()
-	{
-		return tweetBox.getTweetField(); //this.txtTweet;
-	}
-
 	/**
 	 * This is a utility method that will set the scrollbars of any
 	 * <em>JScrollPane</em> you pass to it 8 pixels thickness. 
@@ -695,43 +533,54 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	private void initDefaults() {//{{{
 		//Make the scrollbar very thin in the user list tab
-		fixJScrollPaneBarsSize(followersPane);
-		fixJScrollPaneBarsSize(blockedPane);
-		fixJScrollPaneBarsSize(followingPane);
+//		fixJScrollPaneBarsSize(followersPane);
+//		fixJScrollPaneBarsSize(blockedPane);
+//		fixJScrollPaneBarsSize(followingPane);
 		this.setFrameIcon(resourceMap.getIcon("icon.user"));
 		setJMenuBar(menuBar);
-		logger.debug("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCcc");
+		//Disable the close menu since we dont allow the default session to close
+		if(sessionName.equals("Default"))
+		{
+			//logger.debug(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+			exitItem.setEnabled(false);
+			fileMenu.setEnabled(false);
+		}
+		//logger.debug("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCcc");
 		blockedList = new ContactsList();
 		tweetBox = new TweetBox();
 		tweetBox.setSessionName(sessionName);
-		logger.debug("ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
+		//logger.debug("ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
 		blocked = new BlockedPanel();
 		blocked.setSessionName(sessionName);
-		logger.debug("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		//logger.debug("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 		followers = new FollowersPanel();
 		followers.setSessionName(sessionName);
-		logger.debug("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+		//logger.debug("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 		friends = new FriendsPanel();
 		friends.setSessionName(sessionName);
-		logger.debug("friends----------------------------------------------");
+		//logger.debug("friends----------------------------------------------");
 		userListMainPanel1 = new twitz.ui.UserListMainPanel();
 		userListMainPanel1.setName("userListMainPanel1"); // NOI18N
 		userListMainPanel1.setSessionName(sessionName);
-		logger.debug("userlistmainpanel=============================================");
-		friendsStatusPanel = new StatusPanel();
+		//logger.debug("userlistmainpanel=============================================");
+		friendsStatusPanel = new StatusPanel(sessionName);
 		friendsStatusPanel.setSessionName(sessionName);
 		this.friendsPanel.setRightComponent(friendsStatusPanel);
+		friendsPanel.setOneTouchExpandable(true);
+		friendsPanel.setDividerSize(6);
 
-		friendsTweets = new StatusList();
+		friendsTweets = new StatusList(sessionName);
 		friendsTweets.setSessionName(sessionName);
 		trendPanel = new TrendsPanel();
 		trendPanel.setSessionName(sessionName);
-		timelinePanel = new TimeLinePanel();
+		timelinePanel = new TimeLinePanel(sessionName);
 		timelinePanel.setSessionName(sessionName);
-		searchPanel = new SearchPanel();
+		//addPropertyChangeListener("connected", timelinePanel);
+		searchPanel = new SearchPanel(sessionName);
 		searchPanel.setSessionName(sessionName);
 		timelineTrendsPane.setLeftComponent(trendPanel);
 		timelineTrendsPane.setRightComponent(timelinePanel);
+		timelineTrendsPane.setOneTouchExpandable(true);
 
 		//Add friends list tothe friendsPane tabbed panel
 		friendsPane.insertTab(resourceMap.getString("friends.TabConstraints.tabTitle"), resourceMap.getIcon("friends.TabConstraints.tabIcon"), friends, resourceMap.getString("friends.TabConstraints.tabToolTip"),0); // NOI18N
@@ -743,9 +592,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 		//Make these tabs render with a close button
 		searchPanel.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
-		followersPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
-		followingPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
-		blockedPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
+//		followersPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
+//		followingPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
+//		blockedPane.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
 		friendsPanel.putClientProperty(SubstanceLookAndFeel.TABBED_PANE_CLOSE_BUTTONS_PROPERTY, Boolean.TRUE);
 		
 		TabCloseCallback closeCallback = new TabCloseCallback() {//{{{
@@ -913,15 +762,15 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			menuItemFriends.setSelected(false);
 		}
 		if(!config.getBoolean("tab_blocked")) {
-			tabPane.remove(blockedPane);
+			//tabPane.remove(blockedPane);
 			menuItemBlocked.setSelected(false);
 		}
 		if(!config.getBoolean("tab_following")) {
-			tabPane.remove(followingPane);
+			//tabPane.remove(followingPane);
 			menuItemFollowing.setSelected(false);
 		}
 		if(!config.getBoolean("tab_followers")) {
-			tabPane.remove(followersPane);
+			//tabPane.remove(followersPane);
 			menuItemFollowers.setSelected(false);
 		}
 		if(!config.getBoolean("tab_search")) {
@@ -965,204 +814,35 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		menuItemFollowing.setEnabled(false);
 	}//}}}
 
-	public void initTwitter() {//{{{
-		//Initialize twitter
-		twitterManager = new TwitterManager(sessionName);//.getInstance();
-		twitterManager.addTwitzListener(this);
-		resource = TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
-		javax.swing.SwingWorker worker = new javax.swing.SwingWorker() //{{{
-		{
-			boolean online = false;
-			boolean error = false;
-			TwitterException tec;
+	//Button and menu Actions
+	/**
+	 * This Action is public only do to implementation it is NOT safe to call externally
+	 */
+	@Action
+    public void showAboutBox() {//{{{
+        if (aboutBox == null) {
+            //JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
+            aboutBox = new TwitzAboutBox(getMainFrame());
+            aboutBox.setLocationRelativeTo(getMainFrame());
+        }
+        //TwitzApp.getApplication().show(aboutBox);
+		aboutBox.setVisible(true);
+    }//}}}
 
-			public Void doInBackground()
-			{
-				try
-				{
-					online = twitterManager.getTwitterInstance().test();
-				}
-				catch(TwitterException te){
-					logger.error(te);
-					online = false;
-				}
-				try
-				{
-					twitterManager.getTwitterInstance().verifyCredentials();
-				}
-				catch(TwitterException te)
-				{
-					if(te.getStatusCode() == 401)
-					{
-						//Authentication incorrect
-						tec = te;
-						online = false;
-					}
-				}
-				return null;
-			}
-
-			@Override
-			public void done()
-			{
-				if(error)
-				{
-					connected = online;
-					displayError(tec, "Login Error", "Incorrect username or password", null, true);
-				}
-				else
-				{
-					connected = online;
-					
-					if(online)
-					{
-						loadAllPanels();
-					}
-					else if(DEVMODE)
-					{
-						addSampleData();
-					}
-				}
-			}
-		}; //}}}
-		worker.execute();
-	}//}}}
-
-	public void setTwitterManager(TwitterManager t)
-	{
-		if(t != null)
-		{
-			TwitterManager old = twitterManager;
-			this.twitterManager = t;
-			firePropertyChange("twitterManager", old, t);
+	/**
+	 * This Action is public only do to implementation it is NOT safe to call externally
+	 */
+	@Action
+	public void showPrefsBox() {//{{{
+		if(prefs == null) {
+			//JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
+			prefs = new PreferencesDialog(getMainFrame(), true, mainApp);
+			prefs.addPropertyChangeListener(mainApp);
+			prefs.setLocationRelativeTo(getMainFrame());
+			prefs.setSessionName(sessionName);
+			prefs.setSingleSessionMode(true);
 		}
-	}
-
-	public TwitterManager getTwitterManager()
-	{
-		return twitterManager;
-	}
-
-	public java.beans.PropertyChangeListener getStatusListener()
-	{
-		return statusListener;
-	}
-
-	public String getSessionName()
-	{
-		return this.sessionName;
-	}
-	
-	public void addSampleFriends()
-	{
-		if(DEVMODE)
-		{
-			StatusListModel mod = (StatusListModel) friendsStatusPanel.getStatusList().getModel();
-			mod.clear();
-			for (int i = 0; i < 10; i++)
-			{
-				mod.addStatus(new StatusTest(i));
-			}
-		}
-
-	}
-
-	public User[] getSampleListUsers(int which)//{{{
-	{
-		User[] rv = new User[0];
-
-		User[] ouser = new User[]{
-			new UserTest("Python"),
-			new UserTest("Ladybug"),
-			new UserTest("perry")
-		};
-
-		User[] puser = new User[]{
-			new UserTest("cansport"),
-			new UserTest("CNN News"),
-			new UserTest("Abc News"),
-			new UserTest("Nbc Online"),
-			new UserTest("Black Power gen"),
-			new UserTest("Facts of Life"),
-			new UserTest("black_rino")
-		};
-		switch(which)
-		{
-			case 0:
-				rv = ouser;
-			break;
-			case 1:
-				rv = puser;
-			break;
-		}
-		return rv;
-	}//}}}
-
-	private void addSampleData() {//{{{
-		StatusListModel dm = timelinePanel.getStatusList().getModel();
-		//TODO: Test code to be removed in production
-		for (int i=0; i < 10; i++) {
-			dm.addStatus(new StatusTest(i));
-		}
-
-		trendPanel.addTrend(new TrendTest());
-		trendPanel.addTrend(new TrendTest());
-		trendPanel.addTrend(new TrendTest());
-//		timelinePanel.getStatusList().setFixedCellHeight(120);
-
-		User[] ouser = new User[]{
-			new UserTest("Python"),
-			new UserTest("Ladybug"),
-			new UserTest("perry")
-		};
-		
-
-		User[] puser = new User[]{
-			new UserTest("cansport"),
-			new UserTest("CNN News"),
-			new UserTest("Abc News"),
-			new UserTest("Nbc Online"),
-			new UserTest("Black Power gen"),
-			new UserTest("Facts of Life"),
-			new UserTest("black_rino")
-		};
-//		UserListTest(int id, String name, String fullName,
-//			String slug, String desc, int subCount,
-//			int memberCount, boolean pub, User user)
-		UserListTest ult = new UserListTest(1, "List 1", "List 1 Testing",
-				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
-		UserListTest ult1 = new UserListTest(2, "List 2", "List 1 Testing",
-				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
-		UserListTest ult2 = new UserListTest(3, "News Networks", "List 1 Testing",
-				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
-		UserListTest ult3 = new UserListTest(4, "List 4", "List 1 Testing",
-				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
-		UserListTest ult4 = new UserListTest(5, "Mizer Ball", "List 1 Testing",
-				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
-		UserListTest ult5 = new UserListTest(6, "List 6", "List 1 Testing",
-				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
-		UserListPanel pnl = userListMainPanel1.addUserList(ult);
-		pnl.addUser(ouser);
-		UserListPanel pnl1 = userListMainPanel1.addUserList(ult1);
-		pnl1.addUser(puser);
-		UserListPanel pnl2 = userListMainPanel1.addUserList(ult2);
-		pnl2.addUser(puser);
-		UserListPanel pnl3 = userListMainPanel1.addUserList(ult3);
-		pnl3.addUser(puser);
-		UserListPanel pnl4 = userListMainPanel1.addUserList(ult4);
-		pnl4.addUser(puser);
-		UserListPanel pnl5 = userListMainPanel1.addUserList(ult5);
-		pnl5.addUser(puser);
-
-		friends.addUser(ouser);
-		blocked.addUser(ouser);
-		followers.addUser(puser);
-//		userListMainPanel1.addUserList(ouser, "Panel 1");
-//		userListMainPanel1.addUserList(puser, "Panel 2");
-//		userListMainPanel1.addUserList(puser, "Mizer Ball");
-//		userListMainPanel1.addUserList(puser, "News Networks");
-//		userListMainPanel1.addUserList(puser, "Panel 5");
-
+		prefs.setVisible(true);
 	}//}}}
 
 	@Action
@@ -1217,20 +897,20 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	@Action
 	private void keyReleased(java.awt.event.KeyEvent evt) {//{{{
-		int c = txtTweet.getDocument().getLength();
-		lblChars.setText((140 - c)+"");
-		if((c > 0) && (c < 141)) {
-			btnTweet.setEnabled(true);
-			lblChars.setForeground(getResourceMap().getColor("lblChars.foreground"));
-		}
-		else if(c > 140) {
-			lblChars.setForeground(Color.RED);
-			btnTweet.setEnabled(false);
-		}
-		else
-		{
-			btnTweet.setEnabled(false);
-		}
+//		int c = txtTweet.getDocument().getLength();
+//		lblChars.setText((140 - c)+"");
+//		if((c > 0) && (c < 141)) {
+//			btnTweet.setEnabled(true);
+//			lblChars.setForeground(getResourceMap().getColor("lblChars.foreground"));
+//		}
+//		else if(c > 140) {
+//			lblChars.setForeground(Color.RED);
+//			btnTweet.setEnabled(false);
+//		}
+//		else
+//		{
+//			btnTweet.setEnabled(false);
+//		}
 	}//}}}
 
 	@Action
@@ -1238,7 +918,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		switch(evt.getKeyCode()) {
 			case KeyEvent.VK_ENTER:
 				//sendAsyncTweet();
-				btnTweet.doClick();
+			//	btnTweet.doClick();
 				//sendTweetClicked().execute();
 				break;
 			case KeyEvent.VK_M:
@@ -1264,6 +944,229 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//			btnTweet.setEnabled(false);
 		//		}
 		}
+	}//}}}
+
+	@Action
+	public void showMiniMode() {//{{{
+		if(minimode) {
+			fullTwitz();
+		}
+		else {
+			miniTwitz(false);
+		}
+	}//}}}
+
+	@Action
+	public void viewHTMLLog()//{{{
+	{
+		MessageDialog msg = new MessageDialog(getMainFrame(), false);
+		msg.setContentType("text/html");
+		try
+		{
+			URI spec = SettingsManager.getConfigDirectory().toURI();
+			String s = spec.toString()+"/logs/index.html";
+			URL path = new URL(s);
+			msg.setMessage(path);
+			msg.setResizable(true);
+			msg.setTitle(resourceMap.getString("LOG_WINDOW_TITLE.TEXT"));
+			msg.setSize(640, 480);
+			msg.setVisible(true);
+			//InputStream is = this.getClass().getResourceAsStream(path);
+		}
+		catch (IOException ex)
+		{
+			logger.error(ex.getMessage(), ex);
+		}
+		//InputStream is = this.getClass().getResourceAsStream(path);
+	}//}}}
+
+	/**
+	 * This Action is public only do to implementation it is NOT safe to call externally
+	 */
+	@Action
+	public void closeFrame()
+	{
+		try
+		{
+			this.setClosed(true);
+		}
+		catch (PropertyVetoException ex)
+		{
+			logger.error(ex.getLocalizedMessage());
+		}
+	}
+
+	//Private methods
+	/**
+	 * I use the netbeans gui builder to layout the main forms for this application
+	 * for some reason netbeans does not recognize  my beans so I setup the layout myself
+	 * after the elements are created.
+	 */
+	private void updateLayout()//{{{
+	{
+		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(mainPanel);
+        mainPanel.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(statusPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(tabPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+                    .addComponent(tweetBox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(tweetBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(statusPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+	}//}}}
+
+	private boolean isUser(Object obj) {
+		return (obj instanceof User);
+	}
+
+	private boolean isUserArray(Object obj) {
+		return (obj instanceof User[]);
+	}
+
+	private boolean isStatus(Object obj) {
+		return (obj instanceof Status);
+	}
+
+	private boolean isStatusArray(Object obj) {
+		return (obj instanceof Status[]);
+	}
+
+	private String getScreenNameFromMap(Object obj) {//{{{
+		String screenName = "";
+		User u = null;
+		if (isUserArray(obj))
+		{
+			if(logdebug)
+				logger.debug("Found User array");
+			User[] users = (User[]) obj;
+			screenName = users[0].getScreenName();
+		}
+		else if (isStatusArray(obj))
+		{
+			if(logdebug)
+				logger.debug("Found Status array");
+			Status[] stat = (Status[]) obj;
+			u = stat[0].getUser();
+			screenName = u.getScreenName();
+		}
+		else if (isUser(obj))
+		{
+			u = (User) obj;
+			screenName = u.getScreenName();
+		}
+		else if (isStatus(obj))
+		{
+			Status stat = (Status) obj;
+			u = stat.getUser();
+			screenName = u.getScreenName();
+		}
+		return screenName;
+	}//}}}
+
+	private Vector<String> getScreenNamesFromMap(Object obj) {//{{{
+		String screenName = "";
+		Vector<String> rv = new Vector<String>();
+		User u = null;
+		if (isUserArray(obj))
+		{
+			User[] users = (User[]) obj;
+			if(users.length >= 2) {
+				rv.addElement(users[0].getScreenName());
+				rv.addElement(users[1].getScreenName());
+			}
+		}
+		else if (isStatusArray(obj))
+		{
+			Status[] stat = (Status[]) obj;
+			if(stat.length >= 2) {
+				u = stat[0].getUser();
+				rv.addElement(u.getScreenName());
+				u = stat[1].getUser();
+				rv.addElement(u.getScreenName());
+			}
+		}
+
+		return rv;
+	}//}}}
+
+	private void addSampleData() {//{{{
+		StatusListModel dm = timelinePanel.getStatusList().getModel();
+		//TODO: Test code to be removed in production
+		for (int i=0; i < 10; i++) {
+			dm.addStatus(new StatusTest(i));
+		}
+
+		trendPanel.addTrend(new TrendTest());
+		trendPanel.addTrend(new TrendTest());
+		trendPanel.addTrend(new TrendTest());
+//		timelinePanel.getStatusList().setFixedCellHeight(120);
+
+		User[] ouser = new User[]{
+			new UserTest("Python"),
+			new UserTest("Ladybug"),
+			new UserTest("perry")
+		};
+
+
+		User[] puser = new User[]{
+			new UserTest("cansport"),
+			new UserTest("CNN News"),
+			new UserTest("Abc News"),
+			new UserTest("Nbc Online"),
+			new UserTest("Black Power gen"),
+			new UserTest("Facts of Life"),
+			new UserTest("black_rino")
+		};
+//		UserListTest(int id, String name, String fullName,
+//			String slug, String desc, int subCount,
+//			int memberCount, boolean pub, User user)
+		UserListTest ult = new UserListTest(1, "List 1", "List 1 Testing",
+				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
+		UserListTest ult1 = new UserListTest(2, "List 2", "List 1 Testing",
+				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
+		UserListTest ult2 = new UserListTest(3, "News Networks", "List 1 Testing",
+				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
+		UserListTest ult3 = new UserListTest(4, "List 4", "List 1 Testing",
+				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
+		UserListTest ult4 = new UserListTest(5, "Mizer Ball", "List 1 Testing",
+				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
+		UserListTest ult5 = new UserListTest(6, "List 6", "List 1 Testing",
+				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
+		UserListPanel pnl = userListMainPanel1.addUserList(ult);
+		pnl.addUser(ouser);
+		UserListPanel pnl1 = userListMainPanel1.addUserList(ult1);
+		pnl1.addUser(puser);
+		UserListPanel pnl2 = userListMainPanel1.addUserList(ult2);
+		pnl2.addUser(puser);
+		UserListPanel pnl3 = userListMainPanel1.addUserList(ult3);
+		pnl3.addUser(puser);
+		UserListPanel pnl4 = userListMainPanel1.addUserList(ult4);
+		pnl4.addUser(puser);
+		UserListPanel pnl5 = userListMainPanel1.addUserList(ult5);
+		pnl5.addUser(puser);
+
+		friends.addUser(ouser);
+		blocked.addUser(ouser);
+		followers.addUser(puser);
+//		userListMainPanel1.addUserList(ouser, "Panel 1");
+//		userListMainPanel1.addUserList(puser, "Panel 2");
+//		userListMainPanel1.addUserList(puser, "Mizer Ball");
+//		userListMainPanel1.addUserList(puser, "News Networks");
+//		userListMainPanel1.addUserList(puser, "Panel 5");
+
 	}//}}}
 
 	private JMenu createTabPositionMenu() {//{{{
@@ -1331,39 +1234,39 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 			public void menuSelected(MenuEvent e)
 			{
-				//System.out.println("Menu Selected");
-				java.awt.Component o = tabPane.getSelectedComponent();
-				Component c = actionsMenu.getMenuComponent(0);
-				if(o.getName().equals("recentPane")) {
-					if(recentList.getSelectedRow() == -1)
-						c.setEnabled(false);
-					else
-						c.setEnabled(true);
-				}
-				else if(o.getName().equals("friendsPanel")) {
-					if(friends.getSelectedIndex() == -1)
-						c.setEnabled(false);
-					else
-						c.setEnabled(true);
-				}
-				else if(o.getName().equals("followingPane")) {
-					if(followingList.getSelectedIndex() == -1)
-						c.setEnabled(false);
-					else
-						c.setEnabled(true);
-				}
-				else if(o.getName().equals("followersPane")) {
-					if(followersList.getSelectedIndex() == -1)
-						c.setEnabled(false);
-					else
-						c.setEnabled(true);
-				}
-				else if(o.getName().equals("blockedPane")) {
-					if(blockedList.getSelectedIndex() == -1)
-						c.setEnabled(false);
-					else
-						c.setEnabled(true);
-				}
+//				//System.out.println("Menu Selected");
+//				java.awt.Component o = tabPane.getSelectedComponent();
+//				Component c = actionsMenu.getMenuComponent(0);
+//				if(o.getName().equals("recentPane")) {
+//					if(recentList.getSelectedRow() == -1)
+//						c.setEnabled(false);
+//					else
+//						c.setEnabled(true);
+//				}
+//				else if(o.getName().equals("friendsPanel")) {
+//					if(friends.getSelectedIndex() == -1)
+//						c.setEnabled(false);
+//					else
+//						c.setEnabled(true);
+//				}
+//				else if(o.getName().equals("followingPane")) {
+//					if(followingList.getSelectedIndex() == -1)
+//						c.setEnabled(false);
+//					else
+//						c.setEnabled(true);
+//				}
+//				else if(o.getName().equals("followersPane")) {
+//					if(followersList.getSelectedIndex() == -1)
+//						c.setEnabled(false);
+//					else
+//						c.setEnabled(true);
+//				}
+//				else if(o.getName().equals("blockedPane")) {
+//					if(blockedList.getSelectedIndex() == -1)
+//						c.setEnabled(false);
+//					else
+//						c.setEnabled(true);
+//				}
 			}
 
 			public void menuDeselected(MenuEvent e)
@@ -1381,12 +1284,214 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		return menu;
 	}//}}}
 
+	private void setTabPlacement() {//{{{
+		//JTabbedPane.TOP JTabbedPane.BOTTOM JTabbedPane.LEFT JTabbedPane.RIGHT
+		if(config.getString("tab_position").equals("north")) {
+			tabPane.setTabPlacement(JTabbedPane.TOP);
+		}
+		else if(config.getString("tab_position").equals("south")) {
+			tabPane.setTabPlacement(JTabbedPane.BOTTOM);
+		}
+		else if(config.getString("tab_position").equals("east")) {
+			tabPane.setTabPlacement(JTabbedPane.RIGHT);
+		}
+		else if(config.getString("tab_position").equals("west")) {
+			tabPane.setTabPlacement(JTabbedPane.LEFT);
+		}
+	}//}}}
+	//END private methods
+
+	//Public methods
+	public javax.swing.JTextField getTweetField()
+	{
+		return tweetBox.getTweetField(); //this.txtTweet;
+	}
+
+	public boolean initTwitter() //{{{
+	{
+		//Initialize twitter
+		twitterManager = new TwitterManager(sessionName);//.getInstance();
+		twitterManager.addTwitzListener(this);
+		resource = TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
+		javax.swing.SwingWorker worker = new javax.swing.SwingWorker() //{{{
+		{
+			boolean online = false;
+			boolean error = false;
+			TwitterException tec;
+
+
+			private void message(String msg, Object... args)
+			{
+				if(args.length == 0)
+				{
+					firePropertyChange("message", null, msg);
+				}
+				else
+				{
+					firePropertyChange("message", null, String.format(msg, args));
+				}
+			}
+
+			public Void doInBackground()
+			{
+				firePropertyChange("started", null, "Starting twitter connection task");
+
+				try
+				{
+					message("Looking for network connection to twitter.com");
+					online = twitterManager.getTwitterInstance().test();
+				}
+				catch(TwitterException te){
+					logger.error(te);
+					online = false;
+					message("No connection found to twitter.com");
+					return null;
+				}
+				//TODO modify this for when OAuth is being used
+				message("Attempting to verify credentials for %s", config.getString(DBManager.SESSION_TWITTER_ID));
+				try
+				{
+					twitterManager.getTwitterInstance().verifyCredentials();
+				}
+				catch(TwitterException te)
+				{
+					if(te.getStatusCode() == 401)
+					{
+						//Authentication incorrect
+						tec = te;
+						online = false;
+					}
+				}
+				return null;
+			}
+
+			@Override
+			public void done()
+			{
+				if(error)
+				{
+					setConnected(online);
+					message("Incorrect username or password");
+					displayError(tec, "Login Error", "Incorrect username or password", null, true);
+				}
+				else
+				{
+					setConnected(online);
+
+					if(online)
+					{
+						loadAllPanels();
+					}
+					else if(DEVMODE)
+					{
+						addSampleData();
+					}
+				}
+				firePropertyChange("done", null, null);
+			}
+		}; //}}}
+		worker.addPropertyChangeListener(statusListener);
+		worker.execute();
+		return connected;
+	}//}}}
+
+	public void setConnected(boolean c)
+	{
+		boolean old = connected;
+		//logger.debug("Connected changed --------- "+c+" --------------------");
+		connected = c;
+		timelinePanel.setConnectButtonVisible(c);
+		super.firePropertyChange("connected", old, c);
+	}
+
+	public boolean isConnected() 
+	{
+		return connected;
+	}
+
+	public void setTwitterManager(TwitterManager t)
+	{
+		if(t != null)
+		{
+			TwitterManager old = twitterManager;
+			this.twitterManager = t;
+			firePropertyChange("twitterManager", old, t);
+		}
+	}
+
+	public TwitterManager getTwitterManager()
+	{
+		return twitterManager;
+	}
+
+	public java.beans.PropertyChangeListener getStatusListener()
+	{
+		return statusListener;
+	}
+
+	public String getSessionName()
+	{
+		return this.sessionName;
+	}
+
+	/**
+	 * For development purposes ONLY
+	 */
+	public void addSampleFriends()
+	{
+		if(DEVMODE)
+		{
+			StatusListModel mod = (StatusListModel) friendsStatusPanel.getStatusList().getModel();
+			mod.clear();
+			for (int i = 0; i < 10; i++)
+			{
+				mod.addStatus(new StatusTest(i));
+			}
+		}
+
+	}
+
+	/**
+	 * For development purposes ONLY
+	 */
+	public User[] getSampleListUsers(int which)//{{{
+	{
+		User[] rv = new User[0];
+
+		User[] ouser = new User[]{
+			new UserTest("Python"),
+			new UserTest("Ladybug"),
+			new UserTest("perry")
+		};
+
+		User[] puser = new User[]{
+			new UserTest("cansport"),
+			new UserTest("CNN News"),
+			new UserTest("Abc News"),
+			new UserTest("Nbc Online"),
+			new UserTest("Black Power gen"),
+			new UserTest("Facts of Life"),
+			new UserTest("black_rino")
+		};
+		switch(which)
+		{
+			case 0:
+				rv = ouser;
+			break;
+			case 1:
+				rv = puser;
+			break;
+		}
+		return rv;
+	}//}}}
+
 	/**
 	 * Method builds the Action menu that is displayed application wide
 	 * when a user is clicked on.
 	 * @return A JPopupMenu
 	 */
-	public JPopupMenu getActionsMenu(Component caller) {//{{{
+	public JPopupMenu getActionsMenu(Component caller)
+	{//{{{
 //RETWEETED_BY_ME
 //RETWEETED_TO_ME
 //RETWEETS_OF_ME
@@ -1676,36 +1781,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 		return menu;
 	}//}}}
-	//END private methods
-
-	@Action
-    public void showAboutBox() {//{{{
-        if (aboutBox == null) {
-            //JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
-            aboutBox = new TwitzAboutBox(getMainFrame());
-            aboutBox.setLocationRelativeTo(getMainFrame());
-        }
-        //TwitzApp.getApplication().show(aboutBox);
-		aboutBox.setVisible(true);
-    }//}}}
-
-	@Action
-	public void showPrefsBox() {//{{{
-		if(prefs == null) {
-			//JFrame mainFrame = TwitzApp.getApplication().getMainFrame();
-			prefs = new PreferencesDialog(getMainFrame(), true, mainApp);
-			prefs.addPropertyChangeListener(mainApp);
-			prefs.setLocationRelativeTo(getMainFrame());
-			prefs.setSessionName(sessionName);
-		}
-		prefs.setVisible(true);
-	}//}}}
-
-	public JMenuBar getMenuBar() {
-		return this.menuBar;
-	}
-
-	public void toggleTabs(java.awt.event.ActionEvent evt) {//{{{
+	
+	public void toggleTabs(java.awt.event.ActionEvent evt)
+	{//{{{
 		if (evt.getSource() instanceof javax.swing.JCheckBoxMenuItem)
 		{
 			javax.swing.JCheckBoxMenuItem item = (javax.swing.JCheckBoxMenuItem) evt.getSource();
@@ -1729,13 +1807,13 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				config.setProperty("tab_blocked", item.isSelected() + "");
 				if (item.isSelected())
 				{
-					tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, getResourceMap().getString("blockedPane.TabConstraints.tabTooltip"), index >= 2 ? 2 : index); // NOI18N
-					tabPane.setSelectedComponent(blockedPane);
+				//	tabPane.insertTab(getResourceMap().getString("blockedPane.TabConstraints.tabTitle"), getResourceMap().getIcon("blockedPane.TabConstraints.tabIcon"), blockedPane, getResourceMap().getString("blockedPane.TabConstraints.tabTooltip"), index >= 2 ? 2 : index); // NOI18N
+				//	tabPane.setSelectedComponent(blockedPane);
 					//setTabComponent();
 				}
 				else
 				{
-					tabPane.remove(blockedPane);
+				//	tabPane.remove(blockedPane);
 				}
 			}
 			else if (evt.getActionCommand().equals("Following"))
@@ -1743,13 +1821,13 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				config.setProperty("tab_following", item.isSelected() + "");
 				if (item.isSelected())
 				{
-					tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, getResourceMap().getString("followingPane.TabConstraints.tabTooltip"), index >= 3 ? 3 : index); // NOI18N
-					tabPane.setSelectedComponent(followingPane);
+				//	tabPane.insertTab(getResourceMap().getString("followingPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followingPane.TabConstraints.tabIcon"), followingPane, getResourceMap().getString("followingPane.TabConstraints.tabTooltip"), index >= 3 ? 3 : index); // NOI18N
+				//	tabPane.setSelectedComponent(followingPane);
 					//setTabComponent();
 				}
 				else
 				{
-					tabPane.remove(followingPane);
+				//	tabPane.remove(followingPane);
 				}
 			}
 			else if (evt.getActionCommand().equals("Followers"))
@@ -1757,13 +1835,13 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				config.setProperty("tab_followers", item.isSelected() + "");
 				if (item.isSelected())
 				{
-					tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, getResourceMap().getString("followersPane.TabConstraints.tabTooltip"), index >= 4 ? 4 : index); // NOI18N
-					tabPane.setSelectedComponent(followersPane);
+				//	tabPane.insertTab(getResourceMap().getString("followersPane.TabConstraints.tabTitle"), getResourceMap().getIcon("followersPane.TabConstraints.tabIcon"), followersPane, getResourceMap().getString("followersPane.TabConstraints.tabTooltip"), index >= 4 ? 4 : index); // NOI18N
+				//	tabPane.setSelectedComponent(followersPane);
 					//setTabComponent();
 				}
 				else
 				{
-					tabPane.remove(followersPane);
+				//	tabPane.remove(followersPane);
 				}
 			}
 			else if (evt.getActionCommand().equals("Search"))
@@ -1783,27 +1861,13 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		}
 	}//}}}
 
-	private void setTabPlacement() {//{{{
-		//JTabbedPane.TOP JTabbedPane.BOTTOM JTabbedPane.LEFT JTabbedPane.RIGHT
-		if(config.getString("tab_position").equals("north")) {
-			tabPane.setTabPlacement(JTabbedPane.TOP);
-		}
-		else if(config.getString("tab_position").equals("south")) {
-			tabPane.setTabPlacement(JTabbedPane.BOTTOM);
-		}
-		else if(config.getString("tab_position").equals("east")) {
-			tabPane.setTabPlacement(JTabbedPane.RIGHT);
-		}
-		else if(config.getString("tab_position").equals("west")) {
-			tabPane.setTabPlacement(JTabbedPane.LEFT);
-		}
-	}//}}}
-
-	public static ResourceMap getResourceMap() {
+	public static ResourceMap getResourceMap()
+	{
 		return TwitzApp.getContext().getResourceMap(TwitzMainView.class);
 	}
 
-	public JFrame getMainFrame() {
+	public JFrame getMainFrame()
+	{
 		return mainApp.getMainFrame();
 	}
 
@@ -1820,7 +1884,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	 * @param message The error message to be displayed
 	 * @param method The TwitterMethod object that caused this error. This can be null
 	 */
-	public void displayError(final Throwable t, final String title, final Object message, final twitter4j.TwitterMethod method, final boolean showprefs) {//{{{
+	public void displayError(final Throwable t, final String title, final Object message, final twitter4j.TwitterMethod method, final boolean showprefs)
+	{//{{{
 		Runnable doRun = new Runnable() {
 			public void run() {
 				Object[] options = {"Ok", "Stack Trace"};
@@ -1850,16 +1915,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		SwingUtilities.invokeLater(doRun);
 	}//}}}
 
-	@Action
-	public void showMiniMode() {//{{{
-		if(minimode) {
-			fullTwitz();
-		}
-		else {
-			miniTwitz(false);
-		}
-	}//}}}
-
 	public boolean isMiniMode()//{{{
 	{
 		return minimode;
@@ -1868,7 +1923,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	/**
 	 * Display only a miniature version of Twitz
 	 */
-	public void miniTwitz(boolean startup) {//{{{
+	public void miniTwitz(boolean startup) //{{{
+	{
 		java.awt.Rectangle rec = null;
 		if(startup)
 			oldHeight = config.getInteger("twitz_last_height");
@@ -1901,7 +1957,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	/**
 	 * Display the full Twitz window
 	 */
-	public void fullTwitz() {//{{{
+	public void fullTwitz() //{{{
+	{
 		tabPane.setVisible(true);
 		//getMainFrame().getStatusBar().setVisible(true);
 		menuBar.setVisible(true);
@@ -1912,87 +1969,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		minimode = false;
 		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
 	}//}}}
-
-	public boolean isConnected() {
-		return connected;
-	}
-
-	private boolean isUser(Object obj) {
-		return (obj instanceof User);
-	}
-
-	private boolean isUserArray(Object obj) {
-		return (obj instanceof User[]);
-	}
-
-	private boolean isStatus(Object obj) {
-		return (obj instanceof Status);
-	}
-
-	private boolean isStatusArray(Object obj) {
-		return (obj instanceof Status[]);
-	}
-
-	private String getScreenNameFromMap(Object obj) {//{{{
-		String screenName = "";
-		User u = null;
-		if (isUserArray(obj))
-		{
-			if(logdebug)
-				logger.debug("Found User array");
-			User[] users = (User[]) obj;
-			screenName = users[0].getScreenName();
-		}
-		else if (isStatusArray(obj))
-		{
-			if(logdebug)
-				logger.debug("Found Status array");
-			Status[] stat = (Status[]) obj;
-			u = stat[0].getUser();
-			screenName = u.getScreenName();
-		}
-		else if (isUser(obj))
-		{
-			u = (User) obj;
-			screenName = u.getScreenName();
-		}
-		else if (isStatus(obj))
-		{
-			Status stat = (Status) obj;
-			u = stat.getUser();
-			screenName = u.getScreenName();
-		}
-		return screenName;
-	}//}}}
-
-	private Vector<String> getScreenNamesFromMap(Object obj) {//{{{
-		String screenName = "";
-		Vector<String> rv = new Vector<String>();
-		User u = null;
-		if (isUserArray(obj))
-		{
-			User[] users = (User[]) obj;
-			if(users.length >= 2) {
-				rv.addElement(users[0].getScreenName());
-				rv.addElement(users[1].getScreenName());
-			}
-		}
-		else if (isStatusArray(obj))
-		{
-			Status[] stat = (Status[]) obj;
-			if(stat.length >= 2) {
-				u = stat[0].getUser();
-				rv.addElement(u.getScreenName());
-				u = stat[1].getUser();
-				rv.addElement(u.getScreenName());
-			}
-		}
-
-		return rv;
-	}//}}}
-
-	//TwitterListener abstract methods
-	// <editor-fold defaultstate="collapsed" desc="Abstract Methods">
 
 	//TwitzListener
 	/**
@@ -2041,7 +2017,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			case LIST_MEMBERS: //do this here to avoid threading issues with the ArrayDeque
 				if(args != null && args.size() == 3)
 				{
-					que.add(caller); 
+					que.add(caller);
 				}
 			break;
 			case SEND_DIRECT_MESSAGE:
@@ -2084,6 +2060,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		handler.exec();
 //		(new twitz.events.TwitzEventHandler(t, twitterManager)).execute();
 	} //}}}
+
+	//TwitterListener abstract methods
+	// <editor-fold defaultstate="collapsed" desc="Abstract Methods">
 
 	public void addTwitzListener(TwitzListener o) {
 		dtem.addTwitzListener(o);
@@ -2147,17 +2126,17 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotCurrentTrends(Trends trends) Not supported yet","2"});
 	}//}}}
 
-	public void gotDailyTrends(List<Trends> trendsList)//{{{
+	public void gotDailyTrends(List trendsList)//{{{
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotDailyTrends(List<Trends> trendsList) Not supported yet","2"});
 	}//}}}
 
-	public void gotWeeklyTrends(List<Trends> trendsList)//{{{
+	public void gotWeeklyTrends(List trendsList)//{{{
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotWeeklyTrends(List<Trends> trendsList) Not supported yet","2"});
 	}//}}}
 
-	public void gotPublicTimeline(ResponseList<Status> statuses)//{{{
+	public void gotPublicTimeline(ResponseList statuses)//{{{
 	{
 		Object o = timelineQue.peek();
 		if(o instanceof TimeLinePanel)
@@ -2171,22 +2150,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		}
 	}//}}}
 
-	public void gotHomeTimeline(ResponseList<Status> statuses)//{{{
-	{
-		Object o = timelineQue.peek();
-		if(o instanceof TimeLinePanel)
-		{
-			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
-			panel.updateStatus(statuses);
-		}
-		else
-		{
-			friendsStatusPanel.updateStatus(statuses);
-		}
-		//timelinePanel.updateStatus(statuses);
-	}//}}}
-
-	public void gotFriendsTimeline(ResponseList<Status> statuses)//{{{
+	public void gotHomeTimeline(ResponseList statuses)//{{{
 	{
 		Object o = timelineQue.peek();
 		if(o instanceof TimeLinePanel)
@@ -2201,7 +2165,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
-	public void gotUserTimeline(ResponseList<Status> statuses)//{{{
+	public void gotFriendsTimeline(ResponseList statuses)//{{{
 	{
 		Object o = timelineQue.peek();
 		if(o instanceof TimeLinePanel)
@@ -2216,7 +2180,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
-	public void gotMentions(ResponseList<Status> statuses)//{{{
+	public void gotUserTimeline(ResponseList statuses)//{{{
 	{
 		Object o = timelineQue.peek();
 		if(o instanceof TimeLinePanel)
@@ -2231,7 +2195,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
-	public void gotRetweetedByMe(ResponseList<Status> statuses)//{{{
+	public void gotMentions(ResponseList statuses)//{{{
 	{
 		Object o = timelineQue.peek();
 		if(o instanceof TimeLinePanel)
@@ -2246,7 +2210,22 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//timelinePanel.updateStatus(statuses);
 	}//}}}
 
-	public void gotRetweetedToMe(ResponseList<Status> statuses)//{{{
+	public void gotRetweetedByMe(ResponseList statuses)//{{{
+	{
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//timelinePanel.updateStatus(statuses);
+	}//}}}
+
+	public void gotRetweetedToMe(ResponseList statuses)//{{{
 	{
 		Object o = timelineQue.peek();
 		if(o instanceof TimeLinePanel)
@@ -2420,7 +2399,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	}
 
 	//PagableResponseList<UserList> userLists
-	public void gotUserLists(PagableResponseList<UserList> userLists) //{{{
+	public void gotUserLists(PagableResponseList userLists) //{{{
 	{
 		userListMainPanel1.addUserList(userLists);
 		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotUserLists(PagableResponseList<UserList> userLists) Not supported yet","2"});
@@ -2436,22 +2415,22 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		this.userListMainPanel1.removeUserList(userList.getName());
 	} //}}}
 
-	public void gotUserListStatuses(ResponseList<Status> statuses) //{{{
+	public void gotUserListStatuses(ResponseList statuses) //{{{
 	{
 		this.friendsStatusPanel.updateStatus(statuses);
 	} //}}}
 
-	public void gotUserListMemberships(PagableResponseList<UserList> userLists)
+	public void gotUserListMemberships(PagableResponseList userLists)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotUserListMemberships() Not supported yet","2"});
 	}
 
-	public void gotUserListSubscriptions(PagableResponseList<UserList> userLists)
+	public void gotUserListSubscriptions(PagableResponseList userLists)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotUserListSubscriptions() Not supported yet","2"});
 	}
 
-	public void gotUserListMembers(PagableResponseList<User> users) //{{{
+	public void gotUserListMembers(PagableResponseList users) //{{{
 	{
 		Object o = que.peek();
 		if(o instanceof UserListPanel)
@@ -2476,7 +2455,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "checkedUserListMembership() Not supported yet","2"});
 	}
 
-	public void gotUserListSubscribers(PagableResponseList<User> users)
+	public void gotUserListSubscribers(PagableResponseList users)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
@@ -2496,12 +2475,12 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
-	public void gotDirectMessages(ResponseList<DirectMessage> messages)
+	public void gotDirectMessages(ResponseList messages)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
-	public void gotSentDirectMessages(ResponseList<DirectMessage> messages)
+	public void gotSentDirectMessages(ResponseList messages)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
@@ -2615,7 +2594,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Profile update completed","2"});
 	}//}}}
 
-	public void gotFavorites(ResponseList<Status> statuses)
+	public void gotFavorites(ResponseList statuses)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
@@ -2665,7 +2644,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
-	public void gotBlockingUsers(ResponseList<User> blockingUsers)//{{{
+	public void gotBlockingUsers(ResponseList blockingUsers)//{{{
 	{
 		blocked.updateList(blockingUsers);
 	}//}}}
@@ -2681,7 +2660,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
-	public void gotAvailableTrends(ResponseList<Location> locations) //{{{
+	public void gotAvailableTrends(ResponseList locations) //{{{
 	{
 		trendPanel.setLocations(locations);
 	} //}}}
@@ -2691,12 +2670,12 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		trendPanel.setTrends(trends);
 	} //}}}
 
-	public void gotNearByPlaces(ResponseList<Place> places)
+	public void gotNearByPlaces(ResponseList places)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
-	public void gotReverseGeoCode(ResponseList<Place> places)
+	public void gotReverseGeoCode(ResponseList places)
 	{
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
@@ -2708,7 +2687,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	public void tested(boolean test)//{{{
 	{
-		connected = test;
+		setConnected(test);
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "Connection to twitter.com has "+ (test ? "succeeded" : "failed!!!"),"2"});
 		//Fire off all the startup tasks that populate the GUI
 	}//}}}
@@ -2773,49 +2752,16 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	//END abstract methods
 	//</editor-fold>
 
-	@Action
-	public void viewHTMLLog()//{{{
-	{
-		MessageDialog msg = new MessageDialog(getMainFrame(), false);
-		msg.setContentType("text/html");
-		try
-		{
-			URI spec = SettingsManager.getConfigDirectory().toURI();
-			String s = spec.toString()+"/logs/index.html";
-			URL path = new URL(s);
-			msg.setMessage(path);
-			msg.setResizable(true);
-			msg.setTitle(resourceMap.getString("LOG_WINDOW_TITLE.TEXT"));
-			msg.setSize(640, 480);
-			msg.setVisible(true);
-			//InputStream is = this.getClass().getResourceAsStream(path);
-		}
-		catch (IOException ex)
-		{
-			logger.error(ex.getMessage(), ex);
-		}
-		//InputStream is = this.getClass().getResourceAsStream(path);
-	}//}}}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel actionPanel;
-    private javax.swing.JMenu actionsMenu;
-    private javax.swing.JScrollPane blockedPane;
-    private javax.swing.JButton btnMini;
-    private javax.swing.JButton btnTweet;
-    private javax.swing.JCheckBox chkCOT;
     private javax.swing.JPopupMenu contextMenu;
     private javax.swing.JMenu editMenu;
     private javax.swing.JMenuItem exitItem;
-    private javax.swing.JList followersList;
-    private javax.swing.JScrollPane followersPane;
-    private javax.swing.JList followingList;
-    private javax.swing.JScrollPane followingPane;
+    private javax.swing.JMenu fileMenu;
     private javax.swing.JTabbedPane friendsPane;
     private javax.swing.JSplitPane friendsPanel;
     private javax.swing.JMenuItem helpItem;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JLabel lblChars;
     private javax.swing.JMenuItem logsMenuItem;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
@@ -2836,7 +2782,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
     private javax.swing.JPanel statusPanel;
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JSplitPane timelineTrendsPane;
-    private javax.swing.JTextField txtTweet;
     // End of variables declaration//GEN-END:variables
 
 	

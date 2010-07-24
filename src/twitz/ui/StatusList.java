@@ -5,6 +5,7 @@
 
 package twitz.ui;
 
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -59,14 +60,20 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 	private String sessionName;
 	private TwitzMainView view;
 	private HierarchyBoundsListener sizeListener;
+	/*
+	 * Used to calculate the a real size change because it seems the LAF
+	 * does a small 1 pixel change when it does mouseover
+	 */
+	private Dimension lastSize = new Dimension(0,0);
 
-	public StatusList() {
-		this(new StatusListModel());
+	public StatusList(String session) {
+		this(new StatusListModel(), session);
 	}
 
-	public StatusList(ListModel model) {
+	public StatusList(ListModel model, String session) {
 		super(model);
-		super.setCellRenderer(new StatusListRenderer());
+		setSessionName(session);
+		super.setCellRenderer(new StatusListRenderer(session));
 		initDefaults();
 	}
 
@@ -119,12 +126,12 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 			{
 				java.awt.Component p = getParent();
 				java.awt.Component c = e.getChanged();
-				if((c != null && p != null) && c.equals(p))
+				if((c != null && p != null) && c.equals(p) && isRealResize(p.getSize()))
 				{
 					StatusListModel mod = getModel();
 					if(!mod.isEditing() && !mod.isEmpty())
 					{
-						logger.debug("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpppppppppppppppppppppppppp");
+						//logger.debug("qqqqqqqqqqqqqqqqqqqqqqqqqqq "+c.getName()+" "+p.toString()+" "+p.getParent().getName()+" qqqqqpppppppppppppppppppppppppp");
 						Vector<Status> stat = mod.getDataVector();
 						mod.setDataVector(stat);
 					}
@@ -135,12 +142,31 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 		addHierarchyBoundsListener(sizeListener);
 	} //}}}
 
+	private boolean isRealResize(Dimension size)
+	{
+		boolean rv = false;
+		int owp = (lastSize.width+1);
+		int owm = (lastSize.width-1);
+		int ohp = (lastSize.height+1);
+		int ohm = (lastSize.height-1);
+		if(size.width > owp || size.width < owm)
+		{
+			rv = true;
+		}
+		else if(size.height > ohp || size.height < ohm)
+		{
+			rv = true;
+		}
+		lastSize = size;
+		return rv;
+	}
+
 	private void showMenu(StatusList list, Point p)
 	{
 		view.getActionsMenu(this).show(list, p.x, p.y);
 	}
 
-	public void setSessionName(String name)
+	public final void setSessionName(String name)
 	{
 		String old = this.sessionName;
 		this.sessionName = name;
@@ -268,32 +294,6 @@ public class StatusList extends JList implements ActionListener, TwitzEventModel
 		{
 			spot.checkActionSpot(e, this);
 		}
-	//	final java.awt.Point loc = e.getPoint();
-	//	int selection = this.getSelectedIndex();
-
-	//	if(selection != -1)
-	//	{
-	//		Set<String> set = hotspots.keySet();
-	//		Iterator<String> iter = set.iterator();
-	//		Rectangle rect = getCellBounds(selection, selection);
-	//		while(iter.hasNext())
-	//		{
-	//			String key = iter.next();
-	//			Rectangle dim = hotspots.get(key);
-//	//			System.out.println("Index: " + selection + " \nCell Size:" + rect);
-	//			int pos = (rect.width - dim.x);
-	//			int ypos = (rect.height - dim.y);
-	//			Rectangle box = new Rectangle(rect.x + pos, rect.y + ypos, dim.width, dim.height);
-	//			//addHotspot("Actions", new Rectangle(45, 25, 20, 20));
-//	//			System.out.println("pos: " + pos + " ypos: " + ypos + "\nBox: " + box + "\nPoint: " + loc);
-	//			if (box.contains(loc))
-	//			{
-//	//				System.out.println("Got the spot");
-	//				firePropertyChange(key, null, e); //We send the MouseEvent along
-	//				break;
-	//			}
-	//		}
-	//	}
 	}//}}}
 
 	//TwitzEventModel

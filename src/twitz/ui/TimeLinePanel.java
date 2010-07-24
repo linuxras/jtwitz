@@ -20,6 +20,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import javax.accessibility.Accessible;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.plaf.basic.ComboPopup;
@@ -37,6 +40,7 @@ import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.User;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
+import twitz.TwitzMainView;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
@@ -48,13 +52,17 @@ import twitz.util.*;
  *
  * @author mistik1
  */
-public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel, ActionListener, MouseListener{
+public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel, 
+		ActionListener, MouseListener, PropertyChangeListener
+{
 	private String sessionName;
 	public static final String SESSION_PROPERTY = "sessionName";
+	private TwitzMainView view;
     /** Creates new form TimeLinePanel */
-    public TimeLinePanel() {
-		 resourceMap = twitz.TwitzApp.getContext().getResourceMap(TimeLinePanel.class);
-		 actionMap = twitz.TwitzApp.getContext().getActionMap(TimeLinePanel.class, this);
+    public TimeLinePanel(String session) {
+		setSessionName(session);
+		resourceMap = twitz.TwitzApp.getContext().getResourceMap(TimeLinePanel.class);
+		actionMap = twitz.TwitzApp.getContext().getActionMap(TimeLinePanel.class, this);
         initComponents();
 		initDefaults();
     }
@@ -77,7 +85,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
         txtTimelineUser = new javax.swing.JComboBox(UserStore.getInstance().getRegisteredUsers());
         btnRefresh = new javax.swing.JButton();
         statusScrollPane = new javax.swing.JScrollPane();
-        statusList = new twitz.ui.StatusList();
+        statusList = new twitz.ui.StatusList(sessionName);
 
         pagingToolbar.setFloatable(false);
         pagingToolbar.setRollover(true);
@@ -148,7 +156,16 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 //}}}
 	private void initDefaults()//{{{
 	{
-		statusPanel = new twitz.ui.StatusPanel(true);
+		btnConnect = new javax.swing.JButton();
+		btnConnect.setName("btnConnect");
+		btnConnect.setAction(actionMap.get("connectTwitter"));
+		btnConnect.setText(resourceMap.getString("btnConnect.text"));
+		//btnConnect.setLabel(resourceMap.getString("btnConnect.text"));
+		btnConnect.setToolTipText(resourceMap.getString("btnConnect.toolTipText"));
+		btnConnect.setIcon(resourceMap.getIcon("btnConnect.icon"));
+		timelineToolbar.add(btnConnect);
+		setConnectButtonVisible(true);
+		statusPanel = new twitz.ui.StatusPanel(true, sessionName);
 		add(statusPanel, java.awt.BorderLayout.CENTER);
 		statusPanel.getStatusList().addMouseListener(this);
 		FocusListener fl = new FocusAdapter(){
@@ -201,17 +218,30 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 		//twitz.TwitzMainView.fixJScrollPaneBarsSize(statusScrollPane);
 	}//}}}
 
-	public void setSessionName(String name)
+	public final void setSessionName(String name)
 	{
 		String old = this.sessionName;
 		this.sessionName = name;
 		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view.addPropertyChangeListener("connected", this);
+		if(statusPanel != null)
+			statusPanel.setSessionName(name);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
 	public String getSessionName()
 	{
 		return this.sessionName;
+	}
+
+	@Action
+	public void connectTwitter()
+	{
+		if(view != null)
+		{
+			setConnectButtonVisible(!view.initTwitter());
+		}
 	}
 
 	@Action
@@ -387,7 +417,32 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(cmd), new java.util.Date().getTime(), map));
 		}
 	}//}}}
-	
+
+	//PropertyChangeListener
+	public void propertyChange(PropertyChangeEvent evt)
+	{
+		logger.debug("HHHHHHHHHHHHHHHHhhhhHHHHHHHHHHHHHHH "+evt.getPropertyName()+" HHHHHHHHHHHHHHHHHHHHHHHHHHH");
+		if(evt.getPropertyName().equals("connected"))
+		{
+			logger.debug("Connected propertyChanged ----------------------------");
+			try
+			{
+				boolean devmode = (System.getProperty("twitz_mode").equals("devmode"));
+				boolean state = (Boolean)evt.getNewValue();
+				if(!state && devmode)
+				{
+					setConnectButtonVisible(false);
+				}
+				else
+				{
+					setConnectButtonVisible(!state);
+				}
+			}
+			catch(Exception ignore){}
+		}
+		//throw new UnsupportedOperationException("Not supported yet.");
+	}
+
 	//MouseListener
 	public void mouseClicked(MouseEvent e) {//{{{
 		if (e.getButton() == MouseEvent.BUTTON3)
@@ -404,7 +459,10 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName).getActionsMenu(this).show(this, p.x, p.y);
+					//view.getActionsMenu(this).show(this, p.x, p.y);
+
+					java.awt.Point pe = SwingUtilities.convertPoint(clist, p, this);
+					view.getActionsMenu(this).show(this, pe.x, pe.y);
 				}
 
 			}
@@ -421,6 +479,13 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	public void mouseEntered(MouseEvent e) { }
 	public void mouseExited(MouseEvent e) { }
 
+	public void setConnectButtonVisible(boolean toggle)
+	{
+		btnRefresh.setVisible(!toggle);
+		cmbTimelineType.setVisible(!toggle);
+		txtTimelineUser.setVisible(!toggle);
+		btnConnect.setVisible(toggle);
+	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnRefresh;
@@ -435,6 +500,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
     private javax.swing.JComboBox txtTimelineUser;
     // End of variables declaration//GEN-END:variables
 
+	private javax.swing.JButton btnConnect;
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private twitz.ui.StatusPanel statusPanel;
     private org.jdesktop.application.ResourceMap resourceMap;
@@ -446,4 +512,6 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	private long prevCursor = -1;
 	private int delay = 300000;
 	private int initialDelay = 10000;
+
+
 }

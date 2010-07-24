@@ -19,10 +19,12 @@ import java.awt.event.MouseListener;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -51,7 +53,7 @@ import twitz.util.*;
  *
  * @author mistik1
  */
-public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel, 
+public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 		PropertyChangeListener, ActionListener, MouseListener, java.io.Serializable
 	{
 	
@@ -60,9 +62,20 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 		this(false);
 	}
 
+	public StatusPanel(String session)
+	{
+		this(false, session);
+	}
+	
+	public StatusPanel(boolean timeline)
+	{
+		this(timeline, "Default");
+	}
+
     /** Creates new form StatusPanel */
-    public StatusPanel(boolean timeline) {
+    public StatusPanel(boolean timeline, String session) {
 		super();
+		setSessionName(session);
 		this.inTimeline = timeline;
 		resourceMap = twitz.TwitzApp.getContext().getResourceMap(StatusPanel.class);
         initComponents();
@@ -79,9 +92,9 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
     private void initComponents() {
 
         statusScrollPane = new javax.swing.JScrollPane();
-        statusList = new twitz.ui.StatusList();
+        statusList = new twitz.ui.StatusList(sessionName);
 
-        setName("Form"); // NOI18N
+        setName("StatusPanel"); // NOI18N
         setLayout(new java.awt.BorderLayout());
 
         statusScrollPane.setName("statusScrollPane"); // NOI18N
@@ -101,21 +114,66 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 	//	statusList.addHotSpot("Favorite", new Rectangle(65, 25, 20, 20));
 	//	statusList.addHotSpot("Retweet", new Rectangle(85, 25, 20, 20));
 	//	statusList.addPropertyChangeListener(this);
-		ListHotSpot action = new ListHotSpot("Actions", ListHotSpot.Direction.RIGHT_TO_LEFT, new Rectangle(45, 25, 20, 20), "");
+		org.jdesktop.application.ResourceMap res = twitz.TwitzApp.getContext().getResourceMap(TwitzMainView.class);
+		String resourcesDir = res.getResourcesDir();
+
+		String filename = resourcesDir + res.getString("icon.arrow_rotate_clockwise");
+		//logger.debug(filename);
+		URL reet = res.getClassLoader().getResource(filename);
+		filename = resourcesDir + res.getString("icon.arrow_rotate_clockwise_off" );
+		URL reetOff = res.getClassLoader().getResource(filename);
+
+
+		filename = resourcesDir + res.getString("icon.heart");
+		URL favUrl = res.getClassLoader().getResource(filename);
+		filename = resourcesDir + res.getString("icon.heart_off");
+		URL favOff = res.getClassLoader().getResource(filename);
+
+		filename = resourcesDir + res.getString("icon.bin");
+		URL delUrl = res.getClassLoader().getResource(filename);
+		//filename = resourcesDir + res.getString("icon.bin");
+		//URL delOff = res.getClassLoader().getResource(filename);
+
+		filename = resourcesDir + res.getString("icon.comment_edit");
+		URL actionUrl = res.getClassLoader().getResource(filename);
+
+		ListHotSpot action = new ListHotSpot("Actions", 
+				ListHotSpot.Direction.RIGHT_TO_LEFT,
+				new Rectangle(28, 25, 20, 20),
+				res.getString("tooltip.Actions"));
+		action.setIcon(actionUrl);
 		action.addPropertyChangeListener(this);
-		ListHotSpot fav = new ListHotSpot("Favorite", ListHotSpot.Direction.RIGHT_TO_LEFT, new Rectangle(65, 25, 20, 20), "");
+		ListHotSpot fav = new ListHotSpot("Favorite", 
+				ListHotSpot.Direction.RIGHT_TO_LEFT,
+				new Rectangle(48, 25, 20, 20),
+				res.getString("tooltip.Favorite"));
+		fav.setIcon(favUrl);
+		fav.setDisabledIcon(favOff);
 		fav.addPropertyChangeListener(this);
-		ListHotSpot retweet = new ListHotSpot("Retweet", ListHotSpot.Direction.RIGHT_TO_LEFT, new Rectangle(85, 25, 20, 20), "");
+		ListHotSpot retweet = new ListHotSpot("Retweet", 
+				ListHotSpot.Direction.RIGHT_TO_LEFT,
+				new Rectangle(68, 25, 20, 20),
+				res.getString("tooltip.Retweet"));
+		retweet.setIcon(reet);
+		retweet.setDisabledIcon(reetOff);
 		//ListHotSpot retweet = new ListHotSpot("Retweet", ListHotSpot.Direction.LEFT_TO_RIGHT, new Rectangle(85, 25, 20, 20), "");
 		retweet.addPropertyChangeListener(this);
+		ListHotSpot delete = new ListHotSpot("Delete_Status",
+				ListHotSpot.Direction.RIGHT_TO_LEFT,
+				new Rectangle(88, 25, 20, 20),
+				res.getString("tooltip.Delete_Status"));
+		delete.setIcon(delUrl);
+		delete.setDisabledIcon(delUrl);
+		delete.addPropertyChangeListener(this);
 		statusList.addHotSpot(action);
 		statusList.addHotSpot(fav);
 		statusList.addHotSpot(retweet);
+		statusList.addHotSpot(delete);
 		if(!inTimeline)
 			statusList.addMouseListener(this);
 	}
 
-	public void setSessionName(String name)
+	public final void setSessionName(String name)
 	{
 		String old = this.sessionName;
 		this.sessionName = name;
@@ -284,14 +342,39 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 	
 	public void propertyChange(PropertyChangeEvent evt)//{{{
 	{
+		Status lstat = statusList.getSelectedValue();
 		if("Actions".equals(evt.getPropertyName()))
 		{
-			Status lstat = statusList.getSelectedValue();
+			//Status lstat = statusList.getSelectedValue();
 			int selection = statusList.getSelectedIndex();
 			MouseEvent e = (MouseEvent)evt.getNewValue();
-			StatusPopupPanel spp = new StatusPopupPanel();
+			StatusPopupPanel spp = new StatusPopupPanel(sessionName);
+			//spp.setSessionName(sessionName);
 			spp.configureBox(statusList, lstat, selection);
 			spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
+		}
+		else if("Retweet".equals(evt.getPropertyName()))
+		{
+			//Status lstat = statusList.getSelectedValue();
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(lstat.getId());
+			map.put("arguments", args);
+			TwitzEvent te = new TwitzEvent(this, TwitzEventType.RETWEET_STATUS, new Date().getTime(), map);
+			fireTwitzEvent(te);
+		}
+		else if("Delete_Status".equals(evt.getPropertyName()))
+		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(lstat.getId());
+			map.put("arguments", args);
+			TwitzEvent te = new TwitzEvent(this, TwitzEventType.DESTROY_STATUS, new Date().getTime(), map);
+			fireTwitzEvent(te);
 		}
 	}//}}}
 
@@ -310,7 +393,8 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 						clist.setSelectedIndex(index);
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
-					view.getActionsMenu(this).show(this, p.x, p.y);
+					//view.getActionsMenu(this).show(this, p.x, p.y);
+					view.getActionsMenu(this).show(this, e.getXOnScreen(), e.getYOnScreen());
 				}
 
 			}

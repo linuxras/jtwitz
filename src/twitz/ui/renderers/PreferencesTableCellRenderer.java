@@ -9,6 +9,7 @@ import java.awt.Component;
 import javax.swing.JTable;
 import org.pushingpixels.substance.api.renderers.SubstanceDefaultTableCellRenderer;
 import twitz.util.SettingsManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
@@ -16,7 +17,7 @@ import twitz.util.SettingsManager;
  */
 public class PreferencesTableCellRenderer extends SubstanceDefaultTableCellRenderer {
 
-	SettingsManager config = SettingsManager.getInstance();
+	SettingsManager config = TwitzSessionManager.getInstance().getSettingsManagerForSession("Default");
 	
 	public PreferencesTableCellRenderer() {}
 
@@ -31,7 +32,7 @@ public class PreferencesTableCellRenderer extends SubstanceDefaultTableCellRende
 			String key = (String) table.getValueAt(row, 0);
 			if(config.getString(key+".cfgtype").equalsIgnoreCase("Password"))
 			{
-				StringBuffer b = new StringBuffer();
+				StringBuilder b = new StringBuilder();
 				char[] pc = ((String)value).toCharArray();
 				for(int i=0;i<pc.length; i++)
 					b.append("***");
