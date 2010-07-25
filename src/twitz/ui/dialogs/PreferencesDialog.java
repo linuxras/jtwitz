@@ -47,7 +47,8 @@ import twitz.util.TwitzSessionManager;
  */
 public class PreferencesDialog extends javax.swing.JDialog {
 
-	private SettingsManager config = TwitzSessionManager.getInstance().getSettingsManagerForSession("Default");//SettingsManager.getInstance();
+	private TwitzSessionManager sm = TwitzSessionManager.getInstance();
+	private SettingsManager config = sm.getSettingsManagerForSession("Default");//SettingsManager.getInstance();
 	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(PreferencesDialog.class);
 	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(PreferencesDialog.class, this);
 	private Vector vHeaders = new Vector();
@@ -398,10 +399,10 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		this.sessionName = name;
 		this.currentSession = name;
 		cmbProfile.setSelectedItem(name);
-		cfgBorder.setTitle(name);
-		configPane.setBorder(cfgBorder);
-		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		//cfgBorder.setTitle(name);
+		configPane.setBorder(BorderFactory.createTitledBorder(sessionName));
+		config = sm.getSettingsManagerForSession(sessionName);
+		view = sm.getTwitMainViewForSession(sessionName);
 		chkDefault.setEnabled(!name.equals("Default"));
 
 		//firePropertyChange(SESSION_PROPERTY, old, name);
@@ -478,7 +479,9 @@ public class PreferencesDialog extends javax.swing.JDialog {
 				loadProfileCombo();
 				cmbProfile.setSelectedItem(profile);
 				loadProfile();
-				TwitzSessionManager.getInstance().addNewSession(profile);
+				//logger.debug("=========================++++++++++++++++++++===================");
+				//sm.addNewSession(profile);
+				//logger.debug("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 				//TODO put in code to load up the profile or whatever
 			}
 		}
@@ -494,7 +497,9 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		String str = (String)cmbProfile.getSelectedItem();
 		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(str);
 		this.setSessionName(str);
+		logger.debug("-------------------------------------------------------");
 		loadTable();
+		logger.debug("&&&&&&&&&&&&7&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 	}
 
 	@Action

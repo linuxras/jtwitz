@@ -152,32 +152,14 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		filename = resourcesDir + resourceMap.getString("icon.comment_edit");
 		URL action = resourceMap.getClassLoader().getResource(filename);
 
-		filename = resourcesDir + resourceMap.getString("icon.picture_empty");
-		//filename = resourceMap.getResourcesDir() + resourceMap.getString("icon.comment");
-		URL altImg = resourceMap.getClassLoader().getResource(filename);
-
-		URL img = u.getProfileImageURL();
-
-		URLConnection fileCheck = null;
-		try
-		{
-			fileCheck = img.openConnection();
-			int size = fileCheck.getContentLength();
-			if(size <= 0)
-				img = altImg;
-		}
-		catch (IOException ioe)
-		{
-			System.out.println("wwooooooooooooooooooooooooooooooooooooooooooo");
-			img = altImg;
-		}
+		URL img = twitz.TwitzApp.verifyImage(u.getProfileImageURL());
 
 		StringBuilder table = new StringBuilder("<table border=0 width=");
 		table.append(width).append(">");
 		table.append("<tr><td align='left'>");
 		table.append("<img src=\"").append(img.toString())
 				.append("\" border=0 width=32 height=32><br/>");
-		table.append("<b>").append(stat.getUser().getScreenName()).append("</b>");
+		table.append("<b>").append(u.getScreenName()).append("</b>");
 		table.append("</td><td>");
 		table.append(pretify(stat, stat.getText()));
 		table.append("</td></tr></table>");

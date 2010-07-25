@@ -33,6 +33,8 @@ import java.io.File;
 import java.io.Serializable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Map;
@@ -593,6 +595,45 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		}
 		return directory;
 	}//}}}
+
+	public static synchronized URL verifyImage(URL img)
+	{
+		URL rv = null;
+
+		ResourceMap res = getContext().getResourceMap(TwitzMainView.class);
+		String resourcesDir = res.getResourcesDir();
+		String filename = resourcesDir + res.getString("icon.picture_empty");
+		//filename = resourceMap.getResourcesDir() + resourceMap.getString("icon.comment");
+		URL altImg = res.getClassLoader().getResource(filename);
+
+		//URL img = u.getProfileImageURL();
+
+		URLConnection fileCheck = null;
+		if(img != null)
+		{
+			rv = img;
+			try
+			{
+				fileCheck = img.openConnection();
+				int size = fileCheck.getContentLength();
+				if (size <= 0)
+				{
+					rv = altImg;
+					//System.out.println("wwhhhhhhhhhhhhhhhhhooooooooooooooooooooooooooooooooooooooooooo");
+				}
+			}
+			catch (IOException ioe)
+			{
+				//System.out.println("wwooooooooooooooooooooooooooooooooooooooooooo");
+				rv = altImg;
+			}
+		}
+		else
+		{
+			rv = altImg;
+		}
+		return rv;
+	}
 
     /**
      * Main method launching the application.

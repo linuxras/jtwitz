@@ -5,24 +5,14 @@
 
 package twitz.util;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.logging.Level;
 import org.apache.log4j.Logger;
-import org.jdesktop.application.ResourceMap;
-import org.tmatesoft.sqljet.core.SqlJetException;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
 
@@ -30,7 +20,7 @@ import twitz.TwitzMainView;
  *
  * @author mistik1
  */
-public class TwitzSessionManager extends PropertyChangeSupport
+public class TwitzSessionManager implements java.io.Serializable
 {
 	public static final String LOADED_PROPERTY = "sessionsLoaded";
 	public static final String ADDED_PROPERTY = "sessionsAdded";
@@ -44,6 +34,7 @@ public class TwitzSessionManager extends PropertyChangeSupport
 	private Map<String, TwitzMainView> views = Collections.synchronizedMap(new TreeMap<String, TwitzMainView>());
 	private final TwitzApp mainApp;
 	private TwitzMainView defaultSession;
+	private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
 
 	public static enum OS {
@@ -53,7 +44,7 @@ public class TwitzSessionManager extends PropertyChangeSupport
 	};
 
 	private TwitzSessionManager(TwitzApp app) {//{{{
-		super(app);
+		//super(this);
 		this.mainApp = app;
 		DBM = DBManager.getInstance();
 		logger  = Logger.getLogger(TwitzSessionManager.class.getName());
@@ -92,8 +83,9 @@ public class TwitzSessionManager extends PropertyChangeSupport
 		TwitzMainView rv = null;
 		if(views.containsKey(sessionName))
 			return views.get(sessionName);
-		//System.out.println("creating new view for session: "+sessionName+" =========================");
+		logger.debug("creating new view for session: "+sessionName+" =========================");
 		rv = new TwitzMainView(mainApp, sessionName);
+		firePropertyChange(ADDED_PROPERTY, new Object(), rv);
 		views.put(sessionName, rv);
 		return rv;
 	}
@@ -107,15 +99,18 @@ public class TwitzSessionManager extends PropertyChangeSupport
 		//}
 	}
 
-	public void addNewSession(String sname)
-	{
-		boolean hasview = views.containsKey(sname);
-		if(!hasview)
-		{
-			TwitzMainView v = getTwitMainViewForSession(sname);
-			firePropertyChange(ADDED_PROPERTY, null, v);
-		}
-	}
+//	public void addNewSession(String sname)
+//	{
+//		boolean hasview = views.containsKey(sname);
+//		logger.debug("Checking if we should add: "+sname+" = "+hasview);
+//		logger.debug(views.keySet());
+//		if(!hasview)
+//		{
+//			logger.debug(sname+" Added");
+//			TwitzMainView v = getTwitMainViewForSession(sname);
+//			//firePropertyChange(ADDED_PROPERTY, new Object(), v);
+//		}
+//	}
 
 	public void loadAvailableSessions()
 	{
@@ -255,4 +250,60 @@ public class TwitzSessionManager extends PropertyChangeSupport
 	{
 		return this.currentSession;
 	}
+
+	public void firePropertyChange(String name, Object old, Object newVal)
+	{
+		pcs.firePropertyChange(name, old, newVal);
+	}
+
+	public void firePropertyChange(PropertyChangeEvent e)
+	{
+		pcs.firePropertyChange(e);
+	}
+
+	public void firePropertyChange(String name, boolean oldVal, boolean newVal)
+	{
+		pcs.firePropertyChange(name, oldVal, newVal);
+	}
+
+	public void firePropertyChange(String name, int oldVal, int newVal)
+	{
+		pcs.firePropertyChange(name, oldVal, newVal);
+	}
+
+	public void addPropertyChangeListener(PropertyChangeListener l)
+	{
+		pcs.addPropertyChangeListener(l);
+	}
+
+	public void addPropertyChangeListener(String name, PropertyChangeListener l)
+	{
+		pcs.addPropertyChangeListener(name, l);
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener l)
+	{
+		pcs.removePropertyChangeListener(l);
+	}
+
+	public void removePropertyChangeListener(String name, PropertyChangeListener l)
+	{
+		pcs.removePropertyChangeListener(name, l);
+	}
+
+	public boolean hasListeners(String name)
+	{
+		return pcs.hasListeners(name);
+	}
+
+	public PropertyChangeListener[] getPropertyChangeListeners()
+	{
+		return pcs.getPropertyChangeListeners();
+	}
+
+	public PropertyChangeListener[] getPropertyChangeListeners(String name)
+	{
+		return pcs.getPropertyChangeListeners(name);
+	}
+
 }

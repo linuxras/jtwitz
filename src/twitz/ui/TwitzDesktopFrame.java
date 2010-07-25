@@ -201,8 +201,9 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 		btnDefault.addActionListener(this);
 		taskBarButtons.put("Default", btnDefault);
 		setPreferredSize(new java.awt.Dimension(640, 480));
-		sessions.addPropertyChangeListener(TwitzSessionManager.ADDED_PROPERTY, this);
-		sessions.addPropertyChangeListener(TwitzSessionManager.LOADED_PROPERTY, this);
+		sessions.addPropertyChangeListener(/*TwitzSessionManager.ADDED_PROPERTY, */this);
+//		sessions.addPropertyChangeListener(TwitzSessionManager.ADDED_PROPERTY, this);
+//		sessions.addPropertyChangeListener(TwitzSessionManager.LOADED_PROPERTY, this);
 		//buildProfilesMenu();
 		//throw new UnsupportedOperationException("Not yet implemented");
 	}
@@ -227,6 +228,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 			prefs.setLocationRelativeTo(this);
 			prefs.setSessionName("Default");
 			prefs.setSingleSessionMode(false);
+			
 		}
 		prefs.setVisible(true);
 	}//}}}
@@ -617,6 +619,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 
 	public void propertyChange(PropertyChangeEvent evt)
 	{
+		logger.debug("PropertyEvent: "+evt.getPropertyName());
 		if(evt.getPropertyName().equals(TwitzSessionManager.ADDED_PROPERTY))
 		{
 			TwitzMainView v = (TwitzMainView)evt.getNewValue();
@@ -626,6 +629,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 				addView(v);
 			}
 			buildProfilesMenu();
+			System.out.println("aaaaaaaaaaaaaaadddddddddddddddddeeeeeeeeeeeedddddddddddd");
 		}
 		else if(evt.getPropertyName().equals(TwitzSessionManager.LOADED_PROPERTY))
 		{

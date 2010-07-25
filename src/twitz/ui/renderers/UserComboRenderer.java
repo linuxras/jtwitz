@@ -4,6 +4,9 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.MediaTracker;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.regex.*;
 import javax.swing.ImageIcon;
@@ -20,7 +23,9 @@ import twitz.TwitzApp;
 import twitz.TwitzMainView;
 
 public class UserComboRenderer extends SubstanceDefaultListCellRenderer {
-	
+
+	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
+
 	public UserComboRenderer()
 	{
 		super();
@@ -32,24 +37,31 @@ public class UserComboRenderer extends SubstanceDefaultListCellRenderer {
 	{
 		super.getListCellRendererComponent(list, value, index, isSelected, hasFocus);
 		User u = (User)value;
-		java.net.URL imgURI = u.getProfileImageURL();
-		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(imgURI);
-		int status = icon.getImageLoadStatus();
-		Image img = null;
-		if(status == MediaTracker.ERRORED) {
-			ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
-			icon = res.getImageIcon("icon.user_gray");
-			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
-		}
-		else {
-			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
-		}
-		//Image img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
-		icon = new ImageIcon(img);
+//		java.net.URL imgURI = u.getProfileImageURL();
+//		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(imgURI);
+//		int status = icon.getImageLoadStatus();
+//		Image img = null;
+//		if(status == MediaTracker.ERRORED) {
+//			ResourceMap res = TwitzApp.getContext().getResourceMap(TwitzMainView.class);
+//			icon = res.getImageIcon("icon.user_gray");
+//			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+//		}
+//		else {
+//			img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+//		}
+//		//Image img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+//		icon = new ImageIcon(img);
 		Status s = u.getStatus();
-		setText("<html><b>"+u.getScreenName()+"</b>");
-		setIcon(icon);
-		setToolTipText(u.getScreenName());
+		int width = list.getWidth()-50;
+		//System.out.println("List width: "+width);
+		if(list.getParent() != null)
+		{
+			width = list.getParent().getWidth()-10;//85;
+			//System.out.println("Parent found using width: "+width);
+		}
+		setText("<html>"+tableWrap(u, width));
+//		setIcon(icon);
+		setToolTipText("<html>"+tableWrap(u, width));
 		setVerticalAlignment(TOP);
 		setFont(new Font("Arial", Font.BOLD, 10));
 		return this;
@@ -57,8 +69,8 @@ public class UserComboRenderer extends SubstanceDefaultListCellRenderer {
 
 	private String tableWrap(User u, Status s, int width) //{{{
 	{
-		StringBuffer table = new StringBuffer("<table border=0 width=");
-		table.append(width+"");
+		StringBuilder table = new StringBuilder("<table border=0 width=");
+		table.append(width);
 		table.append("><tr align='center' ><td><b>");
 		table.append(u.getScreenName());
 		table.append("</b></td></tr>");
@@ -70,11 +82,25 @@ public class UserComboRenderer extends SubstanceDefaultListCellRenderer {
 		}
 		if(u.getLocation() != null)
 		{
-			table.append("<tr><td>From: "+u.getLocation()+"</td></tr>");
+			table.append("<tr><td>From: ").append(u.getLocation()).append("</td></tr>");
 		}
 		table.append("</table>");
 		return table.toString();
 	} //}}}
+
+	private String tableWrap(User u, int width)
+	{
+		URL img = twitz.TwitzApp.verifyImage(u.getProfileImageURL());
+
+		StringBuilder tb = new StringBuilder();
+		tb.append("<table width=").append(width).append(">")
+				.append("<tr><td align='left'>")
+				.append("<img border=0 width=32 height=32 src='")
+				.append(img.toString()).append("'></td><td>")
+				.append("<b>").append(u.getScreenName()).append("</b>")
+				.append("</td></tr></table>");
+		return tb.toString();
+	}
 
 	private String pretify(String text)//{{{
 	{

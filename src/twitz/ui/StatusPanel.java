@@ -13,7 +13,6 @@ package twitz.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.Rectangle;
@@ -22,18 +21,15 @@ import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Iterator;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JTable;
-import javax.swing.table.TableColumn;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-import twitter4j.PagableResponseList;
-import twitter4j.Paging;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.UserList;
@@ -46,7 +42,6 @@ import twitz.events.TwitzListener;
 import twitz.ui.StatusList;
 import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.models.StatusListModel;
-import twitz.ui.models.StatusTableModel;
 import twitz.util.*;
 
 /**
@@ -268,46 +263,61 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 	{
 		if(statuses != null)
 		{
-			SwingWorker<List<Status>, Status> worker = new SwingWorker<List<Status>, Status>()
+			SwingWorker<StatusListModel, ResponseList> worker = new SwingWorker<StatusListModel, ResponseList>()
 			{
-				StatusListModel model = new StatusListModel();
+				
 				int total = -1;
 				int count = 1;
 
 				@Override
-				public List<Status> doInBackground()
+				public StatusListModel doInBackground()
 				{
+					StatusListModel model = new StatusListModel();
 					total = statuses.size();
 					firePropertyChange("started", null, "processing status list");
 					for(Object o: statuses)
 					{
 						if(isStatus(o))
 						{
+							firePropertyChange("message", null, String.format("Processing %d of %d records. Please wait...", count, total));
 							Status s = (Status)o;
-							publish(s);
+							//publish(s);
 							store.registerUser(s.getUser());
 							model.addStatus(s);
+							count++;
 						}
 					}
-					return null;//I wont be using get() to process anything
+					return model;
+					//return null;//I wont be using get() to process anything
 				}
 
-				@Override
-				protected void process(List<Status> part)
-				{
-					for(Status s: part)
-					{
-						firePropertyChange("message", null, String.format("Processing %d of %d records. Please wait...", count, total));
-						store.registerUser(s.getUser());
-						model.addStatus(s);
-						count++;
-					}
-				}
+//				@Override
+//				protected void process(List<Status> part)
+//				{
+//					for(Status s: part)
+//					{
+//
+//						store.registerUser(s.getUser());
+//						model.addStatus(s);
+//						count++;
+//					}
+//				}
 
 				@Override
 				protected void done()
 				{
-					getStatusList().setModel(model);
+					try
+					{
+						getStatusList().setModel(get());
+					}
+					catch (InterruptedException ex)
+					{
+						Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
+					}
+					catch (ExecutionException ex)
+					{
+						Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
+					}
 					firePropertyChange("done", null, null);
 				}
 			};

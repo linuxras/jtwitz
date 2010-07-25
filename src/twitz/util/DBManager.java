@@ -133,7 +133,7 @@ public class DBManager {
 					}
 					return true;
 				}
-			}, SqlJetTransactionMode.WRITE);
+			}, SqlJetTransactionMode.EXCLUSIVE);
 			//db.open();
 		}
 		catch (SqlJetException ex)
@@ -215,7 +215,7 @@ public class DBManager {
 		try
 		{
 			db.open();
-			db.beginTransaction(SqlJetTransactionMode.WRITE);
+			db.beginTransaction(SqlJetTransactionMode.EXCLUSIVE);
 			
 			db.createTable(userTableQuery);
 			db.createIndex(userNameIndex);
@@ -272,7 +272,7 @@ public class DBManager {
 		db.open();
 		if (db.isOpen())
 		{
-			db.beginTransaction(SqlJetTransactionMode.WRITE);
+			db.beginTransaction(SqlJetTransactionMode.EXCLUSIVE);
 			if (db.isInTransaction())
 			{
 				ISqlJetTable ut = db.getTable(USER_TABLE);
@@ -351,6 +351,7 @@ public class DBManager {
 						//sid = session.insert(name, 1, 1);
 						logger.log(Level.INFO, "Firstrun name: {0}", name);
 						session.insert(name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 1, 1);
+						firstrun = false;
 					}
 					else
 					{
@@ -651,7 +652,7 @@ public class DBManager {
 		finally
 		{
 			db.commit();
-			if(!db.isInTransaction())
+			//if(!db.isInTransaction())
 				db.close();
 		}
 		//System.out.println("loading properties "+rv);
@@ -690,7 +691,7 @@ public class DBManager {
 				finally
 				{
 					db.commit();
-					if(!db.isInTransaction())
+					//if(!db.isInTransaction())
 						db.close();
 				}
 			}
@@ -704,15 +705,23 @@ public class DBManager {
 		db.open();
 		if(db.isOpen())
 		{
-			db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
-			if(db.isInTransaction())
+			try
 			{
-				ISqlJetTable session = db.getTable(SESSION_TABLE);
-				ISqlJetCursor sc = session.lookup(SESSION_INDEX, name);
-				if(!sc.eof())
+				db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
+				if (db.isInTransaction())
 				{
-					rv = (sc.getInteger(SESSION_DEFAULT) == 1); //1 == TRUE / 0 == FALSE
+					ISqlJetTable session = db.getTable(SESSION_TABLE);
+					ISqlJetCursor sc = session.lookup(SESSION_INDEX, name);
+					if (!sc.eof())
+					{
+						rv = (sc.getInteger(SESSION_DEFAULT) == 1); //1 == TRUE / 0 == FALSE
+					}
 				}
+			}
+			finally
+			{
+				db.commit();
+				db.close();
 			}
 		}
 		return rv;
@@ -840,9 +849,9 @@ public class DBManager {
 		}
 		finally
 		{
-			if(db.isInTransaction())
+			//if(db.isInTransaction())
 				db.commit();
-			if(db.isOpen())
+			//if(db.isOpen())
 				db.close();
 		}
 		return rv;
@@ -873,9 +882,9 @@ public class DBManager {
 		}
 		finally
 		{
-			if(db.isInTransaction())
+			//if(db.isInTransaction())
 				db.commit();
-			if(db.isOpen())
+			//if(db.isOpen())
 				db.close();
 		}
 	}
