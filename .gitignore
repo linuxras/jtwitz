@@ -1,4 +1,4 @@
-#build.properties
+build.properties
 dist/
 build/
 build/classes/
