@@ -350,7 +350,7 @@ public class DBManager {
 						config.insert(21, SESSION_AUTOLOAD, 17, 6);
 						//sid = session.insert(name, 1, 1);
 						logger.log(Level.INFO, "Firstrun name: {0}", name);
-						session.insert(name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 1, 1);
+						session.insert(name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 1, 0);
 						firstrun = false;
 					}
 					else
