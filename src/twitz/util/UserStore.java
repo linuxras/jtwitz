@@ -6,10 +6,15 @@
 package twitz.util;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import org.apache.log4j.Logger;
 import org.tmatesoft.sqljet.core.SqlJetException;
 import twitter4j.User;
+import twitz.events.TwitzEvent;
+import twitz.events.TwitzListener;
+import twitz.util.DBManager.DBQuery;
+import twitz.util.DBManager.DBTask;
 
 /**
  *
@@ -36,14 +41,31 @@ public class UserStore {
 
 	public synchronized void registerUser(User user)
 	{
-		try
-		{
-			DBM.registerUser(user);
-		}
-		catch (Exception ex)
-		{
-			logger.error("Error while registering user", ex);
-		}
+		TwitzListener tl = new TwitzListener() {
+
+			public void eventOccurred(TwitzEvent t)
+			{
+				Map map = t.getEventMap();
+				switch(t.getEventType())
+				{
+					case DB_ERROR_EVENT:
+						Exception e = (Exception) map.get("error");
+						logger.error("Error while registering user "+e.getLocalizedMessage());
+						break;
+					case DB_RETURN_EVENT: //We dont care that it added a user
+						break;
+				}
+			}
+		};
+		DBM.runQuery(DBTask.registerUser, tl, true, user);
+//		try
+//		{
+//			DBM.registerUser(user);
+//		}
+//		catch (Exception ex)
+//		{
+//			logger.error("Error while registering user", ex);
+//		}
 	}
 
 	public synchronized Vector<User> getRegisteredUsers()

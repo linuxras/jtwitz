@@ -10,6 +10,7 @@ import twitter4j.*;
 import org.apache.log4j.Logger;
 import twitz.TwitzMainView;
 import twitz.twitter.TwitterManager;
+import twitz.ui.TwitzBusyPane;
 import twitz.util.TwitzSessionManager;
 
 
@@ -26,6 +27,8 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
     private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
 	private final String sessionName;
 	private final TwitzMainView view;
+	private final Component myGlassPane;
+	TwitzBusyPane busyPane;
 	//private PropertyChangeSupport pcs = new EDTPropertyChangeSupport(this);
 
 	public TwitzEventHandler(TwitzEvent event, String session)
@@ -34,12 +37,21 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		this.sessionName = session;
 		this.view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
 		this.tm = view.getTwitterManager();
+		myGlassPane = view.getGlassPane();
+		busyPane = new TwitzBusyPane(view, this);
 	}
 
 	public void exec()
 	{
+		start();
+	}
+
+	public void start()
+	{
 		firePropertyChange("started", null, null);
 		firePropertyChange("message", null, String.format("Performing task - %s", resourceMap.getString(mainEvent.getEventType().name())));
+		busyPane.block();
+		logger.debug("////////////////////////////////////////////////////////////");
 		execute();
 	}
 	
@@ -648,6 +660,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	@Override
 	public void done()
 	{
+		busyPane.unblock();
 		if(error)
 		{
 			view.onException(errorT, errorMethod);
@@ -663,6 +676,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			JOptionPane.showMessageDialog(null, value, resourceMap.getString("ERROR_TITLE.TEXT"), JOptionPane.ERROR_MESSAGE);
 		firePropertyChange("message", null, String.format("Completed task - %s",resourceMap.getString(mainEvent.getEventType().name())));
 		firePropertyChange("done", null, null);
+		
 	}
 
 	private String getScreenNameFromMap(Object obj) {//{{{

@@ -602,7 +602,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 		ResourceMap res = getContext().getResourceMap(TwitzMainView.class);
 		String resourcesDir = res.getResourcesDir();
-		String filename = resourcesDir + res.getString("icon.picture_empty");
+		String filename = resourcesDir + res.getString("NO_PICTURE_DEFAULT");
 		//filename = resourceMap.getResourcesDir() + resourceMap.getString("icon.comment");
 		URL altImg = res.getClassLoader().getResource(filename);
 

@@ -61,6 +61,46 @@ import twitz.util.TwitzSessionManager;
  */
 public class BlockedPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel, ActionListener
 {
+	private boolean firstrun = true;
+	// Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnNext;
+    private javax.swing.JButton btnPrev;
+    private javax.swing.JButton btnUserAdd;
+    private javax.swing.JButton btnUserDelete;
+    private twitz.ui.ContactsList contactsList1;
+    private javax.swing.JToolBar.Separator jSeparator1;
+    private javax.swing.JToolBar.Separator jSeparator2;
+    private javax.swing.JToolBar.Separator jSeparator3;
+    private javax.swing.JLabel listName;
+    private javax.swing.JScrollPane listPane;
+    private javax.swing.JToolBar pagingToolBar;
+    private javax.swing.JToolBar toolbar;
+    // End of variables declaration//GEN-END:variables
+
+	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
+	private Border defaultBorder, selectedBorder;
+	private javax.swing.Action toggle;
+	private JPanel contentPanel = new JPanel(new BorderLayout());
+	private twitz.util.SettingsManager config;
+	public static final String SESSION_PROPERTY = "sessionName";
+	private String sessionName;
+	private TwitzMainView view;
+
+	boolean collapsed = false;
+	int boxHeight = 350;
+	//final Logger logger = Logger.getLogger(this.getClass().getName());
+	org.jdesktop.application.ResourceMap resourceMap;
+	javax.swing.ActionMap actionMap;
+	final static Logger logger = Logger.getLogger(BlockedPanel.class.getName());
+	boolean logdebug = logger.isDebugEnabled();
+	boolean loginfo = logger.isInfoEnabled();
+
+	private long prevPage = -1;
+	private long nextPage = -1;
+
+	public static final int MAX_HEIGHT = 300;
+	public static final int MIN_HEIGHT = 50;
+
     /** Creates new form BlockedPanel */
     public BlockedPanel() {
 		resourceMap = TwitzApp.getContext().getResourceMap(BlockedPanel.class);
@@ -435,6 +475,20 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 		return this.sessionName;
 	}
 
+	public void update(boolean force)
+	{
+		//Load blocked users
+		logger.debug("update() run");
+		if (firstrun && view.isConnected() || force)
+		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new java.util.Date().getTime(), map));
+			firstrun = false;
+		}
+	}
+
 	//MouseListener
 	public void mouseClicked(MouseEvent e) {//{{{
 		if (e.getButton() == MouseEvent.BUTTON3)
@@ -493,43 +547,5 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
 	}//}}}
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnNext;
-    private javax.swing.JButton btnPrev;
-    private javax.swing.JButton btnUserAdd;
-    private javax.swing.JButton btnUserDelete;
-    private twitz.ui.ContactsList contactsList1;
-    private javax.swing.JToolBar.Separator jSeparator1;
-    private javax.swing.JToolBar.Separator jSeparator2;
-    private javax.swing.JToolBar.Separator jSeparator3;
-    private javax.swing.JLabel listName;
-    private javax.swing.JScrollPane listPane;
-    private javax.swing.JToolBar pagingToolBar;
-    private javax.swing.JToolBar toolbar;
-    // End of variables declaration//GEN-END:variables
-
-	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
-	private Border defaultBorder, selectedBorder;
-	private javax.swing.Action toggle;
-	private JPanel contentPanel = new JPanel(new BorderLayout());
-	private twitz.util.SettingsManager config;
-	public static final String SESSION_PROPERTY = "sessionName";
-	private String sessionName;
-	private TwitzMainView view;
-
-	boolean collapsed = false;
-	int boxHeight = 350;
-	//final Logger logger = Logger.getLogger(this.getClass().getName());
-	org.jdesktop.application.ResourceMap resourceMap;
-	javax.swing.ActionMap actionMap;
-	final static Logger logger = Logger.getLogger(BlockedPanel.class.getName());
-	boolean logdebug = logger.isDebugEnabled();
-	boolean loginfo = logger.isInfoEnabled();
-
-	private long prevPage = -1;
-	private long nextPage = -1;
-
-	public static final int MAX_HEIGHT = 300;
-	public static final int MIN_HEIGHT = 50;
-
+    
 }

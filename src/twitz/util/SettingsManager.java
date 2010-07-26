@@ -13,12 +13,15 @@ import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.ResourceMap;
 import org.tmatesoft.sqljet.core.SqlJetException;
 import twitz.TwitzApp;
+import twitz.events.TwitzEvent;
+import twitz.events.TwitzListener;
 
 /**
  *
@@ -185,14 +188,32 @@ public class SettingsManager extends Properties{
 
 	private void saveSettingsToDb()
 	{
-		try
-		{
-			DBM.updateSettings(currentSession, this);
-		}
-		catch (Exception ex)
-		{
-			logger.error("Fatal error while saving records", ex);
-		}
+		TwitzListener tl = new TwitzListener() {
+
+			public void eventOccurred(TwitzEvent t)
+			{
+				Map map = t.getEventMap();
+				switch(t.getEventType())
+				{
+					case DB_ERROR_EVENT:
+						Exception e = (Exception) map.get("error");
+						logger.error("Error while registering user "+e.getLocalizedMessage());
+						break;
+					case DB_RETURN_EVENT: //view method we could update status bar or something
+						
+						break;
+				}
+			}
+		};
+		DBM.runQuery(DBManager.DBTask.updateSettings, tl, true, currentSession, this);
+//		try
+//		{
+//			DBM.updateSettings(currentSession, this);
+//		}
+//		catch (Exception ex)
+//		{
+//			logger.error("Fatal error while saving records", ex);
+//		}
 	}
 
 	private boolean saveSettings() {//{{{

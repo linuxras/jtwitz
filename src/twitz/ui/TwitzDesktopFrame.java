@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import javax.swing.JDesktopPane;
 import javax.swing.JDialog;
 import javax.swing.JMenuItem;
@@ -635,7 +636,33 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 		{
 			buildProfilesMenu();
 		}
-		//throw new UnsupportedOperationException("Not supported yet.");
+		else if(evt.getPropertyName().equals(TwitzSessionManager.DELETED_PROPERTY))
+		{
+			TwitzMainView v = (TwitzMainView)evt.getNewValue();
+			String s = v.getSessionName();
+			JToggleButton btn = this.taskBarButtons.get(s);
+			JMenuItem item = this.profileMenus.get(s);
+			try
+			{
+				v.setClosed(true);
+				if(btn != null)
+				{
+					btn.setVisible(false);
+					taskBar.remove(btn);
+				}
+				if(item != null)
+				{
+					item.setVisible(false);
+					profilesMenu.remove(item);
+				}
+				getDesktop().remove(v);
+
+			}
+			catch (Exception ex)
+			{
+				logger.error(ex.getLocalizedMessage());
+			}
+		}
 	}
 
 	

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
+import org.apache.log4j.Logger;
 import twitz.ui.dialogs.LocationListDialog;
 import org.jdesktop.application.Action;
 import twitter4j.Location;
@@ -43,6 +44,8 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 	private String sessionName;
 	public static final String SESSION_PROPERTY = "sessionName";
 	twitz.TwitzMainView view;
+	private boolean firstrun = true;
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /** Creates new form TrendsPanel */
     public TrendsPanel() {
@@ -261,6 +264,23 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 		if(locations == null)
 			buildLocationBox();
 		locations.setLocations(locals);
+	}
+
+	public void update(boolean force)
+	{
+		logger.debug("update() run");
+		if (firstrun && view.isConnected() || force)
+		{
+			//Update trends view
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(1);
+			map.put("arguments", args);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new java.util.Date().getTime(), map));
+			firstrun = false;
+		}
 	}
 
 	public void propertyChange(PropertyChangeEvent evt)

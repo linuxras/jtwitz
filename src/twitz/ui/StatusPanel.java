@@ -11,6 +11,7 @@
 
 package twitz.ui;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -263,33 +264,57 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 	{
 		if(statuses != null)
 		{
-			SwingWorker<StatusListModel, ResponseList> worker = new SwingWorker<StatusListModel, ResponseList>()
-			{
-				
-				int total = -1;
-				int count = 1;
+			final Component myGlassPane = view.getGlassPane();//getGlassPane();
+			
 
-				@Override
-				public StatusListModel doInBackground()
+			StatusUpdater worker = new StatusUpdater(view, statuses);
+			worker.addPropertyChangeListener(view.getStatusListener());
+			worker.start();
+		}
+	}
+
+	class StatusUpdater extends SwingWorker<StatusListModel, ResponseList>
+	{
+		final javax.swing.JInternalFrame frame;
+		int total = -1;
+		int count = 1;
+		private final ResponseList statuses;
+		final TwitzBusyPane busyPane;
+
+		public StatusUpdater(javax.swing.JInternalFrame frame, ResponseList list)
+		{
+			this.statuses = list;
+			this.frame = frame;
+			this.busyPane = new TwitzBusyPane(frame, this);
+		}
+
+		public void start()
+		{
+			firePropertyChange("started", null, "processing status list");
+			busyPane.block();
+		}
+
+		@Override
+		public StatusListModel doInBackground()
+		{
+			StatusListModel model = new StatusListModel();
+			total = statuses.size();
+			//firePropertyChange("started", null, "processing status list");
+			for (Object o : statuses)
+			{
+				if (isStatus(o))
 				{
-					StatusListModel model = new StatusListModel();
-					total = statuses.size();
-					firePropertyChange("started", null, "processing status list");
-					for(Object o: statuses)
-					{
-						if(isStatus(o))
-						{
-							firePropertyChange("message", null, String.format("Processing %d of %d records. Please wait...", count, total));
-							Status s = (Status)o;
-							//publish(s);
-							store.registerUser(s.getUser());
-							model.addStatus(s);
-							count++;
-						}
-					}
-					return model;
-					//return null;//I wont be using get() to process anything
+					firePropertyChange("message", null, String.format("Processing %d of %d records. Please wait...", count, total));
+					Status s = (Status) o;
+					//publish(s);
+					store.registerUser(s.getUser());
+					model.addStatus(s);
+					count++;
 				}
+			}
+			return model;
+			//return null;//I wont be using get() to process anything
+		}
 
 //				@Override
 //				protected void process(List<Status> part)
@@ -302,30 +327,28 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 //						count++;
 //					}
 //				}
+		@Override
+		protected void done()
+		{
+			busyPane.unblock();
 
-				@Override
-				protected void done()
-				{
-					try
-					{
-						getStatusList().setModel(get());
-					}
-					catch (InterruptedException ex)
-					{
-						Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
-					}
-					catch (ExecutionException ex)
-					{
-						Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
-					}
-					firePropertyChange("done", null, null);
-				}
-			};
-			worker.addPropertyChangeListener(view.getStatusListener());
-			worker.execute();
+			try
+			{
+				getStatusList().setModel(get());
+			}
+			catch (InterruptedException ex)
+			{
+				Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
+			}
+			catch (ExecutionException ex)
+			{
+				Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
+			}
+			firePropertyChange("done", null, null);
+
 		}
-	}
 
+	}
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {
 		dtem.addTwitzListener(o);

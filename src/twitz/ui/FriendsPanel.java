@@ -60,6 +60,7 @@ import twitz.util.TwitzSessionManager;
  */
 public class FriendsPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel, ActionListener
 {
+	private boolean firstrun = true;
 
     /** Creates new form FriendsPanel */
     public FriendsPanel() {
@@ -435,6 +436,24 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 	public int getSelectedIndex()
 	{
 		return contactsList1.getSelectedIndex();
+	}
+
+	public void update(boolean force)
+	{
+		logger.debug("update() run");
+		if (firstrun && view.isConnected() || force)
+		{
+			//Load friends list
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(config.getString("twitter_id"));//screenName
+			args.add(-1L);
+			map.put("arguments", args);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
+			firstrun = false;
+		}
 	}
 
 	//MouseListener

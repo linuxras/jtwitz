@@ -60,6 +60,8 @@ import twitz.util.TwitzSessionManager;
  */
 public class FollowersPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel, ActionListener
 {
+	private boolean firstrun = true;
+
     /** Creates new form FollowersPanel */
     public FollowersPanel() {
 		resourceMap = TwitzApp.getContext().getResourceMap(FollowersPanel.class);
@@ -432,6 +434,24 @@ public class FollowersPanel extends javax.swing.JPanel implements MouseListener,
 	public int getSelectedIndex()
 	{
 		return contactsList1.getSelectedIndex();
+	}
+
+	public void update(boolean force)
+	{
+		logger.debug("update() run");
+		if (firstrun && view.isConnected() || force)
+		{
+			//Load followers list
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(config.getString("twitter_id"));//screenName
+			args.add(-1L);
+			map.put("arguments", args);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FOLLOWERS_STATUSES, new java.util.Date().getTime(), map));
+			firstrun = false;
+		}
 	}
 
 	//MouseListener

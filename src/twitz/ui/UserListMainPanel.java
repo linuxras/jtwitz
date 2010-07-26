@@ -70,6 +70,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 
 	private long nextPage = -1;
 	private long prevPage = -1;
+	private boolean firstrun = true;
 	
 	public UserListMainPanel()
 	{
@@ -385,6 +386,24 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 			prevPage = userLists.getPreviousCursor();
 		}
 	}//}}}
+
+	public void update(boolean force)
+	{
+		logger.debug("update() run");
+		if (firstrun && view.isConnected() || force)
+		{
+			//Load userlists view
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(config.getString("twitter_id"));//screenName
+			args.add(-1L);
+			map.put("arguments", args);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
+			firstrun = false;
+		}
+	}
 
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {

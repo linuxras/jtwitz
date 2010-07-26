@@ -27,16 +27,16 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="profileBar" alignment="0" pref="475" max="32767" attributes="0"/>
+          <Component id="profileBar" alignment="0" pref="451" max="32767" attributes="0"/>
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="configPane" alignment="1" pref="451" max="32767" attributes="0"/>
+                  <Component id="configPane" alignment="1" pref="427" max="32767" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="btnOk" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" pref="95" max="-2" attributes="0"/>
                       <Component id="btnApply" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="99" max="32767" attributes="0"/>
+                      <EmptySpace pref="75" max="32767" attributes="0"/>
                       <Component id="btnCancel" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -191,6 +191,19 @@
             <Property name="toolTipText" type="java.lang.String" resourceKey="btnNewProfile.toolTipText"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="name" type="java.lang.String" value="btnNewProfile" noResource="true"/>
+            <Property name="verticalTextPosition" type="int" value="3"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="btnDelete">
+          <Properties>
+            <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
+              <action class="twitz.ui.dialogs.PreferencesDialog" id="deleteSession" methodName="deleteSession"/>
+            </Property>
+            <Property name="icon" type="javax.swing.Icon" resourceKey="btnDelete.icon"/>
+            <Property name="text" type="java.lang.String" resourceKey="btnDelete.text"/>
+            <Property name="toolTipText" type="java.lang.String" resourceKey="btnDelete.toolTipText"/>
+            <Property name="focusable" type="boolean" value="false"/>
+            <Property name="name" type="java.lang.String" value="btnDelete" noResource="true"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
           </Properties>
         </Component>

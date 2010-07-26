@@ -11,21 +11,11 @@
 
 package twitz;
 
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.GraphicsEnvironment;
-import java.awt.Rectangle;
-import java.awt.event.WindowEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.WindowFocusListener;
 import java.beans.PropertyChangeSupport;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
@@ -41,15 +31,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.logging.Level;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
 import javax.swing.Timer;
 import javax.swing.Icon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JList;
+import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -57,14 +45,12 @@ import javax.swing.JScrollBar;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.MenuElement;
-import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuListener;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.ResourceMap;
@@ -81,7 +67,6 @@ import twitz.events.TwitzEventModel;
 import twitz.twitter.TwitterManager;
 import twitz.testing.*;
 import twitz.util.SettingsManager;
-import twitz.util.UserStore;
 import twitz.ui.BlockedPanel;
 import twitz.ui.ContactsList;
 import twitz.ui.FollowersPanel;
@@ -89,8 +74,6 @@ import twitz.ui.FriendsPanel;
 import twitz.ui.StatusList;
 import twitz.ui.TrendsPanel;
 import twitz.ui.UserListPanel;
-import twitz.ui.models.ContactsListModel;
-import twitz.ui.models.StatusTableModel;
 import twitz.ui.models.StatusListModel;
 import org.pushingpixels.substance.api.*;
 import org.pushingpixels.substance.api.SubstanceConstants.ScrollPaneButtonPolicyKind;
@@ -102,9 +85,8 @@ import twitz.ui.SearchPanel;
 import twitz.ui.StatusPanel;
 import twitz.ui.TimeLinePanel;
 import twitz.ui.TweetBox;
+import twitz.ui.TwitzBusyPane;
 import twitz.ui.UserListMainPanel;
-import twitz.ui.renderers.StatusListRenderer;
-import twitz.ui.renderers.StatusListPanelRenderer;
 import twitz.util.DBManager;
 import twitz.util.TwitzSessionManager;
 
@@ -504,11 +486,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	{//GEN-HEADEREND:event_tabPaneKeyReleased
 		keyTyped(evt);
 	}//GEN-LAST:event_tabPaneKeyReleased
-
-	private void txtTweetKeyReleased(java.awt.event.KeyEvent evt)                                  
-	{                                         
-		keyReleased(evt);
-	}                                    
+                                   
 
 	/**
 	 * This is a utility method that will set the scrollbars of any
@@ -785,15 +763,20 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 			public void stateChanged(ChangeEvent e)
 			{
-				if(tabPane.getSelectedComponent().equals(searchPanel)) {
-					tweetBox.setVisible(false);
-				}
-				else {
-					tweetBox.setVisible(true);
-				}
+				updateTabState(forceupdate);
+				forceupdate = false;
 			}
 		});//}}}
 		
+		friendsPane.addChangeListener(new ChangeListener() {//{{{
+
+			public void stateChanged(ChangeEvent e)
+			{
+				updateTabState(forceupdate);
+				forceupdate = false;
+			}
+		});//}}}
+
 		tweetBox.setButtonEnabled(false);
 		//Dont allow the tweets list to steal focus
 		friendsTweets.setFocusable(false);
@@ -848,51 +831,52 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	@Action
 	public void loadAllPanels()//{{{
 	{
-		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", timelinePanel);
-		//Update the timeline view.
-		eventOccurred(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime(), map));
-		//Update trends view
-		map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", trendPanel);
-		ArrayList args = new ArrayList();
-		args.add(1);
-		map.put("arguments", args);
-		eventOccurred(new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new java.util.Date().getTime(), map));
-		//Load userlists view
-		map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", userListMainPanel1);
-		args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
-		args.add(-1L);
-		map.put("arguments", args);
-		eventOccurred(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
-		//Load blocked users
-		map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", blocked);
-		eventOccurred(new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new java.util.Date().getTime(), map));
-		//Load followers list
-		map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", followers);
-		args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
-		args.add(-1L);
-		map.put("arguments", args);
-		eventOccurred(new TwitzEvent(this, TwitzEventType.FOLLOWERS_STATUSES, new java.util.Date().getTime(), map));
-		//Load friends list
-		map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", friends);
-		args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
-		args.add(-1L);
-		map.put("arguments", args);
-		eventOccurred(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
+		updateTabState(true);
+//		Map map = Collections.synchronizedMap(new TreeMap());
+//		map.put("async", true);
+//		map.put("caller", timelinePanel);
+//		//Update the timeline view.
+//		eventOccurred(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime(), map));
+//		//Update trends view
+//		map = Collections.synchronizedMap(new TreeMap());
+//		map.put("async", true);
+//		map.put("caller", trendPanel);
+//		ArrayList args = new ArrayList();
+//		args.add(1);
+//		map.put("arguments", args);
+//		eventOccurred(new TwitzEvent(this, TwitzEventType.LOCATION_TRENDS, new java.util.Date().getTime(), map));
+//		//Load userlists view
+//		map = Collections.synchronizedMap(new TreeMap());
+//		map.put("async", true);
+//		map.put("caller", userListMainPanel1);
+//		args = new ArrayList();
+//		args.add(config.getString("twitter_id"));//screenName
+//		args.add(-1L);
+//		map.put("arguments", args);
+//		eventOccurred(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
+//		//Load blocked users
+//		map = Collections.synchronizedMap(new TreeMap());
+//		map.put("async", true);
+//		map.put("caller", blocked);
+//		eventOccurred(new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new java.util.Date().getTime(), map));
+//		//Load followers list
+//		map = Collections.synchronizedMap(new TreeMap());
+//		map.put("async", true);
+//		map.put("caller", followers);
+//		args = new ArrayList();
+//		args.add(config.getString("twitter_id"));//screenName
+//		args.add(-1L);
+//		map.put("arguments", args);
+//		eventOccurred(new TwitzEvent(this, TwitzEventType.FOLLOWERS_STATUSES, new java.util.Date().getTime(), map));
+//		//Load friends list
+//		map = Collections.synchronizedMap(new TreeMap());
+//		map.put("async", true);
+//		map.put("caller", friends);
+//		args = new ArrayList();
+//		args.add(config.getString("twitter_id"));//screenName
+//		args.add(-1L);
+//		map.put("arguments", args);
+//		eventOccurred(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
 	}//}}}
 
 	@Action
@@ -928,21 +912,6 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			case KeyEvent.VK_ESCAPE:
 				mainApp.toggleWindowView("down");
 				break;
-		//	default:
-		//		int c = txtTweet.getDocument().getLength();
-		//		lblChars.setText((140 - c)+"");
-		//		if((c > 0) && (c < 141)) {
-		//			btnTweet.setEnabled(true);
-		//			lblChars.setForeground(getResourceMap().getColor("lblChars.foreground"));
-		//		}
-		//		else if(c > 140) {
-		//			lblChars.setForeground(Color.RED);
-		//			btnTweet.setEnabled(false);
-		//		}
-		//		else
-		//		{
-		//			btnTweet.setEnabled(false);
-		//		}
 		}
 	}//}}}
 
@@ -993,6 +962,45 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		catch (PropertyVetoException ex)
 		{
 			logger.error(ex.getLocalizedMessage());
+		}
+	}
+
+	public void updateTabState(boolean force)
+	{
+		Component c = tabPane.getSelectedComponent();
+		logger.debug("Current tab name: " + c.getName());
+		if (c.equals(searchPanel))
+		{
+			tweetBox.setVisible(false);
+		}
+		else if (c.equals(recentPane))
+		{
+			timelinePanel.update(force);
+			trendPanel.update(force);
+		}
+		else if (c.equals(friendsPanel))
+		{
+			Component f = friendsPane.getSelectedComponent();
+			if (f.equals(friends))
+			{
+				friends.update(force);
+			}
+			else if (f.equals(userListMainPanel1))
+			{
+				userListMainPanel1.update(force);
+			}
+			else if (f.equals(followers))
+			{
+				followers.update(force);
+			}
+			else if (f.equals(blocked))
+			{
+				blocked.update(force);
+			}
+		}
+		else
+		{
+			tweetBox.setVisible(true);
 		}
 	}
 
@@ -1313,86 +1321,113 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		twitterManager = new TwitterManager(sessionName);//.getInstance();
 		twitterManager.addTwitzListener(this);
 		resource = TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
-		javax.swing.SwingWorker worker = new javax.swing.SwingWorker() //{{{
+
+		TwitzLogin worker = new TwitzLogin(this);
+		worker.addPropertyChangeListener(statusListener);
+		worker.start();
+		return connected;
+	}//}}}
+
+	class TwitzLogin extends SwingWorker //{{{
+	{
+
+		boolean online = false;
+		boolean error = false;
+		TwitterException tec;
+		TwitzBusyPane busyPane;
+		Component glassPane;
+		JInternalFrame frame;
+		ResourceMap resource = TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
+
+		public TwitzLogin(JInternalFrame frame)
 		{
-			boolean online = false;
-			boolean error = false;
-			TwitterException tec;
+			this.frame = frame;
+			this.busyPane  = new TwitzBusyPane(frame, this);
+		}
 
+		public void start()
+		{
+			firePropertyChange("started", null, "Starting twitter connection task");
+			message("Starting twitter connection task");
+			busyPane.block();
+			execute();
+		}
 
-			private void message(String msg, Object... args)
+		private void message(String msg, Object... args)
+		{
+			if (args.length == 0)
 			{
-				if(args.length == 0)
-				{
-					firePropertyChange("message", null, msg);
-				}
-				else
-				{
-					firePropertyChange("message", null, String.format(msg, args));
-				}
+				firePropertyChange("message", null, msg);
 			}
-
-			public Void doInBackground()
+			else
 			{
-				firePropertyChange("started", null, "Starting twitter connection task");
+				firePropertyChange("message", null, String.format(msg, args));
+			}
+		}
 
-				try
-				{
-					message("Looking for network connection to twitter.com");
-					online = twitterManager.getTwitterInstance().test();
-				}
-				catch(TwitterException te){
-					logger.error(te);
-					online = false;
-					message("No connection found to twitter.com");
-					return null;
-				}
-				//TODO modify this for when OAuth is being used
-				message("Attempting to verify credentials for %s", config.getString(DBManager.SESSION_TWITTER_ID));
-				try
-				{
-					twitterManager.getTwitterInstance().verifyCredentials();
-				}
-				catch(TwitterException te)
-				{
-					if(te.getStatusCode() == 401)
-					{
-						//Authentication incorrect
-						tec = te;
-						online = false;
-					}
-				}
+		public Void doInBackground()
+		{
+			try
+			{
+				message("Looking for network connection to twitter.com");
+				online = twitterManager.getTwitterInstance().test();
+			}
+			catch (TwitterException te)
+			{
+				logger.error(te);
+				online = false;
+				message("No connection found to twitter.com");
 				return null;
 			}
-
-			@Override
-			public void done()
+			//TODO modify this for when OAuth is being used
+			message("Attempting to verify credentials for %s", config.getString(DBManager.SESSION_TWITTER_ID));
+			try
 			{
-				if(error)
-				{
-					setConnected(online);
-					message("Incorrect username or password");
-					displayError(tec, "Login Error", "Incorrect username or password", null, true);
-				}
-				else
-				{
-					setConnected(online);
-
-					if(online)
-					{
-						loadAllPanels();
-					}
-					else if(DEVMODE)
-					{
-						addSampleData();
-					}
-				}
-				firePropertyChange("done", null, null);
+				twitterManager.getTwitterInstance().verifyCredentials();
 			}
-		}; //}}}
-		worker.addPropertyChangeListener(statusListener);
-		worker.execute();
-		return connected;
+			catch (TwitterException te)
+			{
+				if (te.getStatusCode() == 401)
+				{
+					//Authentication incorrect
+					tec = te;
+					online = false;
+				}
+			}
+			return null;
+		}
+
+		@Override
+		public void done()
+		{
+			busyPane.unblock();
+			if (error)
+			{
+				setConnected(online);
+				message("Incorrect username or password");
+				displayError(tec, "Login Error", "Incorrect username or password", null, true);
+			}
+			else
+			{
+				setConnected(online);
+
+				if (online)
+				{
+					loadAllPanels();
+				}
+				else if (DEVMODE)
+				{
+					addSampleData();
+				}
+			}
+			
+			firePropertyChange("done", null, null);
+		}
+
+		public void cancelled()
+		{
+
+		}
 	}//}}}
 
 	public void setConnected(boolean c)
@@ -1400,6 +1435,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		boolean old = connected;
 		//logger.debug("Connected changed --------- "+c+" --------------------");
 		connected = c;
+		forceupdate = c;
 		timelinePanel.setConnectButtonVisible(c);
 		super.firePropertyChange("connected", old, c);
 	}
@@ -1447,8 +1483,47 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			{
 				mod.addStatus(new StatusTest(i));
 			}
+			new BlockTest(this).start();
 		}
 
+	}
+
+	private class BlockTest extends SwingWorker
+	{
+		private final JInternalFrame frame;
+		private final TwitzBusyPane busy;
+		public BlockTest(JInternalFrame f)
+		{
+			this.frame = f;
+			this.busy = new TwitzBusyPane(frame, this);
+		}
+
+		public void start()
+		{
+			busy.block();
+		}
+
+		protected Object doInBackground()
+		{
+			while(!isCancelled())
+			{
+				try
+				{
+					Thread.sleep(3000);
+				}
+				catch (InterruptedException ex)
+				{
+					java.util.logging.Logger.getLogger(TwitzMainView.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			}
+			return null;
+		}
+
+		@Override
+		protected void done()
+		{
+			busy.unblock();
+		}
 	}
 
 	/**
@@ -2057,7 +2132,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(t, sessionName);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
-		handler.exec();
+		handler.start();
 //		(new twitz.events.TwitzEventHandler(t, twitterManager)).execute();
 	} //}}}
 
@@ -2283,7 +2358,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, sessionName);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
-		handler.exec();
+		handler.start();
 	}//}}}
 
 	public void destroyedStatus(Status destroyedStatus)//{{{
@@ -2301,7 +2376,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, sessionName);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
-		handler.exec();
+		handler.start();
 	}//}}}
 
 	public void retweetedStatus(Status retweetedStatus)//{{{
@@ -2319,7 +2394,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, sessionName);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
-		handler.exec();
+		handler.start();
 	}//}}}
 
 	//ResponseList<Status> retweets
@@ -2626,7 +2701,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, sessionName);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
-		handler.exec();
+		handler.start();
 	}//}}}
 
 	public void destroyedBlock(User user)//{{{
@@ -2636,7 +2711,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		twitz.events.TwitzEventHandler handler = new twitz.events.TwitzEventHandler(te, sessionName);
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
-		handler.exec();
+		handler.start();
 	}//}}}
 
 	public void gotExistsBlock(boolean blockExists)
@@ -2822,6 +2897,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	private boolean minimode = false;
 	private boolean logdebug = logger.isDebugEnabled();
 	private boolean startMode = false;
+	private boolean forceupdate = true;
 
 	/**
 	 * This que is used to track which part of the application is requesting an action

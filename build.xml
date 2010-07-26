@@ -13,8 +13,9 @@
     <import file="nbproject/build-impl.xml"/>
 
     <import file="nbproject/profiler-build-impl.xml"/>
-    <property file="default.build.properties"/>
     <property file="build.properties"/>
+    <property file="default.build.properties"/>
+    
     <!--
 
     There exist several targets which are by default empty and which can be 
@@ -97,6 +98,7 @@
 					</replacetokens>
 				</filterchain>
         </copy>
+	<echo message="${version}"/>
     </target>
 
 	<!--

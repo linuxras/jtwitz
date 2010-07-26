@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
@@ -24,6 +25,7 @@ public class TwitzSessionManager implements java.io.Serializable
 {
 	public static final String LOADED_PROPERTY = "sessionsLoaded";
 	public static final String ADDED_PROPERTY = "sessionsAdded";
+	public static final String DELETED_PROPERTY = "sessionDeleted";
 	static Logger logger;
 	private static TwitzSessionManager instance;
 	private static DBManager DBM;
@@ -165,6 +167,26 @@ public class TwitzSessionManager implements java.io.Serializable
 	public Map<String, TwitzMainView> getSessions()
 	{
 		return views;
+	}
+
+	public void deleteSession(String s)
+	{
+		logger.debug(s);
+		TwitzMainView tmv = getTwitMainViewForSession(s);
+		SettingsManager sm = getSettingsManagerForSession(s);
+		//fire the propertychange before we delete or other parts of the app will
+		//have problems cleaning up with thier SettingsManager having no backing
+		firePropertyChange(DELETED_PROPERTY, null, tmv);
+		try
+		{
+			DBM.deleteSession(sm.getLong(DBManager.SESSION_ID));
+		}
+		catch (Exception ex)
+		{
+			logger.error(ex.getLocalizedMessage());
+		}
+		views.remove(s);
+		sessions.remove(s);
 	}
 
 	private void setDefaults() {//{{{

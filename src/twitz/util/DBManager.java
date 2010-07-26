@@ -6,15 +6,19 @@
 package twitz.util;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 //import org.apache.log4j.Logger;
 import org.tmatesoft.sqljet.core.SqlJetException;
@@ -25,6 +29,10 @@ import org.tmatesoft.sqljet.core.table.ISqlJetTransaction;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 import twitter4j.User;
 import twitz.TwitzApp;
+import twitz.events.DefaultTwitzEventModel;
+import twitz.events.TwitzEvent;
+import twitz.events.TwitzEventType;
+import twitz.events.TwitzListener;
 import twitz.testing.UserTest;
 
 /**
@@ -45,6 +53,7 @@ public class DBManager {
 	//SESSION TABLE (name)
 	public static final String SESSION_TABLE = "login_session";
 	public static final String SESSION_NAME = "session_name";
+	public static final String SESSION_ID = "session_id";
 	public static final String SESSION_TWITTER_ID = "twitter_id";
 	public static final String SESSION_TWITTER_PASSWORD = "twitter_password";
 	public static final String SESSION_TWITTER_PICTURE_URL = "twitter_picture";
@@ -69,6 +78,7 @@ public class DBManager {
 	public static final String SESSION_DEFAULT_INDEX = "session_default_index";
 	public static final String SESSION_AUTOLOAD_INDEX = "session_autoload_index";
 	public static final String SESSION_INDEX = "session_index";
+	public static final String SESSION_ID_INDEX = "session_id_index";
 
 	//CONFIG_TABLE (name, value, sessionid, cfgdesc, cfgtype)
 	public static final String CONFIG_TABLE = "settings";
@@ -92,6 +102,18 @@ public class DBManager {
 	public static final String TYPE_VALUE = "type";
 	public static final String TYPE_INDEX = "type_configid_index";
 
+	public enum DBTask {
+		populateDefaultSettingsTable,
+		lookupSettingsForSession,
+		lookupSessions,
+		isSessionDefault,
+		updateSettings,
+		registerUser,
+		getRegisteredUsers,
+		getRegisteredUsersAsList,
+		deleteSession
+	};
+
 	private static final String DBFILE = "twitz.db";
 
 	private static final File FILE_DIR = TwitzApp.getConfigDirectory();
@@ -101,8 +123,6 @@ public class DBManager {
 	private static final Logger logger = Logger.getLogger("twitz.util.DBManager");
 	//private static final boolean logdebug = logger.isDebugEnabled();
 	private static DBManager instance;
-	
-	private static Vector<User> users = new Vector<User>();
 
 	/*Prevents Instantiation*/
 	private DBManager()
@@ -171,7 +191,7 @@ public class DBManager {
 		String userTableQuery = "CREATE TABLE "+ USER_TABLE + " (" + USER_ID + " INTEGER NOT NULL, " +
 				USER_NAME + " TEXT NOT NULL PRIMARY KEY, " + USER_FULLNAME + " TEXT NOT NULL, " +
 				USER_PICTURE +" TEXT NOT NULL)";
-		String sessionTableQuery = "CREATE TABLE " + SESSION_TABLE + " (" + SESSION_NAME + " TEXT NOT NULL, "
+		String sessionTableQuery = "CREATE TABLE " + SESSION_TABLE + " (" +SESSION_ID +" INTEGER PRIMARY KEY, " + SESSION_NAME + " TEXT NOT NULL, "
 				+ SESSION_TWITTER_ID + " TEXT NOT NULL, " + SESSION_TWITTER_PASSWORD + " TEXT NOT NULL, "
 				+ SESSION_TWITTER_PICTURE_URL + " TEXT, " + SESSION_TWITTER_USE_PROXY + " INTEGER NOT NULL DEFAULT 0,  "
 				+ SESSION_TWITTER_PROXY_PORT + " INTEGER DEFAULT 8080, "
@@ -200,6 +220,7 @@ public class DBManager {
 		String configDescIndex = "CREATE INDEX " + DESC_INDEX + " ON " + DESC_TABLE + "(" +  DESC_ID + ")";
 		String configTypeIndex = "CREATE INDEX " + TYPE_INDEX + " ON " + TYPE_TABLE + "(" +  TYPE_ID + ")";
 		String sessionIndex = "CREATE INDEX " + SESSION_INDEX + " ON "+ SESSION_TABLE +"("+ SESSION_NAME +")";
+		String sessionIdIndex = "CREATE INDEX " + SESSION_ID_INDEX + " ON "+ SESSION_TABLE +"("+ SESSION_ID +")";
 		String sessionDefaultsIndex = "CREATE INDEX " + SESSION_DEFAULT_INDEX + " ON "+ SESSION_TABLE +"("+ SESSION_DEFAULT +")";
 		String sessionAutoIndex = "CREATE INDEX " + SESSION_AUTOLOAD_INDEX + " ON "+ SESSION_TABLE +"("+ SESSION_AUTOLOAD +")";
 
@@ -222,6 +243,7 @@ public class DBManager {
 			db.createIndex(userIdIndex);
 			db.createTable(sessionTableQuery);
 			db.createIndex(sessionIndex);
+			db.createIndex(sessionIdIndex);
 			db.createIndex(sessionDefaultsIndex);
 			db.createIndex(sessionAutoIndex);
 			db.createTable(configTableQuery);
@@ -350,7 +372,7 @@ public class DBManager {
 						config.insert(21, SESSION_AUTOLOAD, 17, 6);
 						//sid = session.insert(name, 1, 1);
 						logger.log(Level.INFO, "Firstrun name: {0}", name);
-						session.insert(name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 1, 0);
+						session.insert(1, name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 1, 0);
 						firstrun = false;
 					}
 					else
@@ -360,9 +382,12 @@ public class DBManager {
 						//tab_position=north, tab_friends=1, tab_blocked=0, tab_following=0, tab_followers=0, tab_search=1, session_default=0, session_autoload=0)
 						logger.log(Level.INFO, "Profile name: {0}", name);
 						ISqlJetCursor sc = session.lookup(SESSION_INDEX, name);
+						ISqlJetCursor scl = session.open();
+						scl.last();
+						long next = scl.getInteger(SESSION_ID)+1;
 						if(sc.eof())
 						{
-							session.insert(name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 0, 0);
+							session.insert(next, name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 0, 0);
 						}
 						else
 						{
@@ -420,6 +445,7 @@ public class DBManager {
 			if(!sc.eof()) //sessions will have unique names
 			{
 				sid = sc.getRowId();
+
 				String twitter_id = sc.getString(SESSION_TWITTER_ID);
 				ISqlJetCursor cc = config.lookup(CONFIG_NAME_INDEX, SESSION_TWITTER_ID);
 				ISqlJetCursor tc = type.lookup(TYPE_INDEX, cc.getInteger(CONFIG_TYPE));
@@ -430,6 +456,16 @@ public class DBManager {
 				if(!dc.eof())
 					rv.setProperty(SESSION_TWITTER_ID+".cfgdesc", dc.getString(DESC_VALUE));
 				
+				long session_id = sc.getInteger(SESSION_ID);
+				cc = config.lookup(CONFIG_NAME_INDEX, SESSION_TWITZ_MINIMODE);
+				tc = type.lookup(TYPE_INDEX, cc.getInteger(CONFIG_TYPE));
+				dc = desc.lookup(DESC_INDEX, cc.getInteger(CONFIG_DESC));
+				rv.setProperty(SESSION_ID, session_id+"");
+				if(!tc.eof())
+					rv.setProperty(SESSION_ID+".cfgtype", tc.getString(TYPE_VALUE));
+				if(!dc.eof())
+					rv.setProperty(SESSION_ID+".cfgdesc", dc.getString(DESC_VALUE));
+
 				String twitter_password = sc.getString(SESSION_TWITTER_PASSWORD);
 				cc = config.lookup(CONFIG_NAME_INDEX, SESSION_TWITTER_PASSWORD);
 				tc = type.lookup(TYPE_INDEX, cc.getInteger(CONFIG_TYPE));
@@ -803,6 +839,36 @@ public class DBManager {
 		}
 	}
 
+	public synchronized void deleteSession(long ses) throws Exception
+	{
+		Logger.getAnonymousLogger().log(Level.INFO, "{0}", ses);
+		try
+		{
+			db.open();
+			if(db.isOpen())
+			{
+				db.beginTransaction(SqlJetTransactionMode.EXCLUSIVE);
+				if(db.isInTransaction())
+				{
+					ISqlJetTable session = db.getTable(SESSION_TABLE);
+					ISqlJetCursor sc = session.lookup(SESSION_ID_INDEX, ses);
+					//if(sc.getRowCount() == 1)
+					//{
+						Logger.getAnonymousLogger().log(Level.INFO, sc.getString(SESSION_NAME));
+//						long id = sc.getRowId();
+//						sc.goToRow(id);
+						sc.delete();
+					//}
+				}
+			}
+		}
+		finally
+		{
+			db.commit();
+			db.close();
+		}
+	}
+
 	private boolean isNumber(String val)
 	{
 		boolean rv = false;
@@ -930,18 +996,139 @@ public class DBManager {
 		return v.subList(0, v.size());
 	}
 
-	private static class DBQuery extends SwingWorker<Vector, Object>
+	public synchronized void runQuery(DBTask type, TwitzListener listener, boolean background, Object... args)
 	{
-		@Override
-		protected Vector doInBackground() throws Exception
+		DBQuery query = new DBQuery(type, args);
+		query.addTwitzListener(listener);
+		if (background)
 		{
-			throw new UnsupportedOperationException("Not supported yet.");
+			query.execute();
+		}
+		else
+		{
+			try
+			{
+				SwingUtilities.invokeAndWait(query);
+			}
+			catch (InterruptedException ex)
+			{
+				Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			catch (InvocationTargetException ex)
+			{
+				Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
+	}
+
+	public class DBQuery extends SwingWorker
+	{
+		DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
+		DBTask task;
+		Object[] params;
+
+		public DBQuery(DBTask dbtask, final Object... args)
+		{
+			task = dbtask;
+			params = args;
+		}
+
+		@Override
+		protected Object doInBackground()// throws Exception
+		{
+			Object rv = null;
+			try
+			{
+				switch(task)
+				{
+					case populateDefaultSettingsTable:
+						if(params != null && params.length == 1 && params[0] instanceof String)
+							rv = populateDefaultSettingsTable((String)params[0]);
+						break;
+					case lookupSettingsForSession:
+						if(params != null && params.length == 1 && params[0] instanceof String)
+							rv = lookupSettingsForSession((String)params[0]);
+						break;
+					case lookupSessions:
+						rv = lookupSessions();
+						break;
+					case isSessionDefault:
+						if(params != null && params.length == 1 && params[0] instanceof String)
+							rv = isSessionDefault((String)params[0]);
+						break;
+					case updateSettings:
+						if(params != null && params.length == 2
+								&& params[0] instanceof String
+								&& params[1] instanceof Properties)
+						{
+							updateSettings((String)params[0], (Properties)params[1]);
+						}
+						break;
+					case registerUser:
+						if(params != null && params.length == 1 && params[0] instanceof User)
+							registerUser((User)params[0]);
+						break;
+					case getRegisteredUsers:
+						rv = getRegisteredUsers();
+						break;
+					case getRegisteredUsersAsList:
+						rv = getRegisteredUsersAsList();
+						break;
+					case deleteSession:
+						if(params != null && params.length == 1 && params[0] instanceof Long)
+							deleteSession((Long)params[0]);
+						break;
+				}
+			}
+			catch(Exception e)
+			{
+				Map map = Collections.synchronizedMap(new TreeMap());
+				map.put("caller", this);
+				map.put("error", e);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DB_ERROR_EVENT, new Date().getTime(), map));
+			}
+			return rv;
+			//throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		@Override
 		public void done()
 		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("caller", this);
+			try
+			{
+				map.put("results", get());
+			}
+			catch (InterruptedException ex)
+			{
+				Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);map.put("caller", this);
+				map.put("error", ex);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DB_ERROR_EVENT, new Date().getTime(), map));
+			}
+			catch (ExecutionException ex)
+			{
+				Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+				map.put("error", ex);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DB_ERROR_EVENT, new Date().getTime(), map));
+			}
+			TwitzEvent resultEvent = new TwitzEvent(this, TwitzEventType.DB_RETURN_EVENT, new Date().getTime(), map);
+			fireTwitzEvent(resultEvent);
+		}
 
+		public void addTwitzListener(TwitzListener l)
+		{
+			dtem.addTwitzListener(l);
+		}
+
+		public void removeTwitzListener(TwitzListener l)
+		{
+			dtem.removeTwitzListener(l);
+		}
+
+		public void fireTwitzEvent(TwitzEvent e)
+		{
+			dtem.fireTwitzEvent(e);
 		}
 	}
 }

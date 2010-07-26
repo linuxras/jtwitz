@@ -100,6 +100,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
         chkAutoload = new javax.swing.JCheckBox();
         btnLoadProfile = new javax.swing.JButton();
         btnNewProfile = new javax.swing.JButton();
+        btnDelete = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         
@@ -202,20 +203,29 @@ public class PreferencesDialog extends javax.swing.JDialog {
         btnNewProfile.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         profileBar.add(btnNewProfile);
 
+        btnDelete.setAction(actionMap.get("deleteSession")); // NOI18N
+        btnDelete.setIcon(resourceMap.getIcon("btnDelete.icon")); // NOI18N
+        btnDelete.setText(resourceMap.getString("btnDelete.text")); // NOI18N
+        btnDelete.setToolTipText(resourceMap.getString("btnDelete.toolTipText")); // NOI18N
+        btnDelete.setFocusable(false);
+        btnDelete.setName("btnDelete"); // NOI18N
+        btnDelete.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        profileBar.add(btnDelete);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(profileBar, javax.swing.GroupLayout.DEFAULT_SIZE, 475, Short.MAX_VALUE)
+            .addComponent(profileBar, javax.swing.GroupLayout.DEFAULT_SIZE, 451, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(configPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 451, Short.MAX_VALUE)
+                    .addComponent(configPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(btnOk)
                         .addGap(95, 95, 95)
                         .addComponent(btnApply)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 99, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 75, Short.MAX_VALUE)
                         .addComponent(btnCancel)))
                 .addContainerGap())
         );
@@ -404,6 +414,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		config = sm.getSettingsManagerForSession(sessionName);
 		view = sm.getTwitMainViewForSession(sessionName);
 		chkDefault.setEnabled(!name.equals("Default"));
+		btnDelete.setEnabled(!name.equals("Default"));
 
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
@@ -420,6 +431,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		this.btnLoadProfile.setEnabled(!val);
 		this.btnNewProfile.setEnabled(!val);
 		this.cmbProfile.setEnabled(!val);
+		if(val)
+			this.btnDelete.setEnabled(!val);
 		firePropertyChange(SINGLE_SESSION_PROPERTY, old, val);
 	}
 
@@ -516,6 +529,17 @@ public class PreferencesDialog extends javax.swing.JDialog {
 			btnApply.setEnabled(config.getBoolean(DBManager.SESSION_AUTOLOAD) == chkAutoload.isSelected());
 	}
 
+	@Action
+	public void deleteSession()
+	{
+		//config
+		sm.deleteSession(sessionName);
+		logger.debug(sessionName);
+		cmbProfile.setSelectedItem("Default");
+		cmbProfile.removeItem(sessionName);
+		loadProfile();
+	}
+
 	//@SuppressWarnings("empty-statement")
 	public void saveChanges() {
 		DefaultTableModel model = (DefaultTableModel)tblConfig.getModel();
@@ -574,6 +598,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnApply;
     private javax.swing.JButton btnCancel;
+    private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnLoadProfile;
     private javax.swing.JButton btnNewProfile;
     private javax.swing.JButton btnOk;

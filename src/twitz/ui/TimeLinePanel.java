@@ -58,6 +58,8 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	private String sessionName;
 	public static final String SESSION_PROPERTY = "sessionName";
 	private TwitzMainView view;
+	private boolean firstrun = true;
+
     /** Creates new form TimeLinePanel */
     public TimeLinePanel(String session) {
 		setSessionName(session);
@@ -350,6 +352,21 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	public void updateStatus(ResponseList statuses)
 	{
 		statusPanel.updateStatus(statuses);
+	}
+
+	public void update(boolean force)
+	{
+		logger.debug("update() run");
+		if(firstrun && view.isConnected() || force)
+		{
+			
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			//Update the timeline view.
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.HOME_TIMELINE, new java.util.Date().getTime(), map));
+			firstrun = false;
+		}
 	}
 	
 	//TwitzEventModel
