@@ -100,29 +100,6 @@
         </copy>
 	<echo message="${version}"/>
     </target>
-    <target name="-check-splash-dir">
-	<condition property="splash.path" value="meta-inf/${splashscreen.basename}">
-	    <available file="${src.dir}/meta-inf/${splashscreen.basename}"/>
-	</condition>
-	<condition property="splash.path" value="META-INF/${splashscreen.basename}">
-	    <available file="${src.dir}/META-INF/${splashscreen.basename}"/>
-	</condition>
-    </target>
-    <target depends="init,compile,-pre-pre-jar,-pre-jar,-init-macrodef-copylibs,-check-splash-dir" if="do.archive+manifest.available+main.class+mkdist.available+splashscreen.available" name="-do-jar-with-libraries-and-splashscreen">
-        <basename file="${application.splash}" property="splashscreen.basename"/>
-        <mkdir dir="${build.classes.dir}/META-INF"/>
-        <copy failonerror="false" file="${application.splash}" todir="${build.classes.dir}/META-INF"/>
-        <j2seproject3:copylibs>
-            <customize>
-                <attribute name="Main-Class" value="${main.class}"/>
-                <!--<attribute name="SplashScreen-Image" value="META-INF/${splashscreen.basename}"/>-->
-		<attribute name="SplashScreen-Image" value="${splash.path}"/>
-            </customize>
-        </j2seproject3:copylibs>
-        <echo>To run this application from the command line without Ant, try:</echo>
-        <property location="${dist.jar}" name="dist.jar.resolved"/>
-        <echo>java -jar "${dist.jar.resolved}"</echo>
-    </target>
 	<!--
 	<target name="-post-compile">
 		 <copy todir="${build.classes.dir}" overwrite="${overwrite}">
