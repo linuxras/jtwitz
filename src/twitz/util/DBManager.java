@@ -786,7 +786,7 @@ public class DBManager {
 						while (e.hasMoreElements())
 						{
 							String key = (String) e.nextElement();
-							if (key.endsWith(".cfgdesc") || key.endsWith(".cfgtype"))
+							if (key.endsWith(".cfgdesc") || key.endsWith(".cfgtype") || key.equals(SESSION_ID))
 							{
 								continue;
 							}
@@ -821,6 +821,8 @@ public class DBManager {
 						if(!map.isEmpty())
 						{
 							map.put(SESSION_NAME, sc.getString(SESSION_NAME));
+							//We DO NOT allow modification of the session id outside of DBManager
+							map.put(SESSION_ID, sc.getInteger(SESSION_ID));
 							//System.out.println(map);
 							sc.updateByFieldNames(map);
 						}

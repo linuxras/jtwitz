@@ -58,7 +58,7 @@ import twitz.util.TwitzSessionManager;
  *
  * @author mistik1
  */
-public class FollowersPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel, ActionListener
+public class FollowersPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel/*, ActionListener*/
 {
 	private boolean firstrun = true;
 
@@ -506,7 +506,16 @@ public class FollowersPanel extends javax.swing.JPanel implements MouseListener,
 	}
 
 	//ActionListener
+	@Action
 	public void actionPerformed(ActionEvent e) {//{{{
+		String cmd = e.getActionCommand();
+		if(cmd.equals("USER_TIMELINE"))
+		{
+			TimeLinePanel panel = view.getTimeLine();
+			view.switchTab(0);
+			panel.timeLineSearch(getContactsList().getSelectedValue());
+			return;
+		}
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("caller", this);
 		map.put("async", true);

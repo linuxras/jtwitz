@@ -353,6 +353,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 				view.setVisible(true);
 				view.setSize(500, 600);
 				view.addInternalFrameListener(this);
+				view.setTitle(sessionName);
 				try
 				{
 					getDesktop().add(view, javax.swing.JDesktopPane.DEFAULT_LAYER);
@@ -528,23 +529,26 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 
 	public void internalFrameClosing(InternalFrameEvent e) {
         //displayMessage("Internal frame closing", e);
-		TwitzMainView f = (TwitzMainView)e.getInternalFrame();
-		if(f != null)
+		if (e.getInternalFrame() instanceof TwitzMainView)
 		{
-			String sname = f.getSessionName();
-			JMenuItem item = profileMenus.get(sname);
-			if(item != null)
+			TwitzMainView f = (TwitzMainView) e.getInternalFrame();
+			if (f != null)
 			{
-				logger.debug("Disabling JMenuItem "+sname);
-				item.setEnabled(true);
-			}
-			JToggleButton btn = taskBarButtons.get(sname);
-			if(btn != null)
-			{
-				logger.debug("Removing JButton "+sname+" from taskBar");
-				//taskBar.remove(btn);
-				//taskBar.revalidate();
-				btn.setVisible(false);
+				String sname = f.getSessionName();
+				JMenuItem item = profileMenus.get(sname);
+				if (item != null)
+				{
+					logger.debug("Disabling JMenuItem " + sname);
+					item.setEnabled(true);
+				}
+				JToggleButton btn = taskBarButtons.get(sname);
+				if (btn != null)
+				{
+					logger.debug("Removing JButton " + sname + " from taskBar");
+					//taskBar.remove(btn);
+					//taskBar.revalidate();
+					btn.setVisible(false);
+				}
 			}
 		}
 
@@ -630,7 +634,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 				addView(v);
 			}
 			buildProfilesMenu();
-			System.out.println("aaaaaaaaaaaaaaadddddddddddddddddeeeeeeeeeeeedddddddddddd");
+			logger.debug("aaaaaaaaaaaaaaadddddddddddddddddeeeeeeeeeeeedddddddddddd");
 		}
 		else if(evt.getPropertyName().equals(TwitzSessionManager.LOADED_PROPERTY))
 		{

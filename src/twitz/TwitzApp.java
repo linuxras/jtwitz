@@ -478,7 +478,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 		boolean resizeH = false;
 		if(frame.height > desktop.height)
 		{
-			comp.setSize(comp.getWidth(), (desktop.height - 32));
+			comp.setSize(comp.getWidth(), (desktop.height));
 			frame = comp.getBounds();
 		}
 		if(frame.width > desktop.width)
@@ -502,7 +502,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			if(left) x = (desktop.width - frame.width);
 			if(right) x = desktop.x;
 			if(down) y = desktop.y;
-			if(up) y = (desktop.height - frame.height) - 49;//-32 is to make up for most OS toolbars
+			if(up) y = (desktop.height - frame.height);// - 49;//-32 is to make up for most OS toolbars
 			//System.out.println("X: " + x + " Y: " + y);
 			comp.setLocation(x, y);
 		}

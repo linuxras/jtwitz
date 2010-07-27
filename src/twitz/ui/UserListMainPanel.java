@@ -387,6 +387,11 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 		}
 	}//}}}
 
+	public Map<String, UserList> getUserLists()
+	{
+		return userlists;
+	}
+
 	public void update(boolean force)
 	{
 		logger.debug("update() run");

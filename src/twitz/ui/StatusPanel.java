@@ -29,8 +29,11 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JMenuItem;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import org.jdesktop.application.Action;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.UserList;
@@ -50,7 +53,7 @@ import twitz.util.*;
  * @author mistik1
  */
 public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
-		PropertyChangeListener, ActionListener, MouseListener, java.io.Serializable
+		PropertyChangeListener,/* ActionListener,*/ MouseListener, java.io.Serializable
 	{
 	
 	public StatusPanel()
@@ -363,14 +366,29 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 	}
 
 	//ActionListener
+	@Action
 	public void actionPerformed(ActionEvent e) {//{{{
-		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("caller", this);
-		map.put("async", true);
-		Status[] selections = getStatusList().getSelectedValues();
-		//User[] selections = new User[select.length]; //getContactsList().getSelectedValues();
-		map.put("selections", selections);
-		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
+		if (e.getSource() instanceof JMenuItem)
+		{
+			String cmd = e.getActionCommand();
+			System.out.println("StatusPanel---------------=========================== "+cmd);
+			if(cmd.equals("USER_TIMELINE"))
+			{
+				TimeLinePanel panel = view.getTimeLine();
+				view.switchTab(0);
+				Status s = getStatusList().getSelectedValue();
+				panel.timeLineSearch(s.getUser());
+				return;
+			}
+			
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("caller", this);
+			map.put("async", true);
+			Status[] selections = getStatusList().getSelectedValues();
+			//User[] selections = new User[select.length]; //getContactsList().getSelectedValues();
+			map.put("selections", selections);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
+		}
 	}//}}}
 	
 	public void propertyChange(PropertyChangeEvent evt)//{{{
@@ -427,7 +445,8 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 					//Make the caller this panel as we can add the selected list to the panel
 					//that  will make the action listener of the menu items this panel as well
 					//view.getActionsMenu(this).show(this, p.x, p.y);
-					view.getActionsMenu(this).show(this, e.getXOnScreen(), e.getYOnScreen());
+					java.awt.Point pe = SwingUtilities.convertPoint(clist, p, this);
+					view.getActionsMenu(this).show(this, pe.x, pe.y);
 				}
 
 			}

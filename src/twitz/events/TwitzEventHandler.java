@@ -300,7 +300,9 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case USER_LISTS:
 				if(args != null && !args.isEmpty())
 				{
-					tm.getAsyncTwitterInstance().getUserLists((String)args.get(0), (Long)args.get(1));;
+					String userName = (String)args.get(0);
+					long page = (Long)args.get(1);
+					tm.getAsyncTwitterInstance().getUserLists(userName, page);
 				}
 				break;
 			case SHOW_USER_LIST:
@@ -349,23 +351,20 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case ADD_LIST_MEMBER:
 				if(args != null && args.size() == 2)
 				{
+					logger.debug("we have a list member to add----------------------");
 					listId = (Integer)args.get(0);
 					userId = (Integer)args.get(1);
-					if(screenName != null && !screenName.equals(""))
-					{
-						tm.getAsyncTwitterInstance().addUserListMember(listId, userId);
-					}
+					tm.getAsyncTwitterInstance().addUserListMember(listId, userId);
 				}
 				break;
 			case DELETE_LIST_MEMBER:
 				if(args != null && args.size() == 2)
 				{
+					logger.debug("we have a list member to delete----------------------");
 					listId = (Integer)args.get(0);
 					userId = (Integer)args.get(1);
-					if(screenName != null && !screenName.equals(""))
-					{
-						tm.getAsyncTwitterInstance().deleteUserListMember(listId, userId);
-					}
+					tm.getAsyncTwitterInstance().deleteUserListMember(listId, userId);
+					
 				}
 				break;
 			case CHECK_LIST_MEMBERSHIP:

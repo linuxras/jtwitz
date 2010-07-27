@@ -368,7 +368,14 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 			firstrun = false;
 		}
 	}
-	
+
+	public void timeLineSearch(User u)
+	{
+		this.cmbTimelineType.setSelectedIndex(1);
+		this.txtTimelineUser.setSelectedItem(u);
+		doSearch();
+	}
+
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {
 		statusPanel.addTwitzListener(o);
@@ -383,6 +390,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	}
 
 	//ActionListener
+	@Action
 	public void actionPerformed(ActionEvent e) {//{{{
 		String cmd = e.getActionCommand();
 		if("COMBO_TIMER".equals(cmd))
@@ -425,13 +433,22 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 		}
 		else
 		{
+			if(cmd.equals("USER_TIMELINE"))
+			{
+				TimeLinePanel panel = view.getTimeLine();
+				view.switchTab(0);
+				Status s = getStatusList().getSelectedValue();
+				panel.timeLineSearch(s.getUser());
+				return;
+			}
+			logger.debug("TimeLinePanel-------------=====================-----------"+cmd);
 			Map map = Collections.synchronizedMap(new TreeMap());
 			map.put("caller", this);
 			map.put("async", true);
 			Status[] selections = getStatusList().getSelectedValues();
 			//User[] selections = new User[select.length]; //getContactsList().getSelectedValues();
 			map.put("selections", selections);
-			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(cmd), new java.util.Date().getTime(), map));
+			fireTwitzEvent(new TwitzEvent(this, twitz.events.TwitzEventType.valueOf(cmd), new java.util.Date().getTime(), map));
 		}
 	}//}}}
 

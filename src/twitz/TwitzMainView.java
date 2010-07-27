@@ -87,6 +87,7 @@ import twitz.ui.TimeLinePanel;
 import twitz.ui.TweetBox;
 import twitz.ui.TwitzBusyPane;
 import twitz.ui.UserListMainPanel;
+import twitz.ui.dialogs.AddListUserDialog;
 import twitz.util.DBManager;
 import twitz.util.TwitzSessionManager;
 
@@ -1110,6 +1111,64 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		return rv;
 	}//}}}
 
+	private User getUserFromMap(Object obj) {//{{{
+		//String screenName = "";
+		User u = null;
+		if (isUserArray(obj))
+		{
+			if(logdebug)
+				logger.debug("Found User array");
+			User[] users = (User[]) obj;
+			u = users[0];
+		}
+		else if (isStatusArray(obj))
+		{
+			if(logdebug)
+				logger.debug("Found Status array");
+			Status[] stat = (Status[]) obj;
+			u = stat[0].getUser();
+			//screenName = u.getScreenName();
+		}
+		else if (isUser(obj))
+		{
+			u = (User) obj;
+			//screenName = u.getScreenName();
+		}
+		else if (isStatus(obj))
+		{
+			Status stat = (Status) obj;
+			u = stat.getUser();
+			//screenName = u.getScreenName();
+		}
+		return u;
+	}//}}}
+
+	private Vector<User> getUsersFromMap(Object obj) {//{{{
+		//String screenName = "";
+		Vector<User> rv = new Vector<User>();
+		User u = null;
+		if (isUserArray(obj))
+		{
+			User[] users = (User[]) obj;
+			if(users.length >= 2) {
+				rv.addElement(users[0]);
+				rv.addElement(users[1]);
+			}
+		}
+		else if (isStatusArray(obj))
+		{
+			Status[] stat = (Status[]) obj;
+			if(stat.length >= 2) {
+				u = stat[0].getUser();
+				rv.addElement(u);
+				u = stat[1].getUser();
+				rv.addElement(u);
+			}
+		}
+
+		return rv;
+	}//}}}
+
 	private void addSampleData() {//{{{
 		StatusListModel dm = timelinePanel.getStatusList().getModel();
 		//TODO: Test code to be removed in production
@@ -1581,7 +1640,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		BlockedPanel bp = null;
 		FollowersPanel flp = null;
 
-		ActionListener actions = null;
+		//ActionListener actions = null;
+		//javax.swing.JComponent actions = null;
+		javax.swing.ActionMap aMap = null;
 
 		boolean selected = true;
 		if(caller != null)
@@ -1593,6 +1654,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
+				aMap = TwitzApp.getContext().getActionMap(t.getClass(), t);
 			}
 			else if (caller instanceof ContactsList)
 			{
@@ -1602,6 +1664,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
+				aMap = TwitzApp.getContext().getActionMap(cl.getClass(), cl);
 			}
 			else if (caller instanceof UserListPanel)
 			{
@@ -1612,7 +1675,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				actions = ulp;
+				aMap = TwitzApp.getContext().getActionMap(ulp.getClass(), ulp);
+				//actions = ulp;
 			}
 			else if (caller instanceof StatusList)
 			{
@@ -1621,7 +1685,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				actions = tl;
+				aMap = TwitzApp.getContext().getActionMap(tl.getClass(), tl);
+				//actions = tl;
 			}
 			else if(caller instanceof StatusPanel)
 			{
@@ -1630,7 +1695,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				actions = sp;
+				aMap = TwitzApp.getContext().getActionMap(sp.getClass(), sp);
+				//actions = sp;
 			}
 			else if(caller instanceof TimeLinePanel)
 			{
@@ -1639,7 +1705,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				actions = tlp;
+				aMap = TwitzApp.getContext().getActionMap(tlp.getClass(), tlp);
+				//actions = tlp;
 			}
 			else if(caller instanceof FriendsPanel)
 			{
@@ -1648,7 +1715,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				actions = fp;
+				aMap = TwitzApp.getContext().getActionMap(fp.getClass(), fp);
+				//actions = fp;
 			}
 			else if(caller instanceof BlockedPanel)
 			{
@@ -1657,7 +1725,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				actions = bp;
+				aMap = TwitzApp.getContext().getActionMap(bp.getClass(), bp);
+				//actions = bp;
 			}
 			else if(caller instanceof FollowersPanel)
 			{
@@ -1666,7 +1735,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				actions = flp;
+				aMap = TwitzApp.getContext().getActionMap(flp.getClass(), flp);
+				//actions = flp;
 			}
 		}
 		JPopupMenu menu = new JPopupMenu(getResourceMap().getString("ACTIONS"));
@@ -1674,12 +1744,15 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		menu.setLabel(getResourceMap().getString("ACTIONS"));
 
 		JMenuItem item = new JMenuItem(getResourceMap().getString("REPORT_SPAM"));
+		//TwitzApp.getContext().getActionMap(TwitzDesktopFrame.class, this);
 		//item.setActionCommand(TwitterConstants.REPORT_SPAM+"");
-		item.setActionCommand("REPORT_SPAM");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			logger.debug("REPORT_SPAM");
+			item.setAction(aMap.get("actionPerformed"));
 		}
+		item.setActionCommand("REPORT_SPAM");
 		item.setIcon(getResourceMap().getIcon("icon.bomb"));
+		item.setText(getResourceMap().getString("REPORT_SPAM"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		menu.add(item);
@@ -1689,20 +1762,24 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		sub.setIcon(getResourceMap().getIcon("icon.stop"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("CREATE_BLOCK"));
-		item.setActionCommand("CREATE_BLOCK");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
+		item.setActionCommand("CREATE_BLOCK");
 		item.setIcon(getResourceMap().getIcon("icon.stop"));
+		item.setText(getResourceMap().getString("CREATE_BLOCK"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("DESTROY_BLOCK"));
-		item.setActionCommand("DESTROY_BLOCK");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
+		item.setActionCommand("DESTROY_BLOCK");
+		item.setText(getResourceMap().getString("DESTROY_BLOCK"));
 		item.setIcon(getResourceMap().getIcon("icon.stop"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
@@ -1713,41 +1790,49 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		sub.setIcon(getResourceMap().getIcon("icon.user"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("CREATE_FRIENDSHIP"));
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("CREATE_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_add"));
+		item.setText(getResourceMap().getString("CREATE_FRIENDSHIP"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("DESTROY_FRIENDSHIP"));
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("DESTROY_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_delete"));
+		item.setText(getResourceMap().getString("DESTROY_FRIENDSHIP"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("EXISTS_FRIENDSHIP"));
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("EXISTS_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_go"));
+		item.setText(getResourceMap().getString("EXISTS_FRIENDSHIP"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("SHOW_FRIENDSHIP"));
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("SHOW_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_gray"));
+		item.setText(getResourceMap().getString("SHOW_FRIENDSHIP"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
@@ -1759,11 +1844,13 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		sub.setIcon(getResourceMap().getIcon("icon.user_comment"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("SEND_DIRECT_MESSAGE"));
-		item.setActionCommand("SEND_DIRECT_MESSAGE");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
+		item.setActionCommand("SEND_DIRECT_MESSAGE");
 		item.setIcon(getResourceMap().getIcon("icon.user_comment"));
+		item.setText(getResourceMap().getString("SEND_DIRECT_MESSAGE"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
@@ -1782,22 +1869,26 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		sub.setIcon(getResourceMap().getIcon("icon.map"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("NEAR_BY_PLACES"));
-		item.setActionCommand("NEAR_BY_PLACES");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
+		item.setActionCommand("NEAR_BY_PLACES");
 		item.setIcon(getResourceMap().getIcon("icon.map"));
+		item.setText(getResourceMap().getString("NEAR_BY_PLACES"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("GEO_DETAILS"));
-		item.setActionCommand("GEO_DETAILS");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
-		item.addActionListener(actions);
+		item.setActionCommand("GEO_DETAILS");
+		//item.addActionListener(actions);
 		item.setIcon(getResourceMap().getIcon("icon.map_edit"));
+		item.setText(getResourceMap().getString("GEO_DETAILS"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
@@ -1810,32 +1901,38 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		sub.setIcon(getResourceMap().getIcon("icon.group"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("ADD_LIST_MEMBER"));
-		item.setActionCommand("ADD_LIST_MEMBER");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
-		item.addActionListener(actions);
+		item.setActionCommand("ADD_LIST_MEMBER");
+		//item.addActionListener(actions);
 		item.setIcon(getResourceMap().getIcon("icon.group_add"));
+		item.setText(getResourceMap().getString("ADD_LIST_MEMBER"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("DELETE_LIST_MEMBER"));
-		item.setActionCommand("DELETE_LIST_MEMBER");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
+		item.setActionCommand("DELETE_LIST_MEMBER");
 		item.setIcon(getResourceMap().getIcon("icon.group_delete"));
+		item.setText(getResourceMap().getString("DELETE_LIST_MEMBER"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("CHECK_LIST_MEMBERSHIP"));
-		item.setActionCommand("CHECK_LIST_MEMBERSHIP");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
+		item.setActionCommand("CHECK_LIST_MEMBERSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.group_gear"));
+		item.setText(getResourceMap().getString("CHECK_LIST_MEMBERSHIP"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
@@ -1843,11 +1940,13 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	//USER_TIMELINE
 		item = new JMenuItem(getResourceMap().getString("USER_TIMELINE"));
-		item.setActionCommand("USER_TIMELINE");
-		if(actions != null) {
-			item.addActionListener(actions);
+		if(aMap != null) {
+			item.setAction(aMap.get("actionPerformed"));
+			//item.addActionListener(actions);
 		}
+		item.setActionCommand("USER_TIMELINE");
 		item.setIcon(getResourceMap().getIcon("icon.timeline_marker"));
+		item.setText(getResourceMap().getString("USER_TIMELINE"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		menu.add(item);
@@ -2014,7 +2113,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//getMainFrame().getStatusBar().setVisible(false);
 		menuBar.setVisible(false);
 		setSize(getWidth(), config.getBoolean("twitz_undecorated") ? 90 : 110);
-		mainApp.fixIFrameLocation(this);
+		TwitzApp.fixIFrameLocation(this);
 		if(rec != null)
 		{
 			int bottom = rec.y + rec.height;
@@ -2038,12 +2137,30 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//getMainFrame().getStatusBar().setVisible(true);
 		menuBar.setVisible(true);
 		setSize(getWidth(), config.getInteger("twitz_last_height"));
-		mainApp.fixIFrameLocation(this);
+		TwitzApp.fixIFrameLocation(this);
 		//btnMini.setIcon(getResourceMap().getIcon("btnMini.icon"));
-		tweetBox.setMiniIcon(getResourceMap().getIcon("btnMini.icon"));
+		tweetBox.setMiniIcon(resourceMap.getIcon("btnMini.icon"));
 		minimode = false;
 		config.setProperty("minimode", minimode+""); //Update the config file so it starts in the same mode
 	}//}}}
+
+	public TimeLinePanel getTimeLine()
+	{
+		return this.timelinePanel;
+	}
+
+	/**
+	 * Switch the tab at index. There will be no Exception thrown if tab does not exist
+	 * @param index The index to switch to, this is a 0 based index
+	 */
+	public void switchTab(int index)
+	{
+		try
+		{
+			tabPane.setSelectedIndex(index);
+		}
+		catch(Exception e){}
+	}
 
 	//TwitzListener
 	/**
@@ -2111,6 +2228,42 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 						Map m = t.getEventMap();
 						m.put("arguments", args);
 					}
+					else
+					{
+						return;
+					}
+				}
+			break;
+			case ADD_LIST_MEMBER:
+			case DELETE_LIST_MEMBER:
+				//logger.debug("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
+				if(eventMap != null)
+				{
+					AddListUserDialog alud = new AddListUserDialog(getMainFrame(), true);
+					alud.setUserListMap(userListMainPanel1.getUserLists());
+					alud.setUser(getUserFromMap(eventMap.get("selections")));
+					if(eventMap.containsKey("userList"))
+					{
+						alud.setSelectedUserList((UserList)eventMap.get("userList"));
+					}
+					if(type.equals(TwitzEventType.DELETE_LIST_MEMBER))
+					{
+						alud.setButtonText("Delete");
+						alud.setButtonIcon(resourceMap.getImageIcon("icon.delete"));
+					}
+					alud.setLocationRelativeTo(this);
+					alud.setVisible(true);
+					if(alud.getSelectedUserList() == null)
+					{
+						return;
+					}
+					UserList select = alud.getSelectedUserList();
+					User user = alud.getUser();
+					args = new ArrayList();
+					args.add(select.getId());
+					args.add(user.getId());
+					Map m = t.getEventMap();
+					m.put("arguments", args);
 				}
 			break;
 			case EXISTS_FRIENDSHIP:
@@ -2174,6 +2327,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			tabPane.setTabPlacement(JTabbedPane.LEFT);
 		}
 		else {
+			logger.debug("9999999999999999999999999999999999999999999999");
 			Map map = Collections.synchronizedMap(new TreeMap());
 			map.put("caller", evt.getSource());
 			map.put("async", true);

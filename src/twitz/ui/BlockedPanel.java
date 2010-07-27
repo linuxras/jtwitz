@@ -14,11 +14,7 @@ package twitz.ui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -30,19 +26,13 @@ import javax.swing.JPanel;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.BorderFactory;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
-import org.jdesktop.swingx.JXCollapsiblePane;
-import twitter4j.PagableResponseList;
 import twitter4j.ResponseList;
 import twitter4j.Paging;
-import twitter4j.Status;
 import twitter4j.User;
-import twitter4j.UserList;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
 import twitz.events.DefaultTwitzEventModel;
@@ -59,7 +49,7 @@ import twitz.util.TwitzSessionManager;
  *
  * @author mistik1
  */
-public class BlockedPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel, ActionListener
+public class BlockedPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel/*, ActionListener*/
 {
 	private boolean firstrun = true;
 	// Variables declaration - do not modify//GEN-BEGIN:variables
@@ -536,7 +526,16 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 	}
 
 	//ActionListener
+	@Action
 	public void actionPerformed(ActionEvent e) {//{{{
+		String cmd = e.getActionCommand();
+		if(cmd.equals("USER_TIMELINE"))
+		{
+			TimeLinePanel panel = view.getTimeLine();
+			view.switchTab(0);
+			panel.timeLineSearch(getContactsList().getSelectedValue());
+			return;
+		}
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("caller", this);
 		map.put("async", true);
