@@ -19,7 +19,7 @@ import org.jdesktop.application.Action;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class MessageDialog extends javax.swing.JDialog {
 

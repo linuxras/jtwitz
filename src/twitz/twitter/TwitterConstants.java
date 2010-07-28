@@ -7,7 +7,7 @@ package twitz.twitter;
 
 /**
  * This provides all the Constants for the Twitter4j interface
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitterConstants {
 	public static final int SEARCH = 0;

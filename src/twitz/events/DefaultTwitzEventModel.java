@@ -9,7 +9,7 @@ import java.util.Vector;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class DefaultTwitzEventModel implements TwitzEventModel {
 

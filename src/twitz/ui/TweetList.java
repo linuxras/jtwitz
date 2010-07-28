@@ -31,7 +31,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TweetList extends JList implements MouseListener, ActionListener, TwitzEventModel{
 

@@ -57,7 +57,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class UserListPanel extends javax.swing.JPanel implements MouseListener, FocusListener, 
 		TwitzEventModel/*, ActionListener*/

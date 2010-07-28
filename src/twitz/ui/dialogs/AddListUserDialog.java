@@ -33,7 +33,7 @@ import twitz.util.UserToStringConverter;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class AddListUserDialog extends javax.swing.JDialog {
 

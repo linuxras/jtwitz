@@ -36,7 +36,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TweetBox extends javax.swing.JPanel implements ActionListener, TwitzEventModel {
 	private SettingsManager config;

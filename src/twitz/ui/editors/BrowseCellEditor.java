@@ -30,7 +30,7 @@ import org.pushingpixels.substance.api.skin.SkinInfo;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class BrowseCellEditor extends AbstractCellEditor implements TableCellEditor {
 

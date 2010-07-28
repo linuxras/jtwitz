@@ -56,7 +56,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class FollowersPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel/*, ActionListener*/
 {

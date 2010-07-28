@@ -50,7 +50,7 @@ import twitz.util.*;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel, 
 		ActionListener, MouseListener, PropertyChangeListener

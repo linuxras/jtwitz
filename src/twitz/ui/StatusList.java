@@ -46,7 +46,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class StatusList extends JList implements ActionListener, TwitzEventModel{
 

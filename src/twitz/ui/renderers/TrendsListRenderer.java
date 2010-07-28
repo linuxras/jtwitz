@@ -13,7 +13,7 @@ import twitter4j.Trend;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TrendsListRenderer extends SubstanceDefaultListCellRenderer {
 

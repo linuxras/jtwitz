@@ -1,0 +1,37 @@
+Twitz @VERSION@ (@CODENAME@)
+Written by Andrew Williams
+
+Twitz (aka JTwitz) is a twitter application written in 100% java.
+
+Most of the current twitter api is supported with the following support 
+comming soon. 
+OAuth authentication should be there in the 1.0 release
+User List subscriptions also slated for 1.0
+Updating your twitter profile 1.0 main feature.
+
+Twitz is released under the GPL v2 check COPYING
+You can also obtain any other license you like by contacting me @
+Andrew Williams linuxras@gmail.com
+
+Twitz is powered by twitter4j.
+
+========================
+Building Twitz
+========================
+
+You need at least java 1.5 or later 1.6 or later recommended
+Ant 1.7.1 or better with dependencies.
+Type the following to the top level folder 'Twitz'
+
+ant jar
+
+========================
+Running Twitz
+========================
+
+To run the project from the command line, type the following:
+
+java -jar "Twitz-@VERSION@.jar" 
+
+Notes:
+

@@ -16,7 +16,7 @@ import org.jdesktop.application.Action;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class CreateUserListDialog extends javax.swing.JDialog {
 

@@ -11,7 +11,7 @@ import javax.swing.table.AbstractTableModel;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class PreferencesTableModel extends AbstractTableModel implements Serializable {
 

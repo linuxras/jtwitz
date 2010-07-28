@@ -24,7 +24,7 @@ import javax.swing.event.PopupMenuListener;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListener
 {

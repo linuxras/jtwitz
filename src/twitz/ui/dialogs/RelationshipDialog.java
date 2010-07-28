@@ -17,7 +17,7 @@ import twitter4j.Relationship;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class RelationshipDialog extends javax.swing.JDialog {
 

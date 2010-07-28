@@ -13,7 +13,7 @@ import twitter4j.Location;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class LocationListModel extends AbstractListModel {
 

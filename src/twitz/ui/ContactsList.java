@@ -28,7 +28,7 @@ import twitz.util.*;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class ContactsList extends JList implements ActionListener, TwitzEventModel{
 

@@ -25,7 +25,7 @@ import twitz.events.TwitzListener;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class SettingsManager extends Properties{
 

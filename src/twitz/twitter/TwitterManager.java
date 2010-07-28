@@ -28,7 +28,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitterManager extends DefaultTwitzEventModel {
 

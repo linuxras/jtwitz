@@ -7,7 +7,7 @@ package twitz.events;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public interface TwitzListener extends java.util.EventListener{
 

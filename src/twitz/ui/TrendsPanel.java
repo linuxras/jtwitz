@@ -38,7 +38,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeListener, TwitzEventModel {
 	private String sessionName;

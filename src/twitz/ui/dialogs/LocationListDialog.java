@@ -44,7 +44,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class LocationListDialog extends JDialog implements TwitzEventModel {
 	private SettingsManager config;

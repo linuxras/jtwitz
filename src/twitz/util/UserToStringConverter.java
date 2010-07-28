@@ -10,7 +10,7 @@ import twitter4j.User;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class UserToStringConverter extends ObjectToStringConverter {
 

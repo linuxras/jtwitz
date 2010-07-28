@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class StatusTableModel extends AbstractTableModel {
 

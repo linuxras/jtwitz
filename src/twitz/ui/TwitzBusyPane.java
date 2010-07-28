@@ -19,7 +19,7 @@ import org.jdesktop.swingx.JXPanel;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzBusyPane extends JXPanel implements MouseListener{
 

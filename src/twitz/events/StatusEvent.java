@@ -7,7 +7,7 @@ package twitz.events;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class StatusEvent extends java.util.EventObject{
 

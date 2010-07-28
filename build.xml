@@ -98,8 +98,63 @@
 					</replacetokens>
 				</filterchain>
         </copy>
+		<copy todir="${dist.dir}">
+			<fileset dir="." includes="README,COPYING"/>
+				<filterchain>
+			        <replacetokens>
+					     <token key="LOGLEVEL" value="${loglevel}"/>
+					     <token key="LOG.APPENDERS" value="${log.appenders}"/>
+					     <token key="VERSION" value="${version}"/>
+					     <token key="CODENAME" value="${codename}"/>
+					     <token key="HOMEPAGE" value="${homepage}"/>
+					</replacetokens>
+				</filterchain>
+		</copy>
 	<echo message="${version}"/>
     </target>
+
+	<target name="distro" depends="javadoc,jar" description="Create binary distribution">
+		<property name="dist.name" value="${ant.project.name}-${version}"/>
+		<zip destfile="${dist.dir}/${dist.name}-doc.zip">
+            <zipfileset dir="${dist.javadoc.dir}" prefix="${dist.name}/javadoc"/>
+        </zip>
+        <zip destfile="${dist.dir}/${dist.name}-src.zip">
+            <zipfileset dir="." prefix="${dist.name}">
+                <include name="${src.dir}/**"/>
+                <exclude name="**/.git"/>
+                <exclude name="**/.gitignore"/>
+            </zipfileset>
+            <zipfileset dir="." prefix="${dist.name}">
+                <include name="${test.src.dir}/**"/>
+                <exclude name="**/.git"/>
+                <exclude name="**/.gitignore"/>
+                <exclude name="**/*.swp"/>
+            </zipfileset>
+            <zipfileset dir="." prefix="${dist.name}">
+                <include name="nbproject/build-impl.xml"/>
+                <include name="nbproject/project.xml"/>
+                <include name="nbproject/genfiles.properties"/>
+                <include name="build.xml"/>
+                <include name="COPYING"/>
+                <include name="README"/>
+                <include name="default.build.properties"/>
+            </zipfileset>
+			<zipfileset dir="." prefix="${dist.name}">
+				<include name="thirdparty/**"/>
+			</zipfileset>
+        </zip>
+        <copy file="${dist.dir}/${ant.project.name}.jar"
+              tofile="${dist.dir}/${dist.name}.jar"/>
+		<zip destfile="${dist.dir}/${dist.name}.zip">
+			<zipfileset dir="." prefix="${dist.name}">
+				<include name="${dist.dir}/${dist.name}.jar"/>
+				<include name="${dist.dir}/lib/**"/>
+				<include name="${dist.dir}/README"/>
+				<include name="${dist.dir}/COPYING"/>
+			</zipfileset>
+		</zip>
+
+	</target>
 	<!--
 	<target name="-post-compile">
 		 <copy todir="${build.classes.dir}" overwrite="${overwrite}">

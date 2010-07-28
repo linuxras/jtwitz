@@ -95,7 +95,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzMainView extends javax.swing.JInternalFrame implements ActionListener, TwitterListener, TwitzListener, TwitzEventModel {
 	private final String sessionName;

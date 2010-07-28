@@ -14,7 +14,7 @@ import twitter4j.UserList;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class UserListRenderer extends SubstanceDefaultListCellRenderer {
 

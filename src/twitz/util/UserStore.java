@@ -21,7 +21,7 @@ import twitz.util.DBManager.DBTask;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class UserStore {
 

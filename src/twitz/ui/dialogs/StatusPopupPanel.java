@@ -53,7 +53,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 

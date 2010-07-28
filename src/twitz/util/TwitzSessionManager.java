@@ -19,7 +19,7 @@ import twitz.TwitzMainView;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzSessionManager implements java.io.Serializable
 {

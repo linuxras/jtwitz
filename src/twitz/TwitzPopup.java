@@ -14,7 +14,7 @@ import javax.swing.JPopupMenu;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzPopup extends JPopupMenu {
 

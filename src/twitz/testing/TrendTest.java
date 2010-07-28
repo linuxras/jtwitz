@@ -9,7 +9,7 @@ import twitter4j.Trend;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TrendTest implements Trend{
 

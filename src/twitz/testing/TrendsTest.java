@@ -12,7 +12,7 @@ import twitter4j.Trends;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TrendsTest implements Trends{
 

@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzEvent extends java.util.EventObject{
 

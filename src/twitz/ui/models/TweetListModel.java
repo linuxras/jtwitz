@@ -12,7 +12,7 @@ import twitter4j.Tweet;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TweetListModel extends AbstractListModel {
 

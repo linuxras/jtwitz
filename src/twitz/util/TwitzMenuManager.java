@@ -26,7 +26,7 @@ import twitz.ui.UserListPanel;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzMenuManager implements PropertyChangeListener{
 

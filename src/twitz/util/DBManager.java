@@ -37,7 +37,7 @@ import twitz.testing.UserTest;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class DBManager {
 

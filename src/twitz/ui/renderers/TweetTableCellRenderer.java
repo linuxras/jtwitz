@@ -21,7 +21,7 @@ import twitter4j.Place;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TweetTableCellRenderer extends SubstanceDefaultTableCellRenderer{
 

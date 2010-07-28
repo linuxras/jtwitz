@@ -12,7 +12,7 @@ import twitter4j.Status;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class StatusListModel extends AbstractListModel {
 

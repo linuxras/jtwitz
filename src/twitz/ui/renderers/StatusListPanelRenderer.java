@@ -56,7 +56,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  * @deprecated This class was an experiment and will not and should not Ever be used
- * @author mistik1
+ * @author Andrew Williams
  */
 public class StatusListPanelRenderer extends JPanel implements TwitzEventModel, ListCellRenderer {
 	private Status status;

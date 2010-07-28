@@ -46,7 +46,7 @@ import twitz.util.TwitzSessionManager;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListener, 
 		InternalFrameListener, PropertyChangeListener

@@ -9,7 +9,7 @@ import twitter4j.Location;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class LocationTest implements Location {
 

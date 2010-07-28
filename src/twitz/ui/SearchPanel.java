@@ -40,7 +40,7 @@ import twitz.util.UserStore;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 

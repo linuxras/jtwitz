@@ -10,7 +10,7 @@ import twitter4j.Relationship;
 
 /**
  *
- * @author mistik1
+ * @author Andrew Williams
  */
 public class RelationshipTest implements Relationship
 {
