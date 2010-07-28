@@ -2285,6 +2285,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					if(alud == null)
 						alud = new AddListUserDialog(getMainFrame(), true);
+					alud.reset();
 					alud.setUserListMap(userListMainPanel1.getUserLists());
 					if(eventMap.containsKey("selections"))
 					{
@@ -2316,6 +2317,10 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 					}
 					UserList select = alud.getSelectedUserList();
 					User user = alud.getUser();
+					if(user == null)
+					{
+						return;
+					}
 					args = new ArrayList();
 					args.add(select.getId());
 					args.add(user.getId());
@@ -2342,6 +2347,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 						alud = new AddListUserDialog(getMainFrame(), true);
 
 					}
+					alud.reset();
 					alud.setUserListMap(userListMainPanel1.getUserLists());
 					alud.setLocationRelativeTo(this);
 					alud.setMode(AddListUserDialog.Mode.LIST_DELETE);

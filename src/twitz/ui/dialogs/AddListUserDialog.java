@@ -51,6 +51,7 @@ public class AddListUserDialog extends javax.swing.JDialog {
 	};
 
 	private Mode mode;
+	private boolean userSelect = false;
 
     /** Creates new form AddListUserDialog */
     public AddListUserDialog(java.awt.Frame parent, boolean modal) {
@@ -233,7 +234,11 @@ public class AddListUserDialog extends javax.swing.JDialog {
 		{
 			this.selectedList = (UserList)v;
 		}
-		if(!mode.equals(Mode.LIST_DELETE))
+		else
+		{
+			this.selectedList = null;
+		}
+		if(userSelect)
 		{
 			Object u = cmbUser.getSelectedItem();
 			if (u instanceof User)
@@ -299,6 +304,7 @@ public class AddListUserDialog extends javax.swing.JDialog {
 			//ImageIcon icon = new ImageIcon(twitz.TwitzApp.verifyImage(user.getProfileImageURL()));
 			userLabel.setIcon(icon);
 			userLabel.setText(user.getScreenName());
+			setSelectedMode(false);
 		}
 	}
 
@@ -315,6 +321,7 @@ public class AddListUserDialog extends javax.swing.JDialog {
 	public void setSelectedUserList(UserList userList)
 	{
 		jList1.setSelectedValue(userList, true);
+		this.selectedList = userList;
 	}
 
 	public void setButtonText(String string)
@@ -359,6 +366,7 @@ public class AddListUserDialog extends javax.swing.JDialog {
 	{
 		userLabel.setVisible(!b);
 		cmbUser.setVisible(b);
+		userSelect = b;
 		//titleLabel.setText(resourceMap.getString("titleLabel.text"));
 
 		if(b)
@@ -369,5 +377,15 @@ public class AddListUserDialog extends javax.swing.JDialog {
 			userPane.moveToFront(cmbUser);
 		}
 
+	}
+
+	public void reset()
+	{
+		this.selectedList = null;
+		this.userToBeAdded = null;
+		setMode(Mode.USER_ADD);
+		cmbUser.setVisible(false);
+		userPane.moveToFront(userLabel);
+		userPane.moveToBack(cmbUser);
 	}
 }
