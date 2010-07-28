@@ -60,13 +60,13 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
             trayIcon.addMouseListener(this);
             SystemTray.getSystemTray().add(trayIcon);
 
-			JMenuItem item = new JMenuItem(TwitzApp.TWEET_MINI);
-			item.addActionListener(mainApp);
-			item.setActionCommand(TwitzApp.TWEET_MINI);
-			item.setIcon(viewResource.getIcon("icon.comment"));
-			popup.add(item);
+//			JMenuItem item = new JMenuItem(TwitzApp.TWEET_MINI);
+//			item.addActionListener(mainApp);
+//			item.setActionCommand(TwitzApp.TWEET_MINI);
+//			item.setIcon(viewResource.getIcon("icon.comment"));
+//			popup.add(item);
 
-			item = new JMenuItem("About twitz");
+			JMenuItem item = new JMenuItem("About twitz");
 			item.addActionListener(mainApp);
 			item.setActionCommand("About");
 			item.setIcon(viewResource.getIcon("icon.help"));
@@ -137,7 +137,7 @@ public class TwitzTrayIcon extends MouseAdapter implements PropertyChangeListene
 			java.awt.Point p = e.getPoint();
 
 			popup.setInvoker(popup);
-			popup.setLocation(p.x, p.y - 100);
+			popup.setLocation(p.x, p.y - 70);
 			menuVisible = true;
 			popup.setVisible(true);
 

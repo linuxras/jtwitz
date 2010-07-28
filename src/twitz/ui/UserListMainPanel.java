@@ -52,7 +52,10 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 	private JToolBar toolbar = new JToolBar();
 	private javax.swing.JButton btnPrev = new javax.swing.JButton();
     private Separator jSeparator3 = new Separator();
+	private Separator separatorRight = new Separator();
     private javax.swing.JButton btnNext = new javax.swing.JButton();
+	private javax.swing.JButton btnAddList = new javax.swing.JButton();
+	private javax.swing.JButton btnDeleteList = new javax.swing.JButton();
     private javax.swing.JScrollPane userListPane = new javax.swing.JScrollPane();
     private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(twitz.ui.UserListPanel.class);
 	private javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(UserListMainPanel.class, this);
@@ -175,7 +178,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
         toolbar.setFloatable(false);
         toolbar.setRollover(true);
         toolbar.setName("listToolbar"); // NOI18N
-        toolbar.setPreferredSize(new java.awt.Dimension(100, 15));
+        toolbar.setPreferredSize(new java.awt.Dimension(100, 18));
 
         btnPrev.setIcon(resourceMap.getIcon("btnPrev.icon")); // NOI18N
         btnPrev.setText(resourceMap.getString("btnPrev.text")); // NOI18N
@@ -190,6 +193,24 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
         jSeparator3.setMaximumSize(new java.awt.Dimension(1000, 10));
         jSeparator3.setName("jSeparator3"); // NOI18N
         toolbar.add(jSeparator3);
+
+		btnAddList.setAction(actionMap.get("addNewList"));
+		btnAddList.setText(resourceMap.getString("btnAddList.text"));
+		btnAddList.setIcon(resourceMap.getIcon("btnAddList.icon"));
+		btnAddList.setToolTipText(resourceMap.getString("btnAddList.toolTipText"));
+		btnAddList.setMargin(new java.awt.Insets(2, 2, 2, 2));
+		toolbar.add(btnAddList);
+
+		btnDeleteList.setAction(actionMap.get("deleteList"));
+		btnDeleteList.setText(resourceMap.getString("btnDeleteList.text"));
+		btnDeleteList.setIcon(resourceMap.getIcon("btnDeleteList.icon"));
+		btnDeleteList.setToolTipText(resourceMap.getString("btnDeleteList.toolTipText"));
+		btnDeleteList.setMargin(new java.awt.Insets(2, 2, 2, 2));
+		toolbar.add(btnDeleteList);
+
+		separatorRight.setMaximumSize(new java.awt.Dimension(1000, 10));
+		separatorRight.setName("separatorRight"); // NOI18N
+		toolbar.add(separatorRight);
 
         btnNext.setIcon(resourceMap.getIcon("btnNext.icon")); // NOI18N
         btnNext.setToolTipText(resourceMap.getString("btnNext.toolTipText")); // NOI18N
@@ -227,6 +248,24 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
 	}//}}}
+
+	@Action
+	public void addNewList()
+	{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", this);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.CREATE_USER_LIST, new java.util.Date().getTime(), map));
+	}
+
+	@Action
+	public void deleteList()
+	{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("async", true);
+		map.put("caller", this);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DELETE_USER_LIST, new java.util.Date().getTime(), map));
+	}
 
 	public void addPanel(Component comp) //{{{
 	{
@@ -394,7 +433,7 @@ public class UserListMainPanel extends JPanel implements TwitzEventModel, Proper
 
 	public void update(boolean force)
 	{
-		logger.debug("update() run");
+		logger.debug("update() run force = "+force);
 		if (firstrun && view.isConnected() || force)
 		{
 			//Load userlists view

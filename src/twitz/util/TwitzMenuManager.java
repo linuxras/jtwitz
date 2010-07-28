@@ -15,8 +15,13 @@ import javax.swing.JTable;
 import org.jdesktop.application.ResourceMap;
 import twitz.TwitzApp;
 import twitz.TwitzMainView;
+import twitz.ui.BlockedPanel;
 import twitz.ui.ContactsList;
+import twitz.ui.FollowersPanel;
+import twitz.ui.FriendsPanel;
 import twitz.ui.StatusList;
+import twitz.ui.StatusPanel;
+import twitz.ui.TimeLinePanel;
 import twitz.ui.UserListPanel;
 
 /**
@@ -51,7 +56,8 @@ public class TwitzMenuManager implements PropertyChangeListener{
 	 * when a user is clicked on.
 	 * @return A JPopupMenu
 	 */
-	public static JPopupMenu getActionsMenu(Component caller) {//{{{
+	public static synchronized JPopupMenu getActionsMenu(Component caller)
+	{//{{{
 //RETWEETED_BY_ME
 //RETWEETED_TO_ME
 //RETWEETS_OF_ME
@@ -60,48 +66,132 @@ public class TwitzMenuManager implements PropertyChangeListener{
 		ContactsList cl = null;
 		StatusList tl = null;
 		UserListPanel ulp = null;
+		StatusPanel sp = null;
+		TimeLinePanel tlp = null;
+		FriendsPanel fp = null;
+		BlockedPanel bp = null;
+		FollowersPanel flp = null;
+
+		//ActionListener actions = null;
+		//javax.swing.JComponent actions = null;
+		javax.swing.ActionMap aMap = null;
 
 		boolean selected = true;
-		if(caller instanceof JTable) {
-			JTable t = (JTable)caller;
-			if(t.getSelectedRow() == -1)
+		boolean blocked = false;
+		if(caller != null)
+		{
+			if (caller instanceof JTable)
+			{
+				JTable t = (JTable) caller;
+				if (t.getSelectedRow() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(t.getClass(), t);
+			}
+			else if (caller instanceof ContactsList)
+			{
+				ContactsList l = (ContactsList) caller;
+				cl = (ContactsList) caller;
+				if (l.getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(cl.getClass(), cl);
+			}
+			else if (caller instanceof UserListPanel)
+			{
+				//caller = (UserListPanel)caller;
+				ContactsList l = ((UserListPanel) caller).getContactsList();
+				ulp = (UserListPanel) caller;
+				if (l.getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(ulp.getClass(), ulp);
+				//actions = ulp;
+			}
+			else if (caller instanceof StatusList)
+			{
+				tl = (StatusList) caller;
+				if (tl.getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(tl.getClass(), tl);
+				//actions = tl;
+			}
+			else if(caller instanceof StatusPanel)
+			{
+				sp = (StatusPanel)caller;
+				if(sp.getStatusList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(sp.getClass(), sp);
+				//actions = sp;
+			}
+			else if(caller instanceof TimeLinePanel)
+			{
+				tlp = (TimeLinePanel)caller;
+				if(tlp.getStatusList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(tlp.getClass(), tlp);
+				//actions = tlp;
+			}
+			else if(caller instanceof FriendsPanel)
+			{
+				fp = (FriendsPanel)caller;
+				if(fp.getContactsList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(fp.getClass(), fp);
+				//actions = fp;
+			}
+			else if(caller instanceof BlockedPanel)
+			{
+				bp = (BlockedPanel)caller;
+				if(bp.getContactsList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
 				selected = false;
-		}
-		else if(caller instanceof ContactsList) {
-			ContactsList l = (ContactsList)caller;
-			cl = (ContactsList)caller;
-			if(l.getSelectedIndex() == -1)
-				selected = false;
-		}
-		else if(caller instanceof UserListPanel) {
-			//caller = (UserListPanel)caller;
-			ContactsList l = ((UserListPanel)caller).getContactsList();
-			ulp = (UserListPanel)caller;
-			if(l.getSelectedIndex() == -1)
-				selected = false;
-		}
-		else if(caller instanceof StatusList) {
-			tl = (StatusList)caller;
-			if(tl.getSelectedIndex() == -1)
-				selected = false;
+				blocked = true;
+				aMap = TwitzApp.getContext().getActionMap(bp.getClass(), bp);
+				//actions = bp;
+			}
+			else if(caller instanceof FollowersPanel)
+			{
+				flp = (FollowersPanel)caller;
+				if(flp.getContactsList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(flp.getClass(), flp);
+				//actions = flp;
+			}
 		}
 		JPopupMenu menu = new JPopupMenu(getResourceMap().getString("ACTIONS"));
 		menu.setFocusable(false);
 		menu.setLabel(getResourceMap().getString("ACTIONS"));
 
 		JMenuItem item = new JMenuItem(getResourceMap().getString("REPORT_SPAM"));
+		//TwitzApp.getContext().getActionMap(TwitzDesktopFrame.class, this);
 		//item.setActionCommand(TwitterConstants.REPORT_SPAM+"");
+		if(aMap != null) {
+			//logger.debug("REPORT_SPAM");
+			item.setAction(aMap.get("menuAction"));
+		}
 		item.setActionCommand("REPORT_SPAM");
-		if(cl != null) {
-			item.addActionListener(cl);
-		} else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
 		item.setIcon(getResourceMap().getIcon("icon.bomb"));
-		item.setEnabled(REPORT_SPAM);
+		item.setText(getResourceMap().getString("REPORT_SPAM"));
+		if(blocked)
+			item.setEnabled(blocked);
+		else
+			item.setEnabled(selected);
 		item.setFocusable(false);
 		menu.add(item);
 		menu.addSeparator();
@@ -110,34 +200,29 @@ public class TwitzMenuManager implements PropertyChangeListener{
 		sub.setIcon(getResourceMap().getIcon("icon.stop"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("CREATE_BLOCK"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
 		item.setActionCommand("CREATE_BLOCK");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
 		item.setIcon(getResourceMap().getIcon("icon.stop"));
-		item.setEnabled(CREATE_BLOCK);
+		item.setText(getResourceMap().getString("CREATE_BLOCK"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("DESTROY_BLOCK"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
 		item.setActionCommand("DESTROY_BLOCK");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
+		item.setText(getResourceMap().getString("DESTROY_BLOCK"));
 		item.setIcon(getResourceMap().getIcon("icon.stop"));
-		item.setEnabled(DESTROY_BLOCK);
+		if(blocked)
+			item.setEnabled(blocked);
+		else
+			item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 		menu.add(sub);
@@ -146,66 +231,50 @@ public class TwitzMenuManager implements PropertyChangeListener{
 		sub.setIcon(getResourceMap().getIcon("icon.user"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("CREATE_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("CREATE_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_add"));
-		item.setEnabled(CREATE_FRIENDSHIP);
+		item.setText(getResourceMap().getString("CREATE_FRIENDSHIP"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("DESTROY_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("DESTROY_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_delete"));
-		item.setEnabled(DESTROY_FRIENDSHIP);
+		item.setText(getResourceMap().getString("DESTROY_FRIENDSHIP"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("EXISTS_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("EXISTS_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_go"));
-		item.setEnabled(EXISTS_FRIENDSHIP);
+		item.setText(getResourceMap().getString("EXISTS_FRIENDSHIP"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("SHOW_FRIENDSHIP"));
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
 		}
 		item.setActionCommand("SHOW_FRIENDSHIP");
 		item.setIcon(getResourceMap().getIcon("icon.user_gray"));
-		item.setEnabled(SHOW_FRIENDSHIP);
+		item.setText(getResourceMap().getString("SHOW_FRIENDSHIP"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 		menu.add(sub);
@@ -216,18 +285,14 @@ public class TwitzMenuManager implements PropertyChangeListener{
 		sub.setIcon(getResourceMap().getIcon("icon.user_comment"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("SEND_DIRECT_MESSAGE"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
 		item.setActionCommand("SEND_DIRECT_MESSAGE");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
 		item.setIcon(getResourceMap().getIcon("icon.user_comment"));
-		item.setEnabled(SEND_DIRECT_MESSAGE);
+		item.setText(getResourceMap().getString("SEND_DIRECT_MESSAGE"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
@@ -241,42 +306,34 @@ public class TwitzMenuManager implements PropertyChangeListener{
 //NEAR_BY_PLACES
 //GEO_DETAILS
 
-		sub = new JMenu(getResourceMap().getString("LOCATION"));
-		sub.setIcon(getResourceMap().getIcon("icon.map"));
-		sub.setFocusable(false);
-		item = new JMenuItem(getResourceMap().getString("NEAR_BY_PLACES"));
-		item.setActionCommand("NEAR_BY_PLACES");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
-		item.setIcon(getResourceMap().getIcon("icon.map"));
-		item.setEnabled(NEAR_BY_PLACES);
-		item.setFocusable(false);
-		sub.add(item);
-
-		item = new JMenuItem(getResourceMap().getString("GEO_DETAILS"));
-		item.setActionCommand("GEO_DETAILS");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null)
-		{
-			item.addActionListener(tl);
-		}
-		item.setIcon(getResourceMap().getIcon("icon.map_edit"));
-		item.setEnabled(GEO_DETAILS);
-		item.setFocusable(false);
-		sub.add(item);
-		menu.add(sub);
+//		sub = new JMenu(getResourceMap().getString("LOCATION"));
+//		sub.setIcon(getResourceMap().getIcon("icon.map"));
+//		sub.setFocusable(false);
+//		item = new JMenuItem(getResourceMap().getString("NEAR_BY_PLACES"));
+//		if(aMap != null) {
+//			item.setAction(aMap.get("menuAction"));
+//			//item.addActionListener(actions);
+//		}
+//		item.setActionCommand("NEAR_BY_PLACES");
+//		item.setIcon(getResourceMap().getIcon("icon.map"));
+//		item.setText(getResourceMap().getString("NEAR_BY_PLACES"));
+//		item.setEnabled(selected);
+//		item.setFocusable(false);
+//		sub.add(item);
+//
+//		item = new JMenuItem(getResourceMap().getString("GEO_DETAILS"));
+//		if(aMap != null) {
+//			item.setAction(aMap.get("menuAction"));
+//			//item.addActionListener(actions);
+//		}
+//		item.setActionCommand("GEO_DETAILS");
+//		//item.addActionListener(actions);
+//		item.setIcon(getResourceMap().getIcon("icon.map_edit"));
+//		item.setText(getResourceMap().getString("GEO_DETAILS"));
+//		item.setEnabled(selected);
+//		item.setFocusable(false);
+//		sub.add(item);
+//		menu.add(sub);
 
 //ADD_LIST_MEMBER
 //DELETE_LIST_MEMBER
@@ -285,67 +342,53 @@ public class TwitzMenuManager implements PropertyChangeListener{
 		sub.setIcon(getResourceMap().getIcon("icon.group"));
 		sub.setFocusable(false);
 		item = new JMenuItem(getResourceMap().getString("ADD_LIST_MEMBER"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
 		item.setActionCommand("ADD_LIST_MEMBER");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
+		//item.addActionListener(actions);
 		item.setIcon(getResourceMap().getIcon("icon.group_add"));
-		item.setEnabled(ADD_LIST_MEMBER);
+		item.setText(getResourceMap().getString("ADD_LIST_MEMBER"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("DELETE_LIST_MEMBER"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
 		item.setActionCommand("DELETE_LIST_MEMBER");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
 		item.setIcon(getResourceMap().getIcon("icon.group_delete"));
-		item.setEnabled(DELETE_LIST_MEMBER);
+		item.setText(getResourceMap().getString("DELETE_LIST_MEMBER"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 
 		item = new JMenuItem(getResourceMap().getString("CHECK_LIST_MEMBERSHIP"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
 		item.setActionCommand("CHECK_LIST_MEMBERSHIP");
-		if(cl != null) {
-			item.addActionListener(cl);
-		} else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
 		item.setIcon(getResourceMap().getIcon("icon.group_gear"));
-		item.setEnabled(CHECK_LIST_MEMBERSHIP);
+		item.setText(getResourceMap().getString("CHECK_LIST_MEMBERSHIP"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 		menu.add(sub);
 
 	//USER_TIMELINE
 		item = new JMenuItem(getResourceMap().getString("USER_TIMELINE"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
 		item.setActionCommand("USER_TIMELINE");
-		if(cl != null) {
-			item.addActionListener(cl);
-		}
-		else if(ulp != null) {
-			item.addActionListener(ulp);
-		}
-		else if(tl != null) {
-			item.addActionListener(tl);
-		}
 		item.setIcon(getResourceMap().getIcon("icon.timeline_marker"));
-		item.setEnabled(USER_TIMELINE);
+		item.setText(getResourceMap().getString("USER_TIMELINE"));
+		item.setEnabled(selected);
 		item.setFocusable(false);
 		menu.add(item);
 
@@ -353,6 +396,7 @@ public class TwitzMenuManager implements PropertyChangeListener{
 
 		return menu;
 	}//}}}
+
 
 	private void setREPORT_SPAM(boolean state){ REPORT_SPAM=state; }
 	private void setCREATE_BLOCK(boolean state){ CREATE_BLOCK=state; }

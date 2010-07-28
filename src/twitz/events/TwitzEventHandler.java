@@ -311,11 +311,12 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 							"Twitz Message", "SHOW_USER_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
 						});
 				break;
-			case DESTROY_USER_LIST:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "DESTROY_USER_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
-						});
+			case DELETE_USER_LIST:
+				if(args != null && args.size() == 1)
+				{
+					listId = (Integer)args.get(0);
+					tm.getAsyncTwitterInstance().destroyUserList(listId);
+				}
 				break;
 			case USER_LIST_STATUSES:
 				if(args != null && args.size() == 3)
@@ -425,6 +426,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				if(eventMap != null) {
 					screenName = getScreenNameFromMap(eventMap.get("selections"));
 				}
+				logger.debug("ScreenName = "+screenName+" ===========-----------------============");
 				//screenName = getScreenNameFromActiveTab();
 				if (!screenName.equals(""))
 				{
@@ -463,6 +465,10 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				if (names.size() >= 2)
 				{
 					tm.getAsyncTwitterInstance().showFriendship(names.get(0), names.get(1));
+				}
+				else
+				{
+					rv = resourceMap.getString("SELECT_MORE_USERS_ERROR.TEXT");
 				}
 				break;
 			case INCOMING_FRIENDSHIPS:

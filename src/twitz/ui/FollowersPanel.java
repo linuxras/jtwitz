@@ -438,7 +438,7 @@ public class FollowersPanel extends javax.swing.JPanel implements MouseListener,
 
 	public void update(boolean force)
 	{
-		logger.debug("update() run");
+		logger.debug("update() run force = "+force);
 		if (firstrun && view.isConnected() || force)
 		{
 			//Load followers list
@@ -507,7 +507,7 @@ public class FollowersPanel extends javax.swing.JPanel implements MouseListener,
 
 	//ActionListener
 	@Action
-	public void actionPerformed(ActionEvent e) {//{{{
+	public void menuAction(ActionEvent e) {//{{{
 		String cmd = e.getActionCommand();
 		if(cmd.equals("USER_TIMELINE"))
 		{

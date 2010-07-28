@@ -39,7 +39,7 @@ public class TwitterConstants {
 	public static final int UPDATE_USER_LIST = 26;
 	public static final int USER_LISTS = 27;
 	public static final int SHOW_USER_LIST = 28;
-	public static final int DESTROY_USER_LIST = 29;
+	public static final int DELETE_USER_LIST = 29;
 	public static final int USER_LIST_STATUSES = 30;
 	public static final int USER_LIST_MEMBERSHIPS = 31;
 	public static final int USER_LIST_SUBSCRIPTIONS = 32;

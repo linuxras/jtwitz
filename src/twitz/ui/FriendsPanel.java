@@ -308,6 +308,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 			Map map = Collections.synchronizedMap(new TreeMap());
 			map.put("async", true);
 			map.put("caller", this);
+			map.put("selections", contactsList1.getSelectedValue());
 			ArrayList args = new ArrayList();
 			User toBeDeleted = contactsList1.getSelectedValue();
 			args.add(toBeDeleted.getScreenName());
@@ -440,7 +441,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 
 	public void update(boolean force)
 	{
-		logger.debug("update() run");
+		logger.debug("update() run force = "+force);
 		if (firstrun && view.isConnected() || force)
 		{
 			//Load friends list
@@ -507,7 +508,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 
 	//ActionListener
 	@Action
-	public void actionPerformed(ActionEvent e) {//{{{
+	public void menuAction(ActionEvent e) {//{{{
 		String cmd = e.getActionCommand();
 		if(cmd.equals("USER_TIMELINE"))
 		{

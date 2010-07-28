@@ -60,10 +60,11 @@ import twitz.util.TwitzSessionManager;
  * @author mistik1
  */
 public class UserListPanel extends javax.swing.JPanel implements MouseListener, FocusListener, 
-		TwitzEventModel, ActionListener
+		TwitzEventModel/*, ActionListener*/
 {
 	private SettingsManager config;
-    /** Creates new form UserListPanel */
+
+	/** Creates new form UserListPanel */
 	@SuppressWarnings("LeakingThisInConstructor")
     public UserListPanel() {
 		resourceMap = TwitzApp.getContext().getResourceMap(UserListPanel.class);
@@ -324,22 +325,30 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 	@Action
 	public void addListUser() {
 		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("listname", list.getName());
+		map.put("userList", list);
+		map.put("async", true);
+		map.put("caller", this);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.ADD_LIST_MEMBER, new java.util.Date().getTime(), map));
 		firePropertyChange("addListUser", map, null);
 	}
 
 	@Action
 	public void deleteListUser() {//{{{
-		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", this);
-		ArrayList args = new ArrayList();
-		User toBeDeleted = contactsList1.getSelectedValue();
-		args.add(list.getId());
-		args.add(toBeDeleted.getId());
-		map.put("arguments", args);
-		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DELETE_LIST_MEMBER, new java.util.Date().getTime(), map));
-		firePropertyChange("deleteListUser", map, null);
+		if (contactsList1.getSelectedIndex() != -1)
+		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			User toBeDeleted = contactsList1.getSelectedValue();
+			map.put("selections", toBeDeleted);
+			args.add(list.getId());
+			args.add(toBeDeleted.getId());
+			map.put("arguments", args);
+			map.put("userList", list);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.DELETE_LIST_MEMBER, new java.util.Date().getTime(), map));
+			firePropertyChange("deleteListUser", map, null);
+		}
 	}//}}}
 
 	@Action
@@ -604,7 +613,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	//ActionListener
 	@Action
-	public void actionPerformed(ActionEvent e) {//{{{
+	public void menuAction(ActionEvent e) {//{{{
 		String cmd = e.getActionCommand();
 		if(cmd.equals("USER_TIMELINE"))
 		{

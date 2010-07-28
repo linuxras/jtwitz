@@ -356,7 +356,7 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 
 	public void update(boolean force)
 	{
-		logger.debug("update() run");
+		logger.debug("update() run force = "+force);
 		if(firstrun && view.isConnected() || force)
 		{
 			
@@ -390,8 +390,8 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 	}
 
 	//ActionListener
-	@Action
-	public void actionPerformed(ActionEvent e) {//{{{
+	public void actionPerformed(ActionEvent e)
+	{
 		String cmd = e.getActionCommand();
 		if("COMBO_TIMER".equals(cmd))
 		{
@@ -431,8 +431,14 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 			};
 			worker.execute();
 		}
-		else
+	}
+
+	@Action
+	public void menuAction(ActionEvent e) //{{{
+	{
+		if(e.getSource() instanceof javax.swing.JMenuItem)
 		{
+			String cmd = e.getActionCommand();
 			if(cmd.equals("USER_TIMELINE"))
 			{
 				TimeLinePanel panel = view.getTimeLine();

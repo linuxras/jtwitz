@@ -268,7 +268,7 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 
 	public void update(boolean force)
 	{
-		logger.debug("update() run");
+		logger.debug("update() run force = "+force);
 		if (firstrun && view.isConnected() || force)
 		{
 			//Update trends view

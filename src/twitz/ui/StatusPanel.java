@@ -367,7 +367,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 
 	//ActionListener
 	@Action
-	public void actionPerformed(ActionEvent e) {//{{{
+	public void menuAction(ActionEvent e) {//{{{
 		if (e.getSource() instanceof JMenuItem)
 		{
 			String cmd = e.getActionCommand();

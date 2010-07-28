@@ -17,11 +17,19 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import org.jdesktop.application.Action;
+import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
+import org.tmatesoft.sqljet.core.SqlJetException;
 import twitter4j.User;
 import twitter4j.UserList;
+import twitz.util.DBManager;
+import twitz.util.UserStore;
+import twitz.util.UserToStringConverter;
 
 /**
  *
@@ -32,13 +40,23 @@ public class AddListUserDialog extends javax.swing.JDialog {
 	private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(AddListUserDialog.class);
 	private javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(AddListUserDialog.class, this);
 	private Map<String, UserList> userListMap = Collections.synchronizedMap(new TreeMap<String, UserList>());
+	private DBManager DBM = DBManager.getInstance();
+	private UserStore store = UserStore.getInstance();
 	private User userToBeAdded;
 	private UserList selectedList;
+	public static enum Mode {
+		USER_ADD,
+		USER_DELETE,
+		LIST_DELETE
+	};
+
+	private Mode mode;
 
     /** Creates new form AddListUserDialog */
     public AddListUserDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+		initDefaults();
     }
 
     /** This method is called from within the constructor to
@@ -52,17 +70,22 @@ public class AddListUserDialog extends javax.swing.JDialog {
         listPanel = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jList1 = new javax.swing.JList();
-        userPanel = new javax.swing.JPanel();
+        userPane = new javax.swing.JLayeredPane();
+        cmbUser = new javax.swing.JComboBox();
         userLabel = new javax.swing.JLabel();
         actionPanel = new javax.swing.JPanel();
         actionToolBar = new javax.swing.JToolBar();
         btnAdd = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JToolBar.Separator();
         btnCancel = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
+        titleLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(218, 248));
-        setName("Form"); // NOI18N
+        setMinimumSize(new java.awt.Dimension(266, 287));
+        setModal(true);
+        setName("AddListUserDialog"); // NOI18N
+        setUndecorated(true);
 
         listPanel.setName("listPanel"); // NOI18N
 
@@ -81,30 +104,27 @@ public class AddListUserDialog extends javax.swing.JDialog {
         listPanel.setLayout(listPanelLayout);
         listPanelLayout.setHorizontalGroup(
             listPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
         );
         listPanelLayout.setVerticalGroup(
             listPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 160, Short.MAX_VALUE)
         );
 
-        userPanel.setName("userPanel"); // NOI18N
+        userPane.setName("userPane"); // NOI18N
+
+        cmbUser.setEditable(true);
+        cmbUser.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbUser.setName("cmbUser"); // NOI18N
+        cmbUser.setBounds(0, 0, 240, 32);
+        userPane.add(cmbUser, javax.swing.JLayeredPane.DEFAULT_LAYER);
 
         
         userLabel.setIcon(resourceMap.getIcon("userLabel.icon")); // NOI18N
         userLabel.setText(resourceMap.getString("userLabel.text")); // NOI18N
         userLabel.setName("userLabel"); // NOI18N
-
-        javax.swing.GroupLayout userPanelLayout = new javax.swing.GroupLayout(userPanel);
-        userPanel.setLayout(userPanelLayout);
-        userPanelLayout.setHorizontalGroup(
-            userPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(userLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE)
-        );
-        userPanelLayout.setVerticalGroup(
-            userPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(userLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
-        );
+        userLabel.setBounds(0, 0, 240, 34);
+        userPane.add(userLabel, javax.swing.JLayeredPane.DEFAULT_LAYER);
 
         actionPanel.setName("actionPanel"); // NOI18N
 
@@ -120,8 +140,8 @@ public class AddListUserDialog extends javax.swing.JDialog {
         btnAdd.setName("btnAdd"); // NOI18N
         actionToolBar.add(btnAdd);
 
+        jSeparator1.setMaximumSize(new java.awt.Dimension(1000, 10));
         jSeparator1.setName("jSeparator1"); // NOI18N
-        jSeparator1.setPreferredSize(new java.awt.Dimension(10, 100));
         actionToolBar.add(jSeparator1);
 
         btnCancel.setAction(actionMap.get("cancelAddUser")); // NOI18N
@@ -135,40 +155,75 @@ public class AddListUserDialog extends javax.swing.JDialog {
         actionPanel.setLayout(actionPanelLayout);
         actionPanelLayout.setHorizontalGroup(
             actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(actionToolBar, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE)
+            .addComponent(actionToolBar, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
         );
         actionPanelLayout.setVerticalGroup(
             actionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(actionToolBar, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
+        jPanel1.setName("jPanel1"); // NOI18N
+
+        titleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        titleLabel.setText(resourceMap.getString("titleLabel.text")); // NOI18N
+        titleLabel.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        titleLabel.setName("titleLabel"); // NOI18N
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(titleLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(titleLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(listPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(userPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(actionPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(listPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(userPane, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(actionPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(userPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(listPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(9, 9, 9)
+                .addComponent(userPane, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(listPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(actionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
     }//GEN-END:initComponents
 
+	private void initDefaults()
+	{
+		twitz.TwitzMainView.fixJScrollPaneBarsSize(jScrollPane1);
+		DefaultComboBoxModel cmod = new DefaultComboBoxModel(store.getRegisteredUsers());
+		cmbUser.setModel(cmod);
+		cmbUser.setRenderer(new twitz.ui.renderers.UserComboRenderer());
+		cmbUser.setEditable(true);
+		AutoCompleteDecorator.decorate(cmbUser, new UserToStringConverter());
+		//userPanel.add(cmbUser);
+		setMode(Mode.USER_ADD);
+		cmbUser.setVisible(false);
+		userPane.moveToFront(userLabel);
+		userPane.moveToBack(cmbUser);
+	}
 
 	@Action
 	public void addListUser()
@@ -177,6 +232,14 @@ public class AddListUserDialog extends javax.swing.JDialog {
 		if(v instanceof UserList)
 		{
 			this.selectedList = (UserList)v;
+		}
+		if(!mode.equals(Mode.LIST_DELETE))
+		{
+			Object u = cmbUser.getSelectedItem();
+			if (u instanceof User)
+			{
+				this.userToBeAdded = (User) u;
+			}
 		}
 		this.dispose();
 	}
@@ -193,12 +256,15 @@ public class AddListUserDialog extends javax.swing.JDialog {
     private javax.swing.JToolBar actionToolBar;
     private javax.swing.JButton btnAdd;
     private javax.swing.JButton btnCancel;
+    private javax.swing.JComboBox cmbUser;
     private javax.swing.JList jList1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JPanel listPanel;
+    private javax.swing.JLabel titleLabel;
     private javax.swing.JLabel userLabel;
-    private javax.swing.JPanel userPanel;
+    private javax.swing.JLayeredPane userPane;
     // End of variables declaration//GEN-END:variables
 
 	public void setUserListMap(Map<String, UserList> map)
@@ -256,8 +322,52 @@ public class AddListUserDialog extends javax.swing.JDialog {
 		btnAdd.setText(string);
 	}
 
+	public void setMode(Mode value)
+	{
+		switch(value)
+		{
+			case USER_DELETE:
+				titleLabel.setText(resourceMap.getString("titleLabel.delete.text"));
+				btnAdd.setText(resourceMap.getString("btnAdd.delete.text"));
+				btnAdd.setIcon(resourceMap.getImageIcon("btnAdd.delete.icon"));
+				userPane.setVisible(true);
+				mode = value;
+			break;
+			case USER_ADD:
+				titleLabel.setText(resourceMap.getString("titleLabel.text"));
+				btnAdd.setText(resourceMap.getString("btnAdd.text"));
+				btnAdd.setIcon(resourceMap.getImageIcon("btnAdd.icon"));
+				userPane.setVisible(true);
+				mode = value;
+			break;
+			case LIST_DELETE:
+				titleLabel.setText(resourceMap.getString("titleLabel.list_delete.text"));
+				btnAdd.setText(resourceMap.getString("btnAdd.delete.text"));
+				btnAdd.setIcon(resourceMap.getImageIcon("btnAdd.delete.icon"));
+				userPane.setVisible(false);
+				mode = value;
+			break;
+		}
+	}
+
 	public void setButtonIcon(ImageIcon imageIcon)
 	{
 		btnAdd.setIcon(imageIcon);
+	}
+
+	public void setSelectedMode(boolean b)
+	{
+		userLabel.setVisible(!b);
+		cmbUser.setVisible(b);
+		//titleLabel.setText(resourceMap.getString("titleLabel.text"));
+
+		if(b)
+		{
+			//titleLabel.setText(resourceMap.getString("titleLabel.delete.text"));
+			DefaultComboBoxModel cmod = new DefaultComboBoxModel(store.getRegisteredUsers());
+			cmbUser.setModel(cmod);
+			userPane.moveToFront(cmbUser);
+		}
+
 	}
 }

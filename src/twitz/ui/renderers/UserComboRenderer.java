@@ -36,6 +36,8 @@ public class UserComboRenderer extends SubstanceDefaultListCellRenderer {
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean hasFocus)
 	{
 		super.getListCellRendererComponent(list, value, index, isSelected, hasFocus);
+		if(value instanceof User)
+		{
 		User u = (User)value;
 //		java.net.URL imgURI = u.getProfileImageURL();
 //		javax.swing.ImageIcon icon = new javax.swing.ImageIcon(imgURI);
@@ -64,6 +66,11 @@ public class UserComboRenderer extends SubstanceDefaultListCellRenderer {
 		setToolTipText("<html>"+tableWrap(u, width));
 		setVerticalAlignment(TOP);
 		setFont(new Font("Arial", Font.BOLD, 10));
+		}
+		else
+		{
+			setText(value.toString());
+		}
 		return this;
 	}
 
