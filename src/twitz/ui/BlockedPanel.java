@@ -49,7 +49,7 @@ import twitz.util.TwitzSessionManager;
  *
  * @author Andrew Williams
  */
-public class BlockedPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel/*, ActionListener*/
+public class BlockedPanel extends javax.swing.JLayeredPane implements MouseListener, TwitzEventModel/*, ActionListener*/
 {
 	private boolean firstrun = true;
 	// Variables declaration - do not modify//GEN-BEGIN:variables
@@ -57,6 +57,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
     private javax.swing.JButton btnPrev;
     private javax.swing.JButton btnUserAdd;
     private javax.swing.JButton btnUserDelete;
+	private javax.swing.JButton btnReload;
     private twitz.ui.ContactsList contactsList1;
     private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
@@ -119,6 +120,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
         btnPrev = new javax.swing.JButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
         btnNext = new javax.swing.JButton();
+		btnReload = new javax.swing.JButton();
 
         jSeparator1.setName("jSeparator1"); // NOI18N
 
@@ -138,6 +140,13 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 
         jSeparator2.setName("jSeparator2"); // NOI18N
         toolbar.add(jSeparator2);
+
+		btnReload.setAction(actionMap.get("reload"));
+		btnReload.setText(resourceMap.getString("btnReload.text"));
+		btnReload.setIcon(resourceMap.getIcon("btnReload.icon"));
+		btnReload.setToolTipText(resourceMap.getString("btnReload.toolTipText"));
+		btnReload.setMargin(new java.awt.Insets(2, 2, 2, 2));
+		toolbar.add(btnReload);
 
         btnUserAdd.setAction(actionMap.get("addListUser")); // NOI18N
         btnUserAdd.setIcon(resourceMap.getIcon("btnUserAdd.icon")); // NOI18N
@@ -225,7 +234,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 		}
 		else
 		{
-			view.addSampleFriends();
+			view.addSampleFriends(this);
 		}
 	}//}}}
 
@@ -292,6 +301,7 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 	//	toolbar.addMouseListener(toolbarListener);
 	//	listName.addMouseListener(toolbarListener);
 		contactsList1.addMouseListener(this);
+	//	contactsList1.setFocusable(false);
 		//addTwitzListener(view);
 		setFocusable(true);
 		addMouseListener(this);
@@ -332,6 +342,12 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 			firePropertyChange("destroyBlock", toBeDeleted, null);
 		}
 	}//}}}
+
+	@Action
+	public void reload()
+	{
+		update(true);
+	}
 
 //	@Action
 //	public void getNext()//{{{
@@ -478,6 +494,13 @@ public class BlockedPanel extends javax.swing.JPanel implements MouseListener, T
 			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.BLOCKING_USERS, new java.util.Date().getTime(), map));
 			firstrun = false;
 		}
+	}
+
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		contactsList1.setEnabled(enabled);
+		super.setEnabled(enabled);
 	}
 
 	//MouseListener

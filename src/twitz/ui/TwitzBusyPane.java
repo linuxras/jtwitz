@@ -14,6 +14,8 @@ package twitz.ui;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import javax.swing.JLayeredPane;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import org.jdesktop.swingx.JXPanel;
 
@@ -23,26 +25,52 @@ import org.jdesktop.swingx.JXPanel;
  */
 public class TwitzBusyPane extends JXPanel implements MouseListener{
 
-	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(TwitzBusyPane.class);
-	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(TwitzBusyPane.class, this);
-	javax.swing.JInternalFrame frame;
-	java.awt.Component myGlassPane;
-	javax.swing.SwingWorker job;
+	private org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(TwitzBusyPane.class);
+	private javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(TwitzBusyPane.class, this);
+	private Logger logger = Logger.getLogger(TwitzBusyPane.class);
+	private javax.swing.JInternalFrame frame;
+	private javax.swing.JComponent box;
+	private javax.swing.JRootPane boxParent;
+	private java.awt.Component myGlassPane;
+	private javax.swing.SwingWorker job;
 	private boolean blocked = false;
+	private final BlockingMode mode;
+	private enum BlockingMode {
+		FRAME,
+		COMPONENT
+	}
 
-    /** Creates new form TwitzBusyPane */
+    /**
+	 * Creates new form TwitzBusyPane
+	 * @param blockingFrame The JInternalFrame you want to block usually a {@link twitz.TwitzMainView}
+	 * @param worker A {@code javax.swing.SwingWorker} that is used with the cancel button, If {@code worker}
+	 * is null the cancel button will be disabled
+	 */
     public TwitzBusyPane(javax.swing.JInternalFrame blockingFrame, javax.swing.SwingWorker worker)
 	{
 		this.frame = blockingFrame;
 		this.job = worker;
-		this.myGlassPane = frame.getGlassPane();
         initComponents();
-		busyLabel.setBusy(true);
-		this.addMouseListener(this);
-		btnCancel.setToolTipText(resourceMap.getString("btnCancel.toolTipText"));
-		setAlpha(0.9F);
-		jXPanel1.setAlpha(1.0F);
+		this.btnCancel.setVisible(!(job == null));
+		this.mode = BlockingMode.FRAME;
+		initDefaults(mode);
     }
+
+	/**
+	 * Creates new form TwitzBusyPane
+	 * @param blockingFrame The {@code javax.swing.JComponent} you want to block.
+	 * @param worker A {@code javax.swing.SwingWorker} that is used with the cancel button, If {@code worker}
+	 * is null the cancel button will be disabled
+	 */
+	public TwitzBusyPane(javax.swing.JComponent blockingBox, javax.swing.SwingWorker worker)
+	{
+		this.box = blockingBox;
+		this.job = worker;
+		initComponents();
+		this.btnCancel.setVisible(!(job == null));
+		this.mode = BlockingMode.COMPONENT;
+		initDefaults(mode);
+	}
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -85,6 +113,33 @@ public class TwitzBusyPane extends JXPanel implements MouseListener{
         add(jXPanel1, new java.awt.GridBagConstraints());
     }//GEN-END:initComponents
 
+	private void initDefaults(BlockingMode m)
+	{
+		busyLabel.setBusy(true);
+		if(job != null)
+			this.addMouseListener(this);
+		btnCancel.setToolTipText(resourceMap.getString("btnCancel.toolTipText"));
+		setAlpha(0.9F);
+		jXPanel1.setAlpha(1.0F);
+		if(m != null)
+		{
+			switch(m)
+			{
+				case FRAME:
+					this.myGlassPane = frame.getGlassPane();
+				break;
+				case COMPONENT:
+					boxParent = box.getRootPane();
+//					if(boxParent != null)
+//						myGlassPane = boxParent.getGlassPane();
+//					else
+//						logger.error("Null root pane");
+//					if(myGlassPane == null)
+//						logger.error("null glass pane");
+				break;
+			}
+		}
+	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancel;
@@ -99,21 +154,76 @@ public class TwitzBusyPane extends JXPanel implements MouseListener{
 
 	public void block()
 	{
-		if(!(myGlassPane instanceof TwitzBusyPane) && !blocked)
+		if (mode != null && !blocked)
 		{
-			frame.setGlassPane(this);
-			this.setVisible(true);
-			blocked = true;
+			switch (mode)
+			{
+				case FRAME:
+					if (myGlassPane != null && !(myGlassPane instanceof TwitzBusyPane) && !blocked)
+					{
+						frame.setGlassPane(this);
+						this.setVisible(true);
+						blocked = true;
+					}
+					break;
+				case COMPONENT:
+					logger.debug("Blocking box "+box.getName());
+					box.setEnabled(false);
+					if(box instanceof javax.swing.JLayeredPane)
+					{
+						JLayeredPane pane = (JLayeredPane)box;
+						pane.setLayer(this, javax.swing.JLayeredPane.MODAL_LAYER);
+						this.setBounds(pane.getBounds());
+						pane.add(this);
+						logger.debug("current layer = "+JLayeredPane.getLayer(this));
+						//pane.moveToFront(this);
+					}
+					busyLabel.setVisible(true);
+					blocked = true;
+//					if (myGlassPane != null && !(myGlassPane instanceof TwitzBusyPane) && !blocked)
+//					{
+//						boxParent.setGlassPane(this);
+//						this.setVisible(true);
+//						blocked = true;
+//					}
+					break;
+			}
 		}
 	}
 
 	public void unblock()
 	{
-		if(!(myGlassPane instanceof TwitzBusyPane) && blocked )
+		if (mode != null && blocked)
 		{
-			frame.setGlassPane(myGlassPane);
-			this.setVisible(false);
-			blocked = false;
+			switch(mode)
+			{
+				case FRAME:
+					if (myGlassPane != null && !(myGlassPane instanceof TwitzBusyPane) && blocked)
+					{
+						frame.setGlassPane(myGlassPane);
+						this.setVisible(false);
+						blocked = false;
+					}
+				break;
+				case COMPONENT:
+					logger.debug("Un-blocking box "+box.getName());
+					box.setEnabled(true);
+					busyLabel.setVisible(false);
+					if(box instanceof javax.swing.JLayeredPane)
+					{
+						JLayeredPane pane = (JLayeredPane)box;
+						pane.remove(this);
+					}
+					box.validate();
+					blocked = false;
+//					if (myGlassPane != null && !(myGlassPane instanceof TwitzBusyPane) && blocked)
+//					{
+//						boxParent.setGlassPane(myGlassPane);
+//						this.setVisible(false);
+//						blocked = false;
+//					}
+					break;
+			}
 		}
 	}
 
@@ -122,9 +232,16 @@ public class TwitzBusyPane extends JXPanel implements MouseListener{
 	{
 		if(!job.isCancelled() && !job.isDone())
 		{
-			job.cancel(true);
+			try
+			{
+				job.cancel(true);
+			}
+			catch(Exception e)
+			{
+				logger.error(e.getLocalizedMessage());
+			}
 		}
-		System.out.println("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+		logger.debug("cancel() MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
 		unblock();
 	}
 
@@ -140,21 +257,31 @@ public class TwitzBusyPane extends JXPanel implements MouseListener{
 
 	public void mousePressed(MouseEvent e)
 	{
+	//	Rectangle button = btnCancel.getBounds();
+	//	if(button.contains(e.getPoint()))
+	//	{
+	//		btnCancel.dispatchEvent(e);
+	//	}
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public void mouseReleased(MouseEvent e)
 	{
+	//	Rectangle button = btnCancel.getBounds();
+	//	if(button.contains(e.getPoint()))
+	//	{
+	//		btnCancel.dispatchEvent(e);
+	//	}
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	public void mouseEntered(MouseEvent e)
 	{
-		Rectangle button = btnCancel.getBounds();
-		if(button.contains(e.getPoint()))
-		{
-			btnCancel.dispatchEvent(e);
-		}
+	//	Rectangle button = btnCancel.getBounds();
+	//	if(button.contains(e.getPoint()))
+	//	{
+	//		btnCancel.dispatchEvent(e);
+	//	}
 		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 

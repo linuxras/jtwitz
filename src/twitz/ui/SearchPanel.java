@@ -12,14 +12,21 @@
 package twitz.ui;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
@@ -42,7 +49,8 @@ import twitz.util.UserStore;
  *
  * @author Andrew Williams
  */
-public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
+public class SearchPanel extends javax.swing.JLayeredPane implements TwitzEventModel, MouseListener
+{
 
     /** Creates new form SearchPanel */
     public SearchPanel(String session) {
@@ -72,6 +80,8 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		cmbRpp.setSelectedIndex(3); //Default to 20 result per page
 		//Set a default search type;
 		setSearchType(cmbSearchType.getSelectedIndex());
+		this.tweetList.addMouseListener(this);
+		this.contactsList.addMouseListener(this);
 	}
 
     /** This method is called from within the constructor to
@@ -332,9 +342,55 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	private String lastSearch = "";
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final UserStore store = UserStore.getInstance();
+	private volatile JList selectedList;
+
 	private String sessionName;
 	public static final String SESSION_PROPERTY = "sessionName";
 	twitz.TwitzMainView view;
+
+	@Action
+	public void menuAction(ActionEvent e) {//{{{
+		if (e.getSource() instanceof JMenuItem)
+		{
+			String cmd = e.getActionCommand();
+			System.out.println("SearchPanel---------------=========================== "+cmd);
+			
+			if (cmd.equals("USER_TIMELINE"))
+			{
+				TimeLinePanel panel = view.getTimeLine();
+				view.switchTab(0);
+				if (searchType == 0)
+				{
+					Tweet t = this.tweetList.getSelectedValue();
+
+					panel.timeLineSearch(t.getFromUser());
+				}
+				else
+				{
+					User u = this.contactsList.getSelectedValue();
+					panel.timeLineSearch(u);
+				}
+				return;
+			}
+
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("caller", this);
+			map.put("async", true);
+			if (searchType == 0)
+			{
+				Tweet[] selections = this.tweetList.getSelectedValues();
+				//User[] selections = new User[select.length]; //getContactsList().getSelectedValues();
+				map.put("selections", selections);
+			}
+			else
+			{
+				User[] selections = this.contactsList.getSelectedValues();
+				map.put("selections", selections);
+			}
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
+			
+		}
+	}//}}}
 
 	@Action
 	public void doSearch()//{{{
@@ -353,11 +409,11 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 				}
 				lastSearch = searchText;
 				query.setQuery(searchText);
-				if (!txtSinceDate.getEditor().getText().equals(""))
+				if (!txtSinceDate.getEditor().getText().isEmpty())
 				{
 					query.setSince(txtSinceDate.getEditor().getText());
 				}
-				if (!txtUntilDate.getEditor().getText().equals(""))
+				if (!txtUntilDate.getEditor().getText().isEmpty())
 				{
 					query.setUntil(txtUntilDate.getEditor().getText());
 				}
@@ -439,10 +495,12 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 			case TWEET:
 				searchPane.setViewportView(tweetList);
 				cmbSearchType.setSelectedIndex(TWEET);
+				this.selectedList = tweetList;
 				break;
 			case USER:
 				searchPane.setViewportView(contactsList);
 				cmbSearchType.setSelectedIndex(USER);
+				this.selectedList = contactsList;
 				break;
 		}
 	}//}}}
@@ -457,7 +515,7 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 		return this.searchType;
 	}
 
-	public Component getCurrentComponent()
+	public JList getSelectedList()
 	{
 		return (this.searchType == TWEET) ? tweetList : contactsList;
 	}
@@ -577,5 +635,60 @@ public class SearchPanel extends javax.swing.JPanel implements TwitzEventModel {
 	public void fireTwitzEvent(TwitzEvent evt)
 	{
 		dtem.fireTwitzEvent(evt);
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) //{{{
+	{
+		if (e.getButton() == MouseEvent.BUTTON3)
+		{
+			java.awt.Point p = e.getPoint();
+			if (e.getSource() instanceof JList)
+			{
+				JList clist = (JList) e.getSource();
+				int index = clist.locationToIndex(p);
+				if (index != -1)
+				{ //Show menu only if list is not empty
+					if (clist.getSelectedIndex() == -1)
+					{
+						clist.setSelectedIndex(index);
+					}
+					//Make the caller this panel as we can add the selected list to the panel
+					//that  will make the action listener of the menu items this panel as well
+					//view.getActionsMenu(this).show(this, p.x, p.y);
+					java.awt.Point pe = SwingUtilities.convertPoint(clist, p, this);
+					view.getActionsMenu(this).show(this, pe.x, pe.y);
+				}
+
+			}
+		}
+		else if (e.getButton() == MouseEvent.BUTTON1)
+		{
+			if (e.getSource() instanceof JList)
+			{
+				JList clist = (JList) e.getSource();
+
+			}
+		}
+	}//}}}
+
+	public void mousePressed(MouseEvent e)
+	{
+		//throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void mouseReleased(MouseEvent e)
+	{
+		//throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void mouseEntered(MouseEvent e)
+	{
+		//throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void mouseExited(MouseEvent e)
+	{
+		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 }

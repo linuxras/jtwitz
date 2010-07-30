@@ -95,7 +95,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	protected void initialize(String[] args) {//{{{
 		String s = getConfigDirectory().getAbsolutePath();
 		System.setProperty("storage.dir", s);
-		System.out.println("Storage dir found: "+s);
+		//System.out.println("Storage dir found: "+s);
 		logger = Logger.getLogger(TwitzApp.class.getName());
 		logdebug = logger.isDebugEnabled();
 		if(logdebug)
@@ -103,6 +103,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 			logger.debug("Inside initialize...");
 			logger.debug("This is the storage dir: "+s);
 		}
+		UIManager.put("ScrollBar.width",8);
 		DBM = DBManager.getInstance();
 		session = TwitzSessionManager.getInstance(this);
 		splash = SplashScreen.getSplashScreen();
@@ -129,7 +130,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 
 	@Override
 	protected JMenuBar createJMenuBar() {
-		System.out.println("Inside createJMenuBar");
+		logger.debug("Inside createJMenuBar");
 		if(splash != null) {
 			try
 			{
@@ -146,7 +147,7 @@ public class TwitzApp extends SingleFrameApplication implements ActionListener, 
 	@Override
 	protected JFrame createTopLevel()
 	{
-		System.out.println("Inside createTopLevel");
+		logger.debug("Inside createTopLevel");
 		TwitzDesktopFrame top = TwitzDesktopFrame.getInstance(this);
 		//top.setUndecorated(config.getBoolean("twitz_undecorated"));
 		configureRootPane(top.getRootPane());

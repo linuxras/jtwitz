@@ -52,7 +52,7 @@ import twitz.util.*;
  *
  * @author Andrew Williams
  */
-public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel, 
+public class TimeLinePanel extends javax.swing.JLayeredPane implements TwitzEventModel, 
 		ActionListener, MouseListener, PropertyChangeListener
 {
 	private String sessionName;
@@ -369,10 +369,24 @@ public class TimeLinePanel extends javax.swing.JPanel implements TwitzEventModel
 		}
 	}
 
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		statusPanel.setEnabled(enabled);
+		super.setEnabled(enabled);
+	}
+
 	public void timeLineSearch(User u)
 	{
 		this.cmbTimelineType.setSelectedIndex(1);
 		this.txtTimelineUser.setSelectedItem(u);
+		doSearch();
+	}
+
+	public void timeLineSearch(String user)
+	{
+		this.cmbTimelineType.setSelectedIndex(1);
+		this.txtTimelineUser.setSelectedItem(user);
 		doSearch();
 	}
 

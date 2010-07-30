@@ -13,26 +13,24 @@ package twitz.ui;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import twitter4j.ResponseList;
 import twitter4j.Status;
@@ -43,7 +41,6 @@ import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
-import twitz.ui.StatusList;
 import twitz.ui.dialogs.StatusPopupPanel;
 import twitz.ui.models.StatusListModel;
 import twitz.util.*;
@@ -52,7 +49,7 @@ import twitz.util.*;
  *
  * @author Andrew Williams
  */
-public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
+public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventModel,
 		PropertyChangeListener,/* ActionListener,*/ MouseListener, java.io.Serializable
 	{
 	
@@ -270,7 +267,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 			final Component myGlassPane = view.getGlassPane();//getGlassPane();
 			
 
-			StatusUpdater worker = new StatusUpdater(view, statuses);
+			StatusUpdater worker = new StatusUpdater(this, statuses);
 			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.start();
 		}
@@ -278,17 +275,46 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 
 	class StatusUpdater extends SwingWorker<StatusListModel, ResponseList>
 	{
-		final javax.swing.JInternalFrame frame;
+		final javax.swing.JComponent frame;
 		int total = -1;
 		int count = 1;
 		private final ResponseList statuses;
-		final TwitzBusyPane busyPane;
+		private TwitzBusyPane busyPane;
+		private final StatusUpdater me;
 
-		public StatusUpdater(javax.swing.JInternalFrame frame, ResponseList list)
+		public StatusUpdater(final javax.swing.JComponent frame, ResponseList list)
 		{
 			this.statuses = list;
 			this.frame = frame;
-			this.busyPane = new TwitzBusyPane(frame, this);
+			me = this;
+			Runnable runnable = new Runnable()
+			{
+
+				public void run()
+				{
+					busyPane = new TwitzBusyPane(frame, me);
+				}
+
+			};
+			if(SwingUtilities.isEventDispatchThread())
+			{
+				runnable.run();
+			}
+			else
+			{
+				try
+				{
+					SwingUtilities.invokeAndWait(runnable);
+				}
+				catch (InterruptedException ex)
+				{
+					logger.error(ex.getLocalizedMessage());
+				}
+				catch (InvocationTargetException ex)
+				{
+					logger.error(ex.getLocalizedMessage());
+				}
+			}
 		}
 
 		public void start()
@@ -341,17 +367,26 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 			}
 			catch (InterruptedException ex)
 			{
-				Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
+				logger.error(ex.getLocalizedMessage());
 			}
 			catch (ExecutionException ex)
 			{
-				Logger.getLogger(StatusPanel.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
+				logger.error(ex.getLocalizedMessage());
 			}
 			firePropertyChange("done", null, null);
 
 		}
 
 	}
+
+		@Override
+	public void setEnabled(boolean enabled)
+	{
+		statusList.setEnabled(enabled);
+		super.setEnabled(enabled);
+	}
+
+
 	//TwitzEventModel
 	public void addTwitzListener(TwitzListener o) {
 		dtem.addTwitzListener(o);
@@ -371,7 +406,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 		if (e.getSource() instanceof JMenuItem)
 		{
 			String cmd = e.getActionCommand();
-			System.out.println("StatusPanel---------------=========================== "+cmd);
+			logger.debug("StatusPanel---------------=========================== "+cmd);
 			if(cmd.equals("USER_TIMELINE"))
 			{
 				TimeLinePanel panel = view.getTimeLine();
@@ -471,6 +506,7 @@ public class StatusPanel extends javax.swing.JPanel implements TwitzEventModel,
 //	private twitz.ui.StatusTable status = new twitz.ui.StatusTable();
 	private javax.swing.JTable status = null;
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
+	private Logger logger = Logger.getLogger(StatusPanel.class);
     private org.jdesktop.application.ResourceMap resourceMap;
 	private boolean isUserList = false;
 	private boolean inTimeline = false;

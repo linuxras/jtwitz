@@ -42,7 +42,7 @@ import twitz.util.TwitzSessionManager;
  *
  * @author Andrew Williams
  */
-public class UserListMainPanel extends JPanel implements TwitzEventModel, PropertyChangeListener {
+public class UserListMainPanel extends javax.swing.JLayeredPane implements TwitzEventModel, PropertyChangeListener {
 
 	private BorderLayout blayout = new BorderLayout();
 	/**

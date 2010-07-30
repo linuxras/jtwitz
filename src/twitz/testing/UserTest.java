@@ -35,6 +35,20 @@ public class UserTest implements User{
 		this(12345, screenName, screenName, "http://localhost/~mistik1/me_3.jpg");
 	}
 
+	public UserTest(String screenName, String avatar)
+	{
+		this.screenName = screenName;
+		this.name = screenName;
+		try
+		{
+			this.profile_img = new URL(avatar);
+		}
+		catch (MalformedURLException ex)
+		{
+			//ignore
+		}
+	}
+
 	public UserTest(int userid, String screenName, String fullname, String avatar)
 	{
 		this.id = userid;

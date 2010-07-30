@@ -81,7 +81,7 @@ public class ContactsRenderer extends SubstanceDefaultListCellRenderer {
 		table.append(width).append("><tr><td align='left' valign='center'>")
 				.append("<img border=0 width=32 height=32 src='")
 				.append(img.toString()).append("'>")
-				.append("&nbsp;&nbsp;&nbsp;<b>")
+				.append("&nbsp;&nbsp;<b>")
 				.append(u.getScreenName())
 				.append("</b></td></tr>");
 		if(s != null && s.getText() != null)

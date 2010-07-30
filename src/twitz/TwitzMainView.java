@@ -86,6 +86,8 @@ import twitz.ui.StatusPanel;
 import twitz.ui.TimeLinePanel;
 import twitz.ui.TweetBox;
 import twitz.ui.TwitzBusyPane;
+import twitz.ui.UserListAccordionPanel;
+import twitz.ui.UserListBox;
 import twitz.ui.UserListMainPanel;
 import twitz.ui.dialogs.AddListUserDialog;
 import twitz.ui.dialogs.CreateUserListDialog;
@@ -508,7 +510,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			hbar.setPreferredSize(new java.awt.Dimension(0, 8));
 
 			pane.putClientProperty(SubstanceLookAndFeel.SCROLL_PANE_BUTTONS_POLICY,
-					ScrollPaneButtonPolicyKind.MULTIPLE_BOTH);
+					ScrollPaneButtonPolicyKind.MULTIPLE);
 		}
 	}//}}}
 
@@ -540,7 +542,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		friends = new FriendsPanel();
 		friends.setSessionName(sessionName);
 		//logger.debug("friends----------------------------------------------");
-		userListMainPanel1 = new twitz.ui.UserListMainPanel();
+		userListMainPanel1 = new twitz.ui.UserListAccordionPanel();//UserListMainPanel();
 		userListMainPanel1.setName("userListMainPanel1"); // NOI18N
 		userListMainPanel1.setSessionName(sessionName);
 		//logger.debug("userlistmainpanel=============================================");
@@ -973,12 +975,17 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	public void updateTabState(boolean force)
 	{
 		Component c = tabPane.getSelectedComponent();
-		logger.debug("Current tab name: " + c.getName());
+		if(logdebug)
+			logger.debug("Current tab name: " + c.getName());
 		if (c.equals(searchPanel))
 		{
 			tweetBox.setVisible(false);
 		}
-		else if (c.equals(recentPane))
+		else
+		{
+			tweetBox.setVisible(true);
+		}
+		if (c.equals(recentPane))
 		{
 			timelinePanel.update(force);
 			trendPanel.update(force);
@@ -1003,10 +1010,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				blocked.update(force);
 			}
 		}
-		else
-		{
-			tweetBox.setVisible(true);
-		}
+		
 	}
 
 	//Private methods
@@ -1057,6 +1061,16 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		return (obj instanceof Status[]);
 	}
 
+	private boolean isTweet(Object obj)
+	{
+		return (obj instanceof Tweet);
+	}
+
+	private boolean isTweetArray(Object obj)
+	{
+		return (obj instanceof Tweet[]);
+	}
+
 	private String getScreenNameFromMap(Object obj) {//{{{
 		String screenName = "";
 		User u = null;
@@ -1086,6 +1100,16 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			u = stat.getUser();
 			screenName = u.getScreenName();
 		}
+		else if(isTweet(obj))
+		{
+			Tweet t = (Tweet)obj;
+			screenName = t.getFromUser();
+		}
+		else if(isTweetArray(obj))
+		{
+			Tweet[] t = (Tweet[])obj;
+			screenName = t[0].getFromUser();
+		}
 		return screenName;
 	}//}}}
 
@@ -1109,6 +1133,15 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				rv.addElement(u.getScreenName());
 				u = stat[1].getUser();
 				rv.addElement(u.getScreenName());
+			}
+		}
+		else if(isTweetArray(obj))
+		{
+			Tweet[] t = (Tweet[]) obj;
+			if(t.length >= 2)
+			{
+				rv.addElement(t[0].getFromUser());
+				rv.addElement(t[1].getFromUser());
 			}
 		}
 
@@ -1144,6 +1177,47 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			u = stat.getUser();
 			//screenName = u.getScreenName();
 		}
+		else if(isTweet(obj))
+		{
+			Tweet t = (Tweet)obj;
+			//Note this should not be used for anything other than
+			// screenname, id and profile_url
+			// TODO: replace this with a call to Twitter.showUser();
+			TwitzBusyPane blocker = new TwitzBusyPane(this, null);
+			blocker.setLabelText(resourceMap.getString("SHOW_USER"));
+			blocker.block();
+			Twitter tw = this.twitterManager.getTwitterInstance();
+			try
+			{
+				u = tw.showUser(t.getFromUser());
+			}
+			catch (TwitterException ex)
+			{
+				logger.error(ex.getLocalizedMessage());
+			}
+//			UserTest fakeUser = new UserTest(t.getFromUser(), t.getProfileImageUrl());
+//			u = fakeUser;
+			blocker.unblock();
+		}
+		else if(isTweetArray(obj))
+		{
+			Tweet[] t = (Tweet[])obj;
+			TwitzBusyPane blocker = new TwitzBusyPane(this, null);
+			blocker.setLabelText(resourceMap.getString("SHOW_USER"));
+			blocker.block();
+			Twitter tw = this.twitterManager.getTwitterInstance();
+			try
+			{
+				u = tw.showUser(t[0].getFromUser());
+			}
+			catch (TwitterException ex)
+			{
+				logger.error(ex.getLocalizedMessage());
+			}
+			blocker.unblock();
+//			UserTest fakeUser = new UserTest(t[0].getFromUser(), t[0].getProfileImageUrl());
+//			u = fakeUser;
+		}
 		return u;
 	}//}}}
 
@@ -1167,6 +1241,36 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				rv.addElement(u);
 				u = stat[1].getUser();
 				rv.addElement(u);
+			}
+		}
+		else if(isTweetArray(obj))
+		{
+			//Note this should not be used for anything other than
+			// screenname, id and profile_url
+			// TODO: replace this with a call to Twitter.showUser();
+			Tweet[] t = (Tweet[])obj;
+			if(t.length >= 2)
+			{
+				TwitzBusyPane blocker = new TwitzBusyPane(this, null);
+				blocker.setLabelText(resourceMap.getString("SHOW_USER"));
+				blocker.block();
+				Twitter tw = this.twitterManager.getTwitterInstance();
+				try
+				{
+					u = tw.showUser(t[0].getFromUser());
+					rv.addElement(u);
+					u = tw.showUser(t[1].getFromUser());
+					rv.addElement(u);
+				}
+				catch (TwitterException ex)
+				{
+					logger.error(ex.getLocalizedMessage());
+				}
+				blocker.unblock();
+//				UserTest fakeUser = new UserTest(t[0].getFromUser(), t[0].getProfileImageUrl());
+//				rv.addElement(fakeUser);
+//				fakeUser = new UserTest(t[1].getFromUser(), t[1].getProfileImageUrl());
+//				rv.addElement(fakeUser);
 			}
 		}
 
@@ -1216,17 +1320,30 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
 		UserListTest ult5 = new UserListTest(6, "List 6", "List 1 Testing",
 				"this is a slug", "this describes the list", 0, 7, true, new UserTest());
-		UserListPanel pnl = userListMainPanel1.addUserList(ult);
+//		UserListPanel pnl = userListMainPanel1.addUserList(ult);
+//		pnl.addUser(ouser);
+//		UserListPanel pnl1 = userListMainPanel1.addUserList(ult1);
+//		pnl1.addUser(puser);
+//		UserListPanel pnl2 = userListMainPanel1.addUserList(ult2);
+//		pnl2.addUser(puser);
+//		UserListPanel pnl3 = userListMainPanel1.addUserList(ult3);
+//		pnl3.addUser(puser);
+//		UserListPanel pnl4 = userListMainPanel1.addUserList(ult4);
+//		pnl4.addUser(puser);
+//		UserListPanel pnl5 = userListMainPanel1.addUserList(ult5);
+//		pnl5.addUser(puser);
+
+		UserListBox pnl = userListMainPanel1.addUserList(ult);
 		pnl.addUser(ouser);
-		UserListPanel pnl1 = userListMainPanel1.addUserList(ult1);
+		UserListBox pnl1 = userListMainPanel1.addUserList(ult1);
 		pnl1.addUser(puser);
-		UserListPanel pnl2 = userListMainPanel1.addUserList(ult2);
+		UserListBox pnl2 = userListMainPanel1.addUserList(ult2);
 		pnl2.addUser(puser);
-		UserListPanel pnl3 = userListMainPanel1.addUserList(ult3);
+		UserListBox pnl3 = userListMainPanel1.addUserList(ult3);
 		pnl3.addUser(puser);
-		UserListPanel pnl4 = userListMainPanel1.addUserList(ult4);
+		UserListBox pnl4 = userListMainPanel1.addUserList(ult4);
 		pnl4.addUser(puser);
-		UserListPanel pnl5 = userListMainPanel1.addUserList(ult5);
+		UserListBox pnl5 = userListMainPanel1.addUserList(ult5);
 		pnl5.addUser(puser);
 
 		friends.addUser(ouser);
@@ -1537,7 +1654,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	/**
 	 * For development purposes ONLY
 	 */
-	public void addSampleFriends()
+	public void addSampleFriends(javax.swing.JComponent caller)
 	{
 		if(DEVMODE)
 		{
@@ -1551,16 +1668,16 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 //			rd.setRelationship(new RelationshipTest());
 //			rd.setLocationRelativeTo(this);
 //			rd.setVisible(true);
-//			new BlockTest(this).start();
+			new BlockTest(caller).start();
 		}
 
 	}
 
 	private class BlockTest extends SwingWorker
 	{
-		private final JInternalFrame frame;
+		private final javax.swing.JComponent frame;
 		private final TwitzBusyPane busy;
-		public BlockTest(JInternalFrame f)
+		public BlockTest(javax.swing.JComponent f)
 		{
 			this.frame = f;
 			this.busy = new TwitzBusyPane(frame, this);
@@ -1643,7 +1760,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		ContactsList cl = null;
 		StatusList tl = null;
 		UserListPanel ulp = null;
+		UserListBox ulb = null;
 		StatusPanel sp = null;
+		SearchPanel search = null;
 		TimeLinePanel tlp = null;
 		FriendsPanel fp = null;
 		BlockedPanel bp = null;
@@ -1688,6 +1807,18 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				aMap = TwitzApp.getContext().getActionMap(ulp.getClass(), ulp);
 				//actions = ulp;
 			}
+			else if (caller instanceof UserListBox)
+			{
+				//caller = (UserListPanel)caller;
+				ContactsList l = ((UserListBox) caller).getContactsList();
+				ulb = (UserListBox) caller;
+				if (l.getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(ulp.getClass(), ulb);
+				//actions = ulp;
+			}
 			else if (caller instanceof StatusList)
 			{
 				tl = (StatusList) caller;
@@ -1707,6 +1838,15 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				}
 				aMap = TwitzApp.getContext().getActionMap(sp.getClass(), sp);
 				//actions = sp;
+			}
+			else if(caller instanceof SearchPanel)
+			{
+				search = (SearchPanel)caller;
+				if(search.getSelectedList().getSelectedIndex() == -1)
+				{
+					selected = false;
+				}
+				aMap = TwitzApp.getContext().getActionMap(search.getClass(), search);
 			}
 			else if(caller instanceof TimeLinePanel)
 			{
@@ -2764,6 +2904,11 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			UserListPanel ulp = (UserListPanel) que.poll();
 			ulp.updateList(users);
 		}
+		else if(o instanceof UserListBox)
+		{
+			UserListBox ulp = (UserListBox) que.poll();
+			ulp.updateList(users);
+		}
 	} //}}}
 
 	public void addedUserListMember(UserList userList)
@@ -3120,7 +3265,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	int busyIconIndex = 0;
 	private int oldHeight = 400;
 
-	private UserListMainPanel userListMainPanel1;
+	//private UserListMainPanel userListMainPanel1;
+	private UserListAccordionPanel userListMainPanel1;
 	private ContactsList blockedList;
 	private FriendsPanel friends;
 	private FollowersPanel followers;

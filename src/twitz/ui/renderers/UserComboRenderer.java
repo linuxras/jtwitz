@@ -53,7 +53,7 @@ public class UserComboRenderer extends SubstanceDefaultListCellRenderer {
 //		}
 //		//Image img = icon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
 //		icon = new ImageIcon(img);
-		Status s = u.getStatus();
+//		Status s = u.getStatus();
 		int width = list.getWidth()-50;
 		//System.out.println("List width: "+width);
 		if(list.getParent() != null)

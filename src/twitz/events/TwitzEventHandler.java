@@ -38,7 +38,9 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		this.view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
 		this.tm = view.getTwitterManager();
 		myGlassPane = view.getGlassPane();
-		busyPane = new TwitzBusyPane(view, this);
+		Map m = event.getEventMap();
+		javax.swing.JComponent comp = (javax.swing.JComponent)m.get("caller");
+		busyPane = new TwitzBusyPane(comp, this);
 	}
 
 	public void exec()
@@ -570,7 +572,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				}
 				break;
 			case CREATE_BLOCK:
-				logger.info("Create Block clicked");
+				logger.debug("Create Block clicked");
 				//screenName = getScreenNameFromActiveTab();
 				if(eventMap != null) {
 					screenName = getScreenNameFromMap(eventMap.get("selections"));
@@ -606,7 +608,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 						});
 				break;
 			case REPORT_SPAM:
-				logger.info("Report SPAM clicked");
+				logger.debug("Report SPAM clicked");
 				//get the username from the active tab and selected row
 				//screenName = getScreenNameFromActiveTab();
 				if(eventMap != null) {
@@ -713,6 +715,16 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			u = stat.getUser();
 			screenName = u.getScreenName();
 		}
+		else if(isTweet(obj))
+		{
+			Tweet t = (Tweet)obj;
+			screenName = t.getFromUser();
+		}
+		else if(isTweetArray(obj))
+		{
+			Tweet[] t = (Tweet[])obj;
+			screenName = t[0].getFromUser();
+		}
 		return screenName;
 	}//}}}
 
@@ -738,6 +750,15 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				rv.addElement(u.getScreenName());
 			}
 		}
+		else if(isTweetArray(obj))
+		{
+			Tweet[] t = (Tweet[]) obj;
+			if(t.length >= 2)
+			{
+				rv.addElement(t[0].getFromUser());
+				rv.addElement(t[1].getFromUser());
+			}
+		}
 
 		return rv;
 	}//}}}
@@ -759,4 +780,13 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 		return (obj instanceof Status[]);
 	}
 
+	private boolean isTweet(Object obj)
+	{
+		return (obj instanceof Tweet);
+	}
+
+	private boolean isTweetArray(Object obj)
+	{
+		return (obj instanceof Tweet[]);
+	}
 }

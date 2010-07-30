@@ -58,9 +58,11 @@ import twitz.util.TwitzSessionManager;
  *
  * @author Andrew Williams
  */
-public class FriendsPanel extends javax.swing.JPanel implements MouseListener, TwitzEventModel/*, ActionListener*/
+public class FriendsPanel extends javax.swing.JLayeredPane implements MouseListener, TwitzEventModel/*, ActionListener*/
 {
 	private boolean firstrun = true;
+	private javax.swing.JButton btnReload;
+	private long currentPage;
 
     /** Creates new form FriendsPanel */
     public FriendsPanel() {
@@ -90,6 +92,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
         btnPrev = new javax.swing.JButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
         btnNext = new javax.swing.JButton();
+		btnReload = new javax.swing.JButton();
 
         jSeparator1.setName("jSeparator1"); // NOI18N
 
@@ -109,6 +112,13 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 
         jSeparator2.setName("jSeparator2"); // NOI18N
         toolbar.add(jSeparator2);
+
+		btnReload.setAction(actionMap.get("reload"));
+		btnReload.setText(resourceMap.getString("btnReload.text"));
+		btnReload.setIcon(resourceMap.getIcon("btnReload.icon"));
+		btnReload.setToolTipText(resourceMap.getString("btnReload.toolTipText"));
+		btnReload.setMargin(new java.awt.Insets(2, 2, 2, 2));
+		toolbar.add(btnReload);
 
         btnUserAdd.setAction(actionMap.get("addListUser")); // NOI18N
         btnUserAdd.setIcon(resourceMap.getIcon("btnUserAdd.icon")); // NOI18N
@@ -196,7 +206,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 		} 
 		else
 		{
-			view.addSampleFriends();
+			view.addSampleFriends(this);
 		}
 	}//}}}
 
@@ -321,6 +331,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 	@Action
 	public void getNext()//{{{
 	{
+		currentPage = nextPage;
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("caller", this);
 		map.put("async", true);
@@ -336,6 +347,7 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 	@Action
 	public void getPrevious()//{{{
 	{
+		currentPage = prevPage;
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("caller", this);
 		map.put("async", true);
@@ -345,6 +357,12 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
 	}//}}}
+
+	@Action
+	public void reload()
+	{
+		update(true);
+	}
 
 	public ContactsList getContactsList() {
 		return contactsList1;
@@ -450,11 +468,18 @@ public class FriendsPanel extends javax.swing.JPanel implements MouseListener, T
 			map.put("caller", this);
 			ArrayList args = new ArrayList();
 			args.add(config.getString("twitter_id"));//screenName
-			args.add(-1L);
+			args.add(currentPage);
 			map.put("arguments", args);
 			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
 			firstrun = false;
 		}
+	}
+
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		contactsList1.setEnabled(enabled);
+		super.setEnabled(enabled);
 	}
 
 	//MouseListener

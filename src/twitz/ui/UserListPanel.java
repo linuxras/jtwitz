@@ -59,7 +59,7 @@ import twitz.util.TwitzSessionManager;
  *
  * @author Andrew Williams
  */
-public class UserListPanel extends javax.swing.JPanel implements MouseListener, FocusListener, 
+public class UserListPanel extends javax.swing.JLayeredPane implements MouseListener, FocusListener, 
 		TwitzEventModel/*, ActionListener*/
 {
 	private SettingsManager config;
@@ -207,6 +207,10 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 			map.put("arguments", args);
 			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LIST_STATUSES, new java.util.Date().getTime(), map));
 		}
+		else
+		{
+			view.addSampleFriends(this);
+		}
 	}//}}}
 
 	private void initDefaults() {//{{{
@@ -215,6 +219,8 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 			public void valueChanged(ListSelectionEvent e)
 			{
 				btnUserDelete.setEnabled(!((ContactsList)e.getSource()).isSelectionEmpty());
+				if(!isFocusOwner())
+					requestFocusInWindow();
 			}
 		};//}}}
 		contactsList1.addListSelectionListener(lsl);
@@ -383,10 +389,10 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 
 	public void setCollapsed(boolean c) {//{{{
 		boolean old = collapsed;
-		if(collapsed && c) {
-			return;
-		}
-		else if(collapsed && !c) {
+	//	if(collapsed && c) {
+	//		return;
+	//	}
+	/*	else*/ if(collapsed && !c) {
 			listPane.setVisible(true);
 			contactsList1.setVisible(true);
 			contactsList1.revalidate();
@@ -527,6 +533,13 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 		}
 	}//}}}
 
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		contactsList1.setEnabled(enabled);
+		super.setEnabled(enabled);
+	}
+
 	//MouseListener
 	public void mouseClicked(MouseEvent e) {//{{{
 		if (e.getButton() == MouseEvent.BUTTON3)
@@ -556,7 +569,7 @@ public class UserListPanel extends javax.swing.JPanel implements MouseListener, 
 				//twitter4j.Twitter t = TwitterManager.getInstance(TwitzMainView.getInstance()).getTwitterInstance();
 				
 			}
-			if(!isFocusOwner())
+			//if(!isFocusOwner())
 				requestFocusInWindow();
 		}
 	}//}}}
