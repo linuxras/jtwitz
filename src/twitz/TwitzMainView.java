@@ -1668,7 +1668,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 //			rd.setRelationship(new RelationshipTest());
 //			rd.setLocationRelativeTo(this);
 //			rd.setVisible(true);
-			new BlockTest(caller).start();
+//			new BlockTest(caller).start();
 		}
 
 	}
