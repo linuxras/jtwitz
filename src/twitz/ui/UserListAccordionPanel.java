@@ -167,7 +167,7 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 		map.put("async", true);
 		map.put("caller", this);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
+		args.add(view.getAuthenticatedUser().getScreenName());//screenName
 		args.add(nextPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
@@ -181,7 +181,7 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 		map.put("async", true);
 		map.put("caller", this);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
+		args.add(view.getAuthenticatedUser().getScreenName());//screenName
 		args.add(prevPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
@@ -273,7 +273,7 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 		String old = this.sessionName;
 		this.sessionName = name;
 		config = session.getSettingsManagerForSession(sessionName);
-		view = session.getTwitMainViewForSession(sessionName);
+		view = session.getTwitzMainViewForSession(sessionName);
 		firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
@@ -439,6 +439,16 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 		return userlists;
 	}
 
+	public Map<String, UserListBox> getListBoxes()
+	{
+		return this.panels;
+	}
+
+	public UserListBox getListBox(String name)
+	{
+		return this.panels.get(name);
+	}
+
 	public void update(boolean force)
 	{
 		logger.debug("update() run force = "+force);
@@ -449,7 +459,7 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 			map.put("async", true);
 			map.put("caller", this);
 			ArrayList args = new ArrayList();
-			args.add(config.getString("twitter_id"));//screenName
+			args.add(view.getAuthenticatedUser().getScreenName());//screenName
 			args.add(currentPage);
 			map.put("arguments", args);
 			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));

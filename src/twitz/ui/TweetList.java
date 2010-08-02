@@ -55,7 +55,7 @@ public class TweetList extends JList implements MouseListener, ActionListener, T
 		String old = this.sessionName;
 		this.sessionName = name;
 		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 

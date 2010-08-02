@@ -12,6 +12,7 @@
 package twitz;
 
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -20,6 +21,7 @@ import java.beans.PropertyChangeSupport;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -79,6 +81,7 @@ import org.pushingpixels.substance.api.*;
 import org.pushingpixels.substance.api.SubstanceConstants.ScrollPaneButtonPolicyKind;
 import org.pushingpixels.substance.api.tabbed.*;
 import org.pushingpixels.substance.api.SubstanceConstants.TabCloseKind;
+import twitter4j.http.AccessToken;
 
 
 import twitz.ui.SearchPanel;
@@ -857,7 +860,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 //		map.put("async", true);
 //		map.put("caller", userListMainPanel1);
 //		args = new ArrayList();
-//		args.add(config.getString("twitter_id"));//screenName
+//		args.add(getAuthenticatedUser().getId());//screenName
 //		args.add(-1L);
 //		map.put("arguments", args);
 //		eventOccurred(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
@@ -871,7 +874,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 //		map.put("async", true);
 //		map.put("caller", followers);
 //		args = new ArrayList();
-//		args.add(config.getString("twitter_id"));//screenName
+//		args.add(getAuthenticatedUser().getId());//screenName
 //		args.add(-1L);
 //		map.put("arguments", args);
 //		eventOccurred(new TwitzEvent(this, TwitzEventType.FOLLOWERS_STATUSES, new java.util.Date().getTime(), map));
@@ -880,7 +883,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 //		map.put("async", true);
 //		map.put("caller", friends);
 //		args = new ArrayList();
-//		args.add(config.getString("twitter_id"));//screenName
+//		args.add(getAuthenticatedUser().getId());//screenName
 //		args.add(-1L);
 //		map.put("arguments", args);
 //		eventOccurred(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
@@ -935,23 +938,53 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	@Action
 	public void viewHTMLLog()//{{{
 	{
-		MessageDialog msg = new MessageDialog(getMainFrame(), false);
-		msg.setContentType("text/html");
-		try
+		Desktop.Action actions = Desktop.Action.BROWSE;
+		if (!Desktop.isDesktopSupported())
 		{
-			URI spec = SettingsManager.getConfigDirectory().toURI();
-			String s = spec.toString()+"/logs/index.html";
-			URL path = new URL(s);
-			msg.setMessage(path);
-			msg.setResizable(true);
-			msg.setTitle(resourceMap.getString("LOG_WINDOW_TITLE.TEXT"));
-			msg.setSize(640, 480);
-			msg.setVisible(true);
-			//InputStream is = this.getClass().getResourceAsStream(path);
+			MessageDialog msg = new MessageDialog(getMainFrame(), false);
+			msg.setContentType("text/html");
+			try
+			{
+				URI spec = SettingsManager.getConfigDirectory().toURI();
+				String s = spec.toString() + "/logs/index.html";
+				URL path = new URL(s);
+				msg.setMessage(path);
+				msg.setResizable(true);
+				msg.setTitle(resourceMap.getString("LOG_WINDOW_TITLE.TEXT"));
+				msg.setSize(640, 480);
+				msg.setVisible(true);
+				//InputStream is = this.getClass().getResourceAsStream(path);
+			}
+			catch (IOException ex)
+			{
+				logger.error(ex.getMessage(), ex);
+			}
 		}
-		catch (IOException ex)
+		else
 		{
-			logger.error(ex.getMessage(), ex);
+			Desktop desktop = Desktop.getDesktop();
+			URI spec = TwitzApp.getConfigDirectory().toURI();
+			String s = spec.toString() + "/logs/index.html";
+			URI path = null;
+			try
+			{
+				path = new URI(s);
+			}
+			catch (URISyntaxException ex)
+			{
+				logger.error(ex.getLocalizedMessage());
+			}
+			if(path != null && desktop.isSupported(actions))
+			{
+				try
+				{
+					desktop.browse(path);
+				}
+				catch (IOException ex)
+				{
+					logger.error(ex.getLocalizedMessage());
+				}
+			}
 		}
 		//InputStream is = this.getClass().getResourceAsStream(path);
 	}//}}}
@@ -1487,9 +1520,19 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			tabPane.setTabPlacement(JTabbedPane.LEFT);
 		}
 	}//}}}
+
+	private void setAuthenticatedUser(User userTest)
+	{
+		this.authenticatedUser = userTest;
+	}
 	//END private methods
 
 	//Public methods
+	public User getAuthenticatedUser()
+	{
+		return this.authenticatedUser;
+	}
+
 	public javax.swing.JTextField getTweetField()
 	{
 		return tweetBox.getTweetField(); //this.txtTweet;
@@ -1498,8 +1541,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	public boolean initTwitter() //{{{
 	{
 		//Initialize twitter
-		twitterManager = new TwitterManager(sessionName);//.getInstance();
-		twitterManager.addTwitzListener(this);
+		getTwitterManager();
 		resource = TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
 
 		TwitzLogin worker = new TwitzLogin(this);
@@ -1518,6 +1560,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		Component glassPane;
 		JInternalFrame frame;
 		ResourceMap resource = TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
+		private User validatedUser;
 
 		public TwitzLogin(JInternalFrame frame)
 		{
@@ -1550,6 +1593,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			try
 			{
 				message("Looking for network connection to twitter.com");
+				twitterManager.login();
 				online = twitterManager.getTwitterInstance().test();
 			}
 			catch (TwitterException te)
@@ -1560,10 +1604,20 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				return null;
 			}
 			//TODO modify this for when OAuth is being used
-			message("Attempting to verify credentials for %s", config.getString(DBManager.SESSION_TWITTER_ID));
+			if(config.getBoolean(DBManager.SESSION_TWITTER_OAUTH))
+			{
+				AccessToken token = config.getAccessToken();
+				//TODO nedds I18N
+				message("Attempting to verify credentials for %s", token == null ? "Unknown User" : token.getScreenName());
+			}
+			else
+			{
+				message("Attempting to verify credentials for %s", config.getString(DBManager.SESSION_TWITTER_ID));
+			}
+			
 			try
 			{
-				twitterManager.getTwitterInstance().verifyCredentials();
+				validatedUser = twitterManager.getTwitterInstance().verifyCredentials();
 			}
 			catch (TwitterException te)
 			{
@@ -1594,10 +1648,12 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 				if (online)
 				{
+					setAuthenticatedUser(validatedUser);
 					loadAllPanels();
 				}
 				else if (DEVMODE)
 				{
+					setAuthenticatedUser(new UserTest());
 					addSampleData();
 				}
 			}
@@ -1609,16 +1665,21 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		{
 
 		}
+
+
 	}//}}}
 
 	public void setConnected(boolean c)
 	{
 		boolean old = connected;
-		//logger.debug("Connected changed --------- "+c+" --------------------");
+		logger.debug("Connected changed --------- "+c+" --------------------");
 		connected = c;
 		forceupdate = c;
-		timelinePanel.setConnectButtonVisible(c);
-		super.firePropertyChange("connected", old, c);
+		if(DEVMODE)
+			timelinePanel.setConnectButtonVisible(c);
+		else
+			timelinePanel.setConnectButtonVisible(!c);
+		firePropertyChange("connected", old, c);
 	}
 
 	public boolean isConnected() 
@@ -1638,6 +1699,12 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	public TwitterManager getTwitterManager()
 	{
+		//It is null before initTwitter is run
+		if(twitterManager == null)
+		{
+			twitterManager = new TwitterManager(sessionName);
+			twitterManager.addTwitzListener(this);
+		}
 		return twitterManager;
 	}
 
@@ -1774,6 +1841,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 		boolean selected = true;
 		boolean isBlock = false;
+		boolean status = false;
 		if(caller != null)
 		{
 			if (caller instanceof JTable)
@@ -1816,7 +1884,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
-				aMap = TwitzApp.getContext().getActionMap(ulp.getClass(), ulb);
+				aMap = TwitzApp.getContext().getActionMap(ulb.getClass(), ulb);
 				//actions = ulp;
 			}
 			else if (caller instanceof StatusList)
@@ -1826,6 +1894,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
+				else
+					status = true;
 				aMap = TwitzApp.getContext().getActionMap(tl.getClass(), tl);
 				//actions = tl;
 			}
@@ -1836,6 +1906,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
+				else
+					status = true;
 				aMap = TwitzApp.getContext().getActionMap(sp.getClass(), sp);
 				//actions = sp;
 			}
@@ -1855,6 +1927,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					selected = false;
 				}
+				else
+					status = true;
 				aMap = TwitzApp.getContext().getActionMap(tlp.getClass(), tlp);
 				//actions = tlp;
 			}
@@ -1994,6 +2068,35 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		item.setFocusable(false);
 		sub.add(item);
 		menu.add(sub);
+//FAVORITE
+		sub = new JMenu(getResourceMap().getString("FAVORITES"));
+		sub.setIcon(getResourceMap().getIcon("icon.heart"));
+		sub.setFocusable(false);
+		item = new JMenuItem(getResourceMap().getString("CREATE_FAVORITE"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
+		item.setActionCommand("CREATE_FAVORITE");
+		item.setIcon(getResourceMap().getIcon("icon.heart_add"));
+		item.setText(getResourceMap().getString("CREATE_FAVORITE"));
+		item.setEnabled(status);
+		item.setFocusable(false);
+		sub.add(item);
+
+		item = new JMenuItem(getResourceMap().getString("DESTROY_FAVORITE"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
+		item.setActionCommand("DESTROY_FAVORITE");
+		//item.addActionListener(actions);
+		item.setIcon(getResourceMap().getIcon("icon.heart_delete"));
+		item.setText(getResourceMap().getString("DESTROY_FAVORITE"));
+		item.setEnabled(status);
+		item.setFocusable(false);
+		sub.add(item);
+		menu.add(sub);
 
 //SENT_DIRECT_MESSAGES
 //SEND_DIRECT_MESSAGE
@@ -2114,13 +2217,37 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			//item.addActionListener(actions);
 		}
 		item.setActionCommand("CHECK_LIST_MEMBERSHIP");
-		item.setIcon(getResourceMap().getIcon("icon.group_gear"));
+		item.setIcon(getResourceMap().getIcon("icon.group_link"));
 		item.setText(getResourceMap().getString("CHECK_LIST_MEMBERSHIP"));
 		item.setEnabled(selected);
 		item.setFocusable(false);
 		sub.add(item);
 		menu.add(sub);
+//NOTIFICATIONS
+		sub = new JMenu(getResourceMap().getString("NOTIFICATIONS"));
+		sub.setIcon(getResourceMap().getIcon("icon.transmit"));
+		sub.setFocusable(false);
+		item = new JMenuItem(getResourceMap().getString("ENABLE_NOTIFICATION"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+		}
+		item.setActionCommand("ENABLE_NOTIFICATION");
+		item.setIcon(getResourceMap().getIcon("icon.transmit_add"));
+		item.setText(getResourceMap().getString("ENABLE_NOTIFICATION"));
+		item.setEnabled(selected);
+		item.setFocusable(false);
+		sub.add(item);
 
+		item = new JMenuItem(getResourceMap().getString("DISABLE_NOTIFICATION"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+		}
+		item.setActionCommand("DISABLE_NOTIFICATION");
+		item.setIcon(getResourceMap().getIcon("icon.transmit_delete"));
+		item.setText(getResourceMap().getString("DISABLE_NOTIFICATION"));
+		item.setEnabled(selected);
+		item.setFocusable(false);
+		sub.add(item);
 	//USER_TIMELINE
 		item = new JMenuItem(getResourceMap().getString("USER_TIMELINE"));
 		if(aMap != null) {
@@ -2347,9 +2474,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	//TwitzListener
 	/**
-	 * Event Processor for all events that are related to twitter activity in the {@link twitz.twitter.TwitterManager}
+	 * Event Processor for all events that are related to twitter activity in the {@link twitz.event.TwitzEventHandler}
 	 * A TwitzEvent will will have and type.
-	 * @param t
+	 * @param t A {@link TwitzEvent} to process
 	 */
 	public void eventOccurred(TwitzEvent t)//{{{
 	{
@@ -2393,7 +2520,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			case LIST_MEMBERS: //do this here to avoid threading issues with the ArrayDeque
 				if(args != null && args.size() == 3)
 				{
-					que.add(caller);
+					userlistQue.add(caller);
 				}
 			break;
 			case SEND_DIRECT_MESSAGE:
@@ -2420,11 +2547,12 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			break;
 			case ADD_LIST_MEMBER:
 			case DELETE_LIST_MEMBER:
+			case CHECK_LIST_MEMBERSHIP:
 				//logger.debug("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
 				if(eventMap != null)
 				{
 					if(alud == null)
-						alud = new AddListUserDialog(getMainFrame(), true);
+						alud = new AddListUserDialog(getMainFrame(), true, this.sessionName);
 					alud.reset();
 					alud.setUserListMap(userListMainPanel1.getUserLists());
 					if(eventMap.containsKey("selections"))
@@ -2447,7 +2575,16 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 					{
 						alud.setSelectedUserList((UserList)eventMap.get("userList"));
 					}
-					alud.setMode(type.equals(TwitzEventType.DELETE_LIST_MEMBER) ? AddListUserDialog.Mode.USER_DELETE : AddListUserDialog.Mode.USER_ADD);
+					alud.setMode(AddListUserDialog.Mode.USER_ADD);
+					if(type.equals(TwitzEventType.DELETE_LIST_MEMBER))
+					{
+						alud.setMode(AddListUserDialog.Mode.LIST_DELETE);
+					}
+					else if(type.equals(TwitzEventType.CHECK_LIST_MEMBERSHIP))
+					{
+						alud.setMode(AddListUserDialog.Mode.USER_CHECK);
+					}
+					
 					
 					alud.setLocationRelativeTo(this);
 					alud.setVisible(true);
@@ -2461,10 +2598,21 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 					{
 						return;
 					}
+					//checkUserListMembership(java.lang.String listOwnerScreenName, int listId, int userId)
 					args = new ArrayList();
-					args.add(select.getId());
-					args.add(user.getId());
 					Map m = t.getEventMap();
+					if(type.equals(TwitzEventType.CHECK_LIST_MEMBERSHIP))
+					{
+						args.add(select.getUser().getScreenName());
+						args.add(select.getId());
+						args.add(user.getId());
+						que.add(select);
+					}
+					else
+					{
+						args.add(select.getId());
+						args.add(user.getId());
+					}
 					m.put("arguments", args);
 				}
 			break;
@@ -2484,7 +2632,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 				{
 					if (alud == null)
 					{
-						alud = new AddListUserDialog(getMainFrame(), true);
+						alud = new AddListUserDialog(getMainFrame(), true, this.sessionName);
 
 					}
 					alud.reset();
@@ -2508,6 +2656,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 					names = getScreenNamesFromMap(eventMap.get("selections"));
 				}
 			break;
+			case FAVORITES:
 			case HOME_TIMELINE:
 			case FRIENDS_TIMELINE:
 			case USER_TIMELINE:
@@ -2740,7 +2889,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		User u = status.getUser();
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
-		map.put("caller", this);
+		map.put("caller", timelinePanel);
 		ArrayList args = new ArrayList();
 		args.add(u.getScreenName());
 		map.put("arguments", args);
@@ -2750,6 +2899,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
 		handler.start();
+		this.timelineQue.add(timelinePanel);
 	}//}}}
 
 	public void destroyedStatus(Status destroyedStatus)//{{{
@@ -2758,7 +2908,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		User u = destroyedStatus.getUser();
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
-		map.put("caller", this);
+		map.put("caller", timelinePanel);
 		ArrayList args = new ArrayList();
 		args.add(u.getScreenName());
 		map.put("arguments", args);
@@ -2768,6 +2918,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
 		handler.start();
+		this.timelineQue.add(timelinePanel);
 	}//}}}
 
 	public void retweetedStatus(Status retweetedStatus)//{{{
@@ -2776,7 +2927,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		User u = retweetedStatus.getUser();
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
-		map.put("caller", this);
+		map.put("caller", timelinePanel);
 		ArrayList args = new ArrayList();
 		args.add(u.getScreenName());
 		map.put("arguments", args);
@@ -2786,6 +2937,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		handler.addPropertyChangeListener(mainApp.getTrayIcon());
 		handler.addPropertyChangeListener(statusListener);
 		handler.start();
+		this.timelineQue.add(timelinePanel);
 	}//}}}
 
 	//ResponseList<Status> retweets
@@ -2898,32 +3050,57 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	public void gotUserListMembers(PagableResponseList users) //{{{
 	{
-		Object o = que.peek();
+		Object o = userlistQue.peek();
 		if(o instanceof UserListPanel)
 		{
-			UserListPanel ulp = (UserListPanel) que.poll();
+			UserListPanel ulp = (UserListPanel) userlistQue.poll();
 			ulp.updateList(users);
 		}
 		else if(o instanceof UserListBox)
 		{
-			UserListBox ulp = (UserListBox) que.poll();
+			UserListBox ulp = (UserListBox) userlistQue.poll();
 			ulp.updateList(users);
 		}
 	} //}}}
 
 	public void addedUserListMember(UserList userList)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "addedUserListMember(UserList userList) Not supported yet","2"});
+		UserListBox box = userListMainPanel1.getListBox(userList.getName());
+		if(box != null)
+		{
+			box.loadListUsers();
+		}
 	}
 
 	public void deletedUserListMember(UserList userList)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "deletedUserListMember() Not supported yet","2"});
+		UserListBox box = userListMainPanel1.getListBox(userList.getName());
+		if(box != null)
+		{
+			box.loadListUsers();
+		}
 	}
 
 	public void checkedUserListMembership(User users)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "checkedUserListMembership() Not supported yet","2"});
+		Object obj = que.peek();
+		if(obj instanceof UserList)
+		{
+			UserList list = (UserList)que.poll();
+			firePropertyChange("POPUP", new Object(),
+					new String[]{
+						resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
+						resourceMap.getString("LIST_MEMBER.TEXT", users.getScreenName(), list.getName()),
+						"2"
+			});
+		}
+		else
+			firePropertyChange("POPUP", new Object(),
+					new String[]{
+						resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
+						resourceMap.getString("LIST_MEMBER.TEXT", users.getScreenName()),
+						"2"
+			});
 	}
 
 	public void gotUserListSubscribers(PagableResponseList users)
@@ -2974,7 +3151,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		map.put("async", true);
 		map.put("caller", friends);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
+		args.add(getAuthenticatedUser().getId());//screenName
 		args.add(-1L);
 		map.put("arguments", args);
 		eventOccurred(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
@@ -2989,7 +3166,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		map.put("async", true);
 		map.put("caller", friends);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
+		args.add(getAuthenticatedUser().getId());//screenName
 		args.add(-1L);
 		map.put("arguments", args);
 		eventOccurred(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
@@ -3072,17 +3249,29 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	public void gotFavorites(ResponseList statuses)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
+		Object o = timelineQue.peek();
+		if(o instanceof TimeLinePanel)
+		{
+			TimeLinePanel panel = (TimeLinePanel)timelineQue.poll();
+			panel.updateStatus(statuses);
+		}
+		else
+		{
+			friendsStatusPanel.updateStatus(statuses);
+		}
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void createdFavorite(Status status)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
+		updateTabState(true);
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void destroyedFavorite(Status status)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
+		updateTabState(true);
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void enabledNotification(User user) //{{{
@@ -3161,6 +3350,22 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
+	public void verifiedCredentials(User user)
+	{
+		setAuthenticatedUser(user);
+		setConnected(true);//if it gets here its conencted
+	}
+
+	public void gotRetweetedBy(ResponseList rl)
+	{
+		//throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void gotRetweetedByIDs(IDs ids)
+	{
+		//throw new UnsupportedOperationException("Not supported yet.");
+	}
+
 	public void tested(boolean test)//{{{
 	{
 		setConnected(test);
@@ -3175,13 +3380,29 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 			logger.debug(method);
 		}
 		logger.error(te);
-		if(method != null && method.equals(TwitterMethod.UPDATE_STATUS))
+		if(method != null)
 		{
-			//tweetBox.clearTweetText();
-			tweetBox.setButtonEnabled(true);
-			tweetBox.setTweetEnabled(true);
-			//btnTweet.setEnabled(true);
-			//txtTweet.setEnabled(true);
+			if(method.equals(TwitterMethod.HOME_TIMELINE) ||
+					method.equals(TwitterMethod.FRIENDS_TIMELINE) ||
+					method.equals(TwitterMethod.USER_TIMELINE) ||
+					method.equals(TwitterMethod.MENTIONS) ||
+					method.equals(TwitterMethod.RETWEETED_BY_ME) ||
+					method.equals(TwitterMethod.RETWEETED_TO_ME) ||
+					method.equals(TwitterMethod.RETWEETS_OF_ME))
+			{
+				//Remove this object so we dont interfare with later calls
+				timelineQue.poll();
+			}
+			else if(method.equals(TwitterMethod.UPDATE_STATUS))
+			{
+				tweetBox.setButtonEnabled(true);
+				tweetBox.setTweetEnabled(true);
+			}
+			else if(method.equals(TwitterMethod.LIST_MEMBERS))
+			{
+				//Remove this object so we dont interfare with later calls
+				userlistQue.poll();
+			}
 		}
 		if(te.getStatusCode() == 401)
 		{
@@ -3194,8 +3415,18 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		{
 			if(method != null && method.equals(TwitterMethod.CHECK_LIST_MEMBERSHIP))
 			{
-				displayError(te, resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
-						resourceMap.getString("USER_NOT_USERLIST_MEMBER.TEXT"), method, false);
+				Object obj = que.peek();
+				if(obj instanceof UserList)
+				{
+					UserList list = (UserList)que.poll();
+					displayError(te, resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
+						resourceMap.getString("USER_NOT_USERLIST_MEMBER.TEXT", list.getName()), method, false);
+				}
+				else
+				{
+					displayError(te, resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
+							resourceMap.getString("USER_NOT_USERLIST_MEMBER.TEXT"), method, false);
+				}
 				return;
 			}
 			if(method != null)
@@ -3301,12 +3532,14 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	private boolean logdebug = logger.isDebugEnabled();
 	private boolean startMode = false;
 	private boolean forceupdate = false;
+	private volatile User authenticatedUser;
 
 	/**
 	 * This que is used to track which part of the application is requesting an action
 	 */
 	private ArrayDeque que = new ArrayDeque();
 	private ArrayDeque timelineQue = new ArrayDeque();
+	private ArrayDeque userlistQue = new ArrayDeque();
 	private java.beans.PropertyChangeListener statusListener;
 	//A Map to store all the statuses in the recentList table
 	private Map<Long, Status> recentMap = new TreeMap<Long, Status>();

@@ -203,7 +203,7 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 	{
 		String old = this.sessionName;
 		this.sessionName = name;
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
@@ -226,7 +226,7 @@ public class TrendsPanel extends javax.swing.JPanel implements PropertyChangeLis
 
 	private void buildLocationBox() {
 		if(locations == null) {
-			//view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+			//view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 			locations = new LocationListDialog(view.getMainFrame(), this, sessionName);
 			locations.setSessionName(sessionName);
 			locations.addTwitzListener(view);

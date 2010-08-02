@@ -80,8 +80,9 @@ public class TwitzSessionManager implements java.io.Serializable
 		return rv;
 	}
 
-	public synchronized TwitzMainView getTwitMainViewForSession(String sessionName)
+	public synchronized TwitzMainView getTwitzMainViewForSession(String sessionName)
 	{
+		//logger.info(sessionName);
 		TwitzMainView rv = null;
 		if(views.containsKey(sessionName))
 			return views.get(sessionName);
@@ -109,7 +110,7 @@ public class TwitzSessionManager implements java.io.Serializable
 //		if(!hasview)
 //		{
 //			logger.debug(sname+" Added");
-//			TwitzMainView v = getTwitMainViewForSession(sname);
+//			TwitzMainView v = getTwitzMainViewForSession(sname);
 //			//firePropertyChange(ADDED_PROPERTY, new Object(), v);
 //		}
 //	}
@@ -172,7 +173,7 @@ public class TwitzSessionManager implements java.io.Serializable
 	public void deleteSession(String s)
 	{
 		logger.debug(s);
-		TwitzMainView tmv = getTwitMainViewForSession(s);
+		TwitzMainView tmv = getTwitzMainViewForSession(s);
 		SettingsManager sm = getSettingsManagerForSession(s);
 		//fire the propertychange before we delete or other parts of the app will
 		//have problems cleaning up with thier SettingsManager having no backing

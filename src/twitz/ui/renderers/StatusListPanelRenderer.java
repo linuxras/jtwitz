@@ -393,7 +393,7 @@ public class StatusListPanelRenderer extends JPanel implements TwitzEventModel, 
 		fixButtons(s);
 		setForeground(uiPainter.getForeground());
 		setBackground(uiPainter.getBackground());
-		addTwitzListener(TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName));
+		addTwitzListener(TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName));
 		return this;
 	}//}}}
 

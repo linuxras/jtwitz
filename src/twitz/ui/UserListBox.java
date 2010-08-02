@@ -8,11 +8,7 @@ package twitz.ui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -30,10 +26,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
-import org.jdesktop.swingx.JXCollapsiblePane;
 import twitter4j.PagableResponseList;
 import twitter4j.Paging;
-import twitter4j.Status;
 import twitter4j.User;
 import twitter4j.UserList;
 import twitz.TwitzApp;
@@ -314,14 +308,14 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 		}
 		contactsList1.addMouseListener(this);
 		//addTwitzListener(view);
-		setFocusable(true);
+		//setFocusable(true);
 		addMouseListener(this);
 		//addFocusListener(this);
 		//Store the default border set by the user.
 		defaultBorder = getBorder();
 		selectedBorder = BorderFactory.createLoweredBevelBorder();
 		setBorder(selectedBorder);
-        contactsList1.setFocusable(false);
+        //contactsList1.setFocusable(false);
 		jSeparator2.setPreferredSize(new Dimension(1000,20));
 		listName.setMaximumSize(new Dimension(40,listName.getPreferredSize().height));
 		listName.setFont(new Font("Arial", Font.BOLD, 10));
@@ -337,7 +331,7 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 		String old = this.sessionName;
 		this.sessionName = name;
 		config = session.getSettingsManagerForSession(sessionName);
-		view = session.getTwitMainViewForSession(sessionName);
+		view = session.getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
@@ -428,6 +422,7 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 		map.put("async", true);
 		User[] selections = getContactsList().getSelectedValues();
 		map.put("selections", selections);
+		map.put("userList", this.list);
 		if(logdebug)
 			logger.debug("Firing TwitzEvent");
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.valueOf(e.getActionCommand()), new java.util.Date().getTime(), map));
@@ -515,18 +510,7 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 		if(userList != null)
 		{
 			this.list = userList;
-			if(view.isConnected())//if this is false we are in offline testing mode
-			{
-				Map map = Collections.synchronizedMap(new TreeMap());
-				map.put("async", true);
-				map.put("caller", this);
-				ArrayList args = new ArrayList();
-				args.add(list.getUser().getScreenName());
-				args.add(list.getId());
-				args.add(-1);
-				map.put("arguments", args);
-				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.LIST_MEMBERS, new java.util.Date().getTime(), map));
-			}
+			loadListUsers();
 		}
 	}//}}}
 
@@ -540,8 +524,25 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 		return (u instanceof User);
 	}
 
+	public void loadListUsers()
+	{
+		if (view.isConnected())//if this is false we are in offline testing mode
+		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", this);
+			ArrayList args = new ArrayList();
+			args.add(list.getUser().getScreenName());
+			args.add(list.getId());
+			args.add(-1);
+			map.put("arguments", args);
+			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.LIST_MEMBERS, new java.util.Date().getTime(), map));
+		}
+	}
+
 	public void updateList(final PagableResponseList users)//{{{
 	{
+		logger.info("updateList() called with "+users.size()+" Member(s)");
 		if(users != null)
 		{
 			SwingWorker<ContactsListModel, Object> worker = new SwingWorker<ContactsListModel, Object>()
@@ -559,7 +560,7 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 					{
 						if(isUser(o))
 							clm.addElement((User)o);
-						firePropertyChange("message", null, String.format("Loading user %d of %d", count, total));
+						firePropertyChange("message", null, String.format("Loading list user %d of %d", count, total));
 						count++;
 					}
 					return clm;

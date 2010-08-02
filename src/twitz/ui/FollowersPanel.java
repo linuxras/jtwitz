@@ -295,7 +295,7 @@ public class FollowersPanel extends javax.swing.JLayeredPane implements MouseLis
 		String old = this.sessionName;
 		this.sessionName = name;
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
@@ -337,7 +337,7 @@ public class FollowersPanel extends javax.swing.JLayeredPane implements MouseLis
 		User[] selections = getContactsList().getSelectedValues();
 		map.put("selections", selections);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));
+		args.add(view.getAuthenticatedUser().getId());
 		args.add(nextPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FOLLOWERS_STATUSES, new java.util.Date().getTime(), map));
@@ -351,7 +351,7 @@ public class FollowersPanel extends javax.swing.JLayeredPane implements MouseLis
 		map.put("caller", this);
 		map.put("async", true);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));
+		args.add(view.getAuthenticatedUser().getId());
 		args.add(prevPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FOLLOWERS_STATUSES, new java.util.Date().getTime(), map));
@@ -465,7 +465,7 @@ public class FollowersPanel extends javax.swing.JLayeredPane implements MouseLis
 			map.put("async", true);
 			map.put("caller", this);
 			ArrayList args = new ArrayList();
-			args.add(config.getString("twitter_id"));//screenName
+			args.add(view.getAuthenticatedUser().getId());//screenName
 			args.add(currentPage);
 			map.put("arguments", args);
 			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FOLLOWERS_STATUSES, new java.util.Date().getTime(), map));

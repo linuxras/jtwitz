@@ -11,13 +11,9 @@
 
 package twitz.ui.dialogs;
 
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.MediaTracker;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -25,23 +21,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
-import javax.swing.border.SoftBevelBorder;
-import javax.swing.border.TitledBorder;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
-import org.jdesktop.application.ResourceMap;
-import twitter4j.Place;
 import twitter4j.Status;
-import twitter4j.User;
-import twitter4j.util.TimeSpanUtil;
-import twitz.TwitzApp;
 import twitz.TwitzMainView;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
@@ -69,9 +53,11 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 	public static final String SESSION_PROPERTY = "sessionName";
 	private String sessionName;
 	private TwitzMainView view;
+	private final javax.swing.JLayeredPane caller;
 
     /** Creates new form StatusPopupPanel */
-    public StatusPopupPanel(String session) {
+    public StatusPopupPanel(String session, javax.swing.JLayeredPane caller) {
+		this.caller = caller;
 		setSessionName(session);
         initComponents();
 		initDefaults();
@@ -217,7 +203,7 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 		String old = this.sessionName;
 		this.sessionName = name;
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
@@ -233,7 +219,7 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 			logger.debug("Sending retweet");
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
-		map.put("caller", this);
+		map.put("caller", caller);
 		ArrayList args = new ArrayList();
 		args.add(getStatus().getId());
 		map.put("arguments", args);
@@ -249,7 +235,7 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 			logger.debug("Sending delete status request");
 		Map map = Collections.synchronizedMap(new TreeMap());
 		map.put("async", true);
-		map.put("caller", this);
+		map.put("caller", caller);
 		ArrayList args = new ArrayList();
 		args.add(getStatus().getId());
 		map.put("arguments", args);
@@ -302,15 +288,15 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 
 	private void fixButtons(Status s)//{{{
 	{
-		btnDelete.setEnabled(s.getUser().getScreenName().equals(config.getString("twitter_id")));
-		btnRetweet.setEnabled(s.getUser().getScreenName().equals(config.getString("twitter_id")));
-		btnReplyTo.setEnabled(!s.getUser().getScreenName().equals(config.getString("twitter_id")));
+		btnDelete.setEnabled(s.getUser().getId() == view.getAuthenticatedUser().getId());
+		btnRetweet.setEnabled(s.getUser().getId() == view.getAuthenticatedUser().getId());
+		btnReplyTo.setEnabled(s.getUser().getId() != view.getAuthenticatedUser().getId());
 		lblRetweet.setEnabled(s.isRetweet());
 		lblFav.setEnabled(s.isFavorited());
 	}//}}}
 
 	private String tableWrap(String source/*, int width*/) {//{{{
-		StringBuffer table = new StringBuffer("<table border=0 width=\"90%\"");
+		StringBuilder table = new StringBuilder("<table border=0 width=\"90%\"");
 		/*table.append(width+"");*/
 		table.append("><tr><td>");
 		table.append(source);

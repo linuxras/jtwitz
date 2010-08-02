@@ -160,7 +160,7 @@ public class TweetBox extends javax.swing.JPanel implements ActionListener, Twit
 		String old = this.sessionName;
 		this.sessionName = name;
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 

@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.ResourceMap;
 import org.tmatesoft.sqljet.core.SqlJetException;
+import twitter4j.http.AccessToken;
 import twitz.TwitzApp;
 import twitz.events.TwitzEvent;
 import twitz.events.TwitzListener;
@@ -39,6 +40,7 @@ public class SettingsManager extends Properties{
 	private String currentSession = "Default";
 	private boolean autosave = true;
 	private boolean settingsLoaded = false;
+	private AccessToken sessionToken;
 
 	public static enum OS {
 		WINDOWS,
@@ -178,6 +180,10 @@ public class SettingsManager extends Properties{
 		try
 		{
 			setProperties(DBM.lookupSettingsForSession(currentSession));
+			if(getBoolean(DBManager.SESSION_TWITTER_OAUTH))
+			{
+				this.updateAccessToken();
+			}
 		}
 		catch (SqlJetException ex)
 		{
@@ -197,7 +203,7 @@ public class SettingsManager extends Properties{
 				{
 					case DB_ERROR_EVENT:
 						Exception e = (Exception) map.get("error");
-						logger.error("Error while registering user "+e.getLocalizedMessage());
+						logger.error("Error while saving config "+e.getLocalizedMessage());
 						break;
 					case DB_RETURN_EVENT: //view method we could update status bar or something
 						
@@ -510,5 +516,30 @@ public class SettingsManager extends Properties{
 	public String getCurrentSession()
 	{
 		return this.currentSession;
+	}
+
+	public void updateAccessToken()
+	{
+		if (getBoolean(DBManager.SESSION_TWITTER_OAUTH))
+		{
+			//lookup the oauth access token configure for this session
+			if (getLong(DBManager.SESSION_TWITTER_OAUTH_ID) > 0)
+			{
+				long oauthid = getLong(DBManager.SESSION_TWITTER_OAUTH_ID);
+				try
+				{
+					sessionToken = DBM.getAccessToken(oauthid);
+				}
+				catch (SqlJetException ex)
+				{
+					logger.error(ex.getLocalizedMessage());
+				}
+			}
+		}
+	}
+
+	public AccessToken getAccessToken()
+	{
+		return this.sessionToken;
 	}
 }

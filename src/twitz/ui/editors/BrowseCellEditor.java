@@ -5,53 +5,63 @@
 
 package twitz.ui.editors;
 
+import java.awt.event.WindowEvent;
 import twitz.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowListener;
+import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.util.EventObject;
-import java.util.ArrayList;
-import java.util.Vector;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JFileChooser;
-import javax.swing.JPanel;
 import javax.swing.event.CellEditorListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
-import org.pushingpixels.substance.api.SubstanceSkin;
-import org.pushingpixels.substance.api.SubstanceLookAndFeel;
-import org.pushingpixels.substance.api.skin.SkinInfo;
+import twitz.ui.dialogs.TwitzOAuthDialog;
+import twitz.util.DBManager;
+import twitz.util.TwitzSessionManager;
 
 /**
  *
  * @author Andrew Williams
  */
 public class BrowseCellEditor extends AbstractCellEditor implements TableCellEditor {
+	private final TwitzSessionManager session;
+	private final javax.swing.JDialog caller;
 
-	public BrowseCellEditor(String sessionName) {
-		//config = c;
+	public BrowseCellEditor(javax.swing.JDialog parent, String sessionName) {
+		this.caller = parent;
 		this.sessionName = sessionName;
+		this.session = twitz.util.TwitzSessionManager.getInstance();
 		initComponents();
-		cmbSkins.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e)
-			{
-				stopCellEditing();
-				//throw new UnsupportedOperationException("Not supported yet.");
-			}
-		});
+		
 	}
 
 	private void initComponents() {//{{{
 
         txtPath = new javax.swing.JTextField();
         btnBrowse = new javax.swing.JButton();
+		btnShowDialog = new javax.swing.JButton();
+		//logger.info("Session Name = "+this.sessionName);
+		TwitzMainView view = session.getTwitzMainViewForSession(this.sessionName);
+		componentEditor = new TwitzOAuthDialog(view.getMainFrame(), true, this.sessionName);
+		componentEditor.setLocationRelativeTo(caller);
+		WindowListener cListener = new WindowAdapter(){
+			@Override
+			public void windowClosed(WindowEvent e)
+			{
+				//logger.info("WindowAdater did it----------------------------------------");
+				stopCellEditing();
+			}
+		};
+		componentEditor.addWindowListener(cListener);
+
 		boolEditor.setAlignmentX(javax.swing.JSpinner.LEFT_ALIGNMENT);
 		boolEditor.getEditor().setAlignmentX(javax.swing.JSpinner.LEFT_ALIGNMENT);
 
@@ -117,12 +127,27 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
                 .addComponent(btnBrowse)
                 .addComponent(txtPath, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
+		btnShowDialog.setAction(actionMap.get("loadDialog")); // NOI18N
+        btnShowDialog.setIcon(resourceMap.getIcon("btnShowDialog.icon")); // NOI18N
+        btnShowDialog.setText(resourceMap.getString("btnShowDialog.text")); // NOI18N
+		btnShowDialog.setToolTipText(resourceMap.getString("btnShowDialog.toolTipText")); // NOI18N
+        btnShowDialog.setFocusable(false);
+        btnShowDialog.setName("btnShowDialog"); // NOI18N
+
 		int skinCount = resourceMap.getInteger("Substance.skins.count");
 		skins = new String[skinCount];
 		for(int i=0; i < skinCount; i++) {
 			skins[i] = resourceMap.getString("Substance.skin["+ i +"]");
 		}
 		cmbSkins = new javax.swing.JComboBox(skins);
+		cmbSkins.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e)
+			{
+				stopCellEditing();
+				//throw new UnsupportedOperationException("Not supported yet.");
+			}
+		});
     }//}}}
 
 	private void txtPathActionPerformed(java.awt.event.ActionEvent evt)
@@ -164,6 +189,14 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 			sFile = chooser.getSelectedFile();
 			txtPath.setText(sFile.getAbsolutePath());
 		}
+	}
+
+	@Action
+	public void loadDialog()
+	{
+		//this.componentEditor.setSelectedId(config.getInteger(DBManager.SESSION_TWITTER_OAUTH_ID));
+		this.componentEditor.setMode(TwitzOAuthDialog.Mode.SELECT);
+		this.componentEditor.setVisible(true);
 	}
 
 	public java.awt.Component getTableCellEditorComponent(javax.swing.JTable table, Object value, boolean isSelected, int row, int column)//{{{
@@ -222,6 +255,20 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 			//return txtString;
 			return passEditor;
 		}
+		else if(type.equalsIgnoreCase("component"))
+		{
+			if(cellVal.equals(configVal))
+			{
+				this.componentEditor.setSelectedId(config.getInteger(val));
+			}
+			else
+			{
+				int cv = Integer.parseInt(cellVal);
+				this.componentEditor.setSelectedId(cv);
+			}
+			currentEditor = "Component";
+			return this.btnShowDialog;
+		}
 		if(cellVal.equals(configVal)) {
 			txtString.setText(configVal);
 		}
@@ -248,12 +295,17 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		}
 		else if(currentEditor.equalsIgnoreCase("Password")) {
 			char[] pass = passEditor.getPassword();
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			for(int i=0; i < pass.length; i++)
 				buf.append(pass[i]);
 			//if(logdebug)
 			//	logger.debug("Current Password String: "+buf.toString());
 			rv = buf.toString();
+		}
+		else if(currentEditor.equalsIgnoreCase("Component"))
+		{
+			rv = this.componentEditor.getSelectedId()+"";
+			//rv = (String)componentValue;
 		}
 		else {
 			rv = txtString.getText();
@@ -306,8 +358,10 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 
 	// Variables declaration - do not modify
 	public static final String SESSION_PROPERTY = "sessionChanged";
+	private javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(BrowseCellEditor.class, this);
 	private String sessionName = "Default";
     private javax.swing.JButton btnBrowse;
+	private javax.swing.JButton btnShowDialog;
     private javax.swing.JTextField txtPath;
 	private javax.swing.JTextField txtString = new javax.swing.JTextField();
 	private javax.swing.JPanel panel = new javax.swing.JPanel();
@@ -318,11 +372,13 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 	//private javax.swing.JComboBox cmbSkins = new SubstanceSkinComboSelector();
 	private String boolModel[] = {"true", "false"};
 	private javax.swing.JSpinner boolEditor = new javax.swing.JSpinner(new javax.swing.SpinnerListModel(boolModel));
+	private TwitzOAuthDialog componentEditor;// = new TwitzOAuthDialog(view, true);
 	private twitz.util.SettingsManager config = twitz.util.TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);//twitz.util.SettingsManager.getInstance();
 	private String currentEditor = null;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private boolean logdebug = logger.isDebugEnabled();
 	org.jdesktop.application.ResourceMap resourceMap;
+	private Object componentValue;
     // End of variables declaration
 
 	class ImageFileFilter extends FileFilter

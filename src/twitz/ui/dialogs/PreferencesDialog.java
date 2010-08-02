@@ -56,6 +56,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	private TwitzApp mainApp;
 	private boolean updateSkin = false;
 	private boolean updateLogin = false;
+	private boolean updateOAuth = false;
 	private boolean singleSessionMode = false;
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final boolean logdebug = logger.isDebugEnabled();
@@ -75,7 +76,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		vHeaders.add("Values");
 		this.mainApp = app;
         initComponents();
-		loadTable();
+		//loadTable();
 		
 		initDefaults();
 		
@@ -251,11 +252,11 @@ public class PreferencesDialog extends javax.swing.JDialog {
 	{
 		//DefaultTableColumnModel cModel = (DefaultTableColumnModel)tblConfig.getColumnModel();
 		//cModel.getColumn(0).setMaxWidth(10);
-		DefaultTableModel mModel = (DefaultTableModel)tblConfig.getModel();
-		sorter = this.getTableRowSorter(mModel);
-		tblConfig.setRowSorter(sorter);
-		tblConfig.setModel(mModel);
-		sorter.sort();
+//		DefaultTableModel mModel = (DefaultTableModel)tblConfig.getModel();
+//		sorter = this.getTableRowSorter(mModel);
+//		tblConfig.setRowSorter(sorter);
+//		tblConfig.setModel(mModel);
+//		sorter.sort();
 
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(configPane);
 
@@ -269,7 +270,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 
 		};
 		this.addWindowListener(wl);
-		currentSession = (String) cmbProfile.getSelectedItem();
+		//currentSession = (String) cmbProfile.getSelectedItem();
 		cmbProfile.removeAllItems();
 		try
 		{
@@ -395,7 +396,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		//tblConfig.getColumnModel().getColumn(2).setCellEditor(new BrowseCellEditor());
 		DefaultTableColumnModel cModel = (DefaultTableColumnModel)tblConfig.getColumnModel();
 		cModel.getColumn(0).setMaxWidth(10);
-		cModel.getColumn(2).setCellEditor(new BrowseCellEditor(sessionName));
+		cModel.getColumn(2).setCellEditor(new BrowseCellEditor(this, sessionName));
 		sorter = this.getTableRowSorter(model);
 		tblConfig.setRowSorter(sorter);
 		tblConfig.setModel(model);
@@ -405,6 +406,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
 
 	public void setSessionName(String name)
 	{
+		//logger.info("setSessionName() = "+name);
 		String old = this.sessionName;
 		this.sessionName = name;
 		this.currentSession = name;
@@ -412,10 +414,10 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		//cfgBorder.setTitle(name);
 		configPane.setBorder(BorderFactory.createTitledBorder(sessionName));
 		config = sm.getSettingsManagerForSession(sessionName);
-		view = sm.getTwitMainViewForSession(sessionName);
+		view = sm.getTwitzMainViewForSession(sessionName);
 		chkDefault.setEnabled(!name.equals("Default"));
 		btnDelete.setEnabled(!name.equals("Default"));
-
+		loadTable();
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
@@ -558,11 +560,19 @@ public class PreferencesDialog extends javax.swing.JDialog {
 					oldSkin = config.getString(key);
 				}
 			}
-			if(key.equals("twitter_id") || key.equals("twitter_password")) {
+			if((key.equals("twitter_id") || key.equals("twitter_password"))) {
 				if(!value.equals(config.getString(key))) {
 					//logger.debug(key+" value: "+value);
 					//Tell TwitterManager to update itself.
 					updateLogin = true;
+				}
+			}
+			if(key.equals(DBManager.SESSION_TWITTER_OAUTH) || key.equals(DBManager.SESSION_TWITTER_OAUTH_ID))
+			{
+				if(!value.equals(config.getString(key)))
+				{
+					updateLogin = true;
+					updateOAuth = true;
 				}
 			}
 		}
@@ -571,6 +581,10 @@ public class PreferencesDialog extends javax.swing.JDialog {
 		config.setProperties(p);
 		if(updateLogin)
 		{
+			if(updateOAuth)
+			{
+				config.updateAccessToken();
+			}
 			try
 			{
 				TwitterManager tm = view.getTwitterManager();

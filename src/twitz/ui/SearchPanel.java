@@ -462,7 +462,7 @@ public class SearchPanel extends javax.swing.JLayeredPane implements TwitzEventM
 	{
 		String old = this.sessionName;
 		this.sessionName = name;
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}

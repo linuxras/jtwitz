@@ -11,6 +11,7 @@
 
 package twitz.ui;
 
+import java.awt.Desktop;
 import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,6 +20,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
@@ -237,24 +239,54 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 	@Action
 	public void viewHTMLLog()//{{{
 	{
-		ResourceMap res = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
-		MessageDialog msg = new MessageDialog(this, false);
-		msg.setContentType("text/html");
-		try
+		Desktop.Action actions = Desktop.Action.BROWSE;
+		if (!Desktop.isDesktopSupported())
 		{
-			URI spec = twitz.TwitzApp.getConfigDirectory().toURI();
-			String s = spec.toString()+"/logs/index.html";
-			URL path = new URL(s);
-			msg.setMessage(path);
-			msg.setResizable(true);
-			msg.setTitle(res.getString("LOG_WINDOW_TITLE.TEXT"));
-			msg.setSize(640, 480);
-			msg.setVisible(true);
-			//InputStream is = this.getClass().getResourceAsStream(path);
+			ResourceMap res = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
+			MessageDialog msg = new MessageDialog(this, false);
+			msg.setContentType("text/html");
+			try
+			{
+				URI spec = twitz.TwitzApp.getConfigDirectory().toURI();
+				String s = spec.toString() + "/logs/index.html";
+				URL path = new URL(s);
+				msg.setMessage(path);
+				msg.setResizable(true);
+				msg.setTitle(res.getString("LOG_WINDOW_TITLE.TEXT"));
+				msg.setSize(640, 480);
+				msg.setVisible(true);
+				//InputStream is = this.getClass().getResourceAsStream(path);
+			}
+			catch (IOException ex)
+			{
+				logger.error(ex.getMessage(), ex);
+			}
 		}
-		catch (IOException ex)
+		else
 		{
-			logger.error(ex.getMessage(), ex);
+			Desktop dtop = Desktop.getDesktop();
+			URI spec = TwitzApp.getConfigDirectory().toURI();
+			String s = spec.toString() + "/logs/index.html";
+			URI path = null;
+			try
+			{
+				path = new URI(s);
+			}
+			catch (URISyntaxException ex)
+			{
+				logger.error(ex.getLocalizedMessage());
+			}
+			if(path != null && dtop.isSupported(actions))
+			{
+				try
+				{
+					dtop.browse(path);
+				}
+				catch (IOException ex)
+				{
+					logger.error(ex.getLocalizedMessage());
+				}
+			}
 		}
 		//InputStream is = this.getClass().getResourceAsStream(path);
 	}//}}}
@@ -520,7 +552,7 @@ public class TwitzDesktopFrame extends javax.swing.JFrame implements ActionListe
 			}
 			else
 			{
-				addView(TwitzSessionManager.getInstance().getTwitMainViewForSession(e.getActionCommand()));
+				addView(TwitzSessionManager.getInstance().getTwitzMainViewForSession(e.getActionCommand()));
 				item.setEnabled(false);
 			}
 		}

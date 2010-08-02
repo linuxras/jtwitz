@@ -124,7 +124,7 @@ public class TimeLinePanel extends javax.swing.JLayeredPane implements TwitzEven
         timelineToolbar.setName("timelineToolbar"); // NOI18N
         timelineToolbar.setPreferredSize(new java.awt.Dimension(124, 24));
 
-        cmbTimelineType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Home", "User", "Public", "Retweeted by me", "Retweeted to me", "Retweets of me", "Mentions" }));
+        cmbTimelineType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Home", "User", "Public", "Favorites", "Retweeted by me", "Retweeted to me", "Retweets of me", "Mentions" }));
         cmbTimelineType.setToolTipText(resourceMap.getString("cmbTimelineType.toolTipText")); // NOI18N
         cmbTimelineType.setMinimumSize(new java.awt.Dimension(100, 24));
         cmbTimelineType.setName("cmbTimelineType"); // NOI18N
@@ -210,7 +210,7 @@ public class TimeLinePanel extends javax.swing.JLayeredPane implements TwitzEven
 				if(e.getStateChange() == ItemEvent.SELECTED)
 				{
 					String item = (String)e.getItem();
-					txtTimelineUser.setEnabled("User".equals(item));
+					txtTimelineUser.setEnabled(("User".equals(item) || "Favorites".equals(item)));
 				}
 			}
 		});
@@ -225,7 +225,7 @@ public class TimeLinePanel extends javax.swing.JLayeredPane implements TwitzEven
 		String old = this.sessionName;
 		this.sessionName = name;
 		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		view.addPropertyChangeListener("connected", this);
 		if(statusPanel != null)
 			statusPanel.setSessionName(name);
@@ -287,25 +287,46 @@ public class TimeLinePanel extends javax.swing.JLayeredPane implements TwitzEven
 				map.put("caller", this);
 				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.PUBLIC_TIMELINE, new java.util.Date().getTime(), map));
 				break;
-			case 3: //Retweet by me
+			case 3: //Favorites
+				map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				if(this.txtTimelineUser.isEnabled())
+				{
+					args = new ArrayList();
+					Object obj = txtTimelineUser.getSelectedItem();
+					if(obj instanceof String)
+					{
+						args.add((String)obj);
+						map.put("arguments", args);
+					}
+					else if(obj instanceof User)
+					{
+						args.add(((User)obj).getScreenName());
+						map.put("arguments", args);
+					}
+				}
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FAVORITES, new java.util.Date().getTime(), map));
+				break;
+			case 4: //Retweet by me
 				map = Collections.synchronizedMap(new TreeMap());
 				map.put("async", true);
 				map.put("caller", this);
 				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_BY_ME, new java.util.Date().getTime(), map));
 				break;
-			case 4: //Retweets to me
+			case 5: //Retweets to me
 				map = Collections.synchronizedMap(new TreeMap());
 				map.put("async", true);
 				map.put("caller", this);
 				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETED_TO_ME, new java.util.Date().getTime(), map));
 				break;
-			case 5: //Retweet of
+			case 6: //Retweet of
 				map = Collections.synchronizedMap(new TreeMap());
 				map.put("async", true);
 				map.put("caller", this);
 				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.RETWEETS_OF_ME, new java.util.Date().getTime(), map));
 				break;
-			case 6: //Mentions
+			case 7: //Mentions
 				map = Collections.synchronizedMap(new TreeMap());
 				map.put("async", true);
 				map.put("caller", this);

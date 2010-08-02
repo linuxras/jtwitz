@@ -3,19 +3,14 @@ package twitz.ui.renderers;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.Image;
-import java.awt.MediaTracker;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JList;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
@@ -27,8 +22,8 @@ import twitter4j.Place;
 import twitter4j.Status;
 import twitter4j.User;
 import twitter4j.util.TimeSpanUtil;
+import twitz.TwitzMainView;
 import twitz.ui.StatusList;
-import twitz.util.DBManager;
 import twitz.util.ListHotSpot;
 import twitz.util.SettingsManager;
 import twitz.util.TwitzSessionManager;
@@ -46,12 +41,14 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 	private String spotTip = "";
 	private final String sessionName;
 	private SettingsManager config;
+	private final TwitzMainView view;
 
 	public StatusListRenderer(String session)
 	{
 		super();
 		this.sessionName = session;
-		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		this.config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
+		this.view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		this.putClientProperty(SubstanceLookAndFeel.COLORIZATION_FACTOR, 1.0);
 	}
 	
@@ -140,17 +137,17 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 		Date d = stat.getCreatedAt();
 		Vector<ListHotSpot> hotzone = source.getHotSpot();
 
-		String resourcesDir = resourceMap.getResourcesDir();
-
-		String filename = resourcesDir + resourceMap.getString(stat.isRetweet() ? "icon.arrow_rotate_clockwise" : "icon.arrow_rotate_clockwise_off" );
-		//logger.debug(filename);
-		URL retweet = resourceMap.getClassLoader().getResource(filename);
-
-		filename = resourcesDir + resourceMap.getString(stat.isFavorited() ? "icon.heart" : "icon.heart_off");
-		URL fav = resourceMap.getClassLoader().getResource(filename);
-
-		filename = resourcesDir + resourceMap.getString("icon.comment_edit");
-		URL action = resourceMap.getClassLoader().getResource(filename);
+//		String resourcesDir = resourceMap.getResourcesDir();
+//
+//		String filename = resourcesDir + resourceMap.getString(stat.isRetweet() ? "icon.arrow_rotate_clockwise" : "icon.arrow_rotate_clockwise_off" );
+//		//logger.debug(filename);
+//		URL retweet = resourceMap.getClassLoader().getResource(filename);
+//
+//		filename = resourcesDir + resourceMap.getString(stat.isFavorited() ? "icon.heart" : "icon.heart_off");
+//		URL fav = resourceMap.getClassLoader().getResource(filename);
+//
+//		filename = resourcesDir + resourceMap.getString("icon.comment_edit");
+//		URL action = resourceMap.getClassLoader().getResource(filename);
 
 		URL img = twitz.TwitzApp.verifyImage(u.getProfileImageURL());
 
@@ -183,7 +180,8 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 				}
 				else if(lhs.getName().equals("Delete_Status"))
 				{
-					enabled = (config.getString(DBManager.SESSION_TWITTER_ID).equals(u.getScreenName()));
+					boolean isuser = (view.getAuthenticatedUser() == null) ? false : view.getAuthenticatedUser().getScreenName().equals(u.getScreenName());
+					enabled = (isuser);
 				}
 				lhs.setEnabled(enabled);
 				tb.append("<img border=0 src='").append(enabled ? lhs.getIcon().toString() : lhs.getDisabledIcon().toString()).append("'></td>");
@@ -208,7 +206,9 @@ public class StatusListRenderer extends SubstanceDefaultListCellRenderer {
 				}
 				else if(rhs.getName().equals("Delete_Status"))
 				{
-					enabled = (config.getString(DBManager.SESSION_TWITTER_ID).equals(u.getScreenName()));
+					boolean isuser = (view.getAuthenticatedUser() == null) ? false : view.getAuthenticatedUser().getScreenName().equals(u.getScreenName());
+					enabled = (isuser);
+					//enabled = (view.getAuthenticatedUser().getScreenName().equals(u.getScreenName()));
 				}
 				rhs.setEnabled(enabled);
 				tb.append("<img border=0 src='").append(enabled ? rhs.getIcon().toString() : rhs.getDisabledIcon().toString()).append("'></td>");

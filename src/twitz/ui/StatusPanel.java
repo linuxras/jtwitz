@@ -113,16 +113,16 @@ public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventM
 		org.jdesktop.application.ResourceMap res = twitz.TwitzApp.getContext().getResourceMap(TwitzMainView.class);
 		String resourcesDir = res.getResourcesDir();
 
-		String filename = resourcesDir + res.getString("icon.arrow_rotate_clockwise");
+		String filename = resourcesDir + res.getString("Retweet.icon");
 		//logger.debug(filename);
 		URL reet = res.getClassLoader().getResource(filename);
-		filename = resourcesDir + res.getString("icon.arrow_rotate_clockwise_off" );
+		filename = resourcesDir + res.getString("Retweet.off.icon" );
 		URL reetOff = res.getClassLoader().getResource(filename);
 
 
-		filename = resourcesDir + res.getString("icon.heart");
+		filename = resourcesDir + res.getString("Favorite.icon");
 		URL favUrl = res.getClassLoader().getResource(filename);
-		filename = resourcesDir + res.getString("icon.heart_off");
+		filename = resourcesDir + res.getString("Favorite.off.icon");
 		URL favOff = res.getClassLoader().getResource(filename);
 
 		filename = resourcesDir + res.getString("icon.bin");
@@ -174,7 +174,7 @@ public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventM
 		String old = this.sessionName;
 		this.sessionName = name;
 		//config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
@@ -264,9 +264,6 @@ public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventM
 	{
 		if(statuses != null)
 		{
-			final Component myGlassPane = view.getGlassPane();//getGlassPane();
-			
-
 			StatusUpdater worker = new StatusUpdater(this, statuses);
 			worker.addPropertyChangeListener(view.getStatusListener());
 			worker.start();
@@ -434,7 +431,7 @@ public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventM
 			//Status lstat = statusList.getSelectedValue();
 			int selection = statusList.getSelectedIndex();
 			MouseEvent e = (MouseEvent)evt.getNewValue();
-			StatusPopupPanel spp = new StatusPopupPanel(sessionName);
+			StatusPopupPanel spp = new StatusPopupPanel(sessionName, inTimeline ? view.getTimeLine() : this);
 			//spp.setSessionName(sessionName);
 			spp.configureBox(statusList, lstat, selection);
 			spp.popupBox(e.getXOnScreen(), e.getYOnScreen());
@@ -444,7 +441,7 @@ public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventM
 			//Status lstat = statusList.getSelectedValue();
 			Map map = Collections.synchronizedMap(new TreeMap());
 			map.put("async", true);
-			map.put("caller", this);
+			map.put("caller", inTimeline ? view.getTimeLine() : this);
 			ArrayList args = new ArrayList();
 			args.add(lstat.getId());
 			map.put("arguments", args);
@@ -455,7 +452,7 @@ public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventM
 		{
 			Map map = Collections.synchronizedMap(new TreeMap());
 			map.put("async", true);
-			map.put("caller", this);
+			map.put("caller", inTimeline ? view.getTimeLine() : this);
 			ArrayList args = new ArrayList();
 			args.add(lstat.getId());
 			map.put("arguments", args);

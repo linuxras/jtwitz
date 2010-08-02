@@ -35,7 +35,7 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 	{
 		this.mainEvent = event;
 		this.sessionName = session;
-		this.view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		this.view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		this.tm = view.getTwitterManager();
 		myGlassPane = view.getGlassPane();
 		Map m = event.getEventMap();
@@ -371,10 +371,14 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				}
 				break;
 			case CHECK_LIST_MEMBERSHIP:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "CHECK_LIST_MEMBERSHIP: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
-						});
+				//checkUserListMembership(java.lang.String listOwnerScreenName, int listId, int userId)
+				if(args != null && args.size() == 3)
+				{
+					screenName = (String)args.get(0);
+					listId = (Integer)args.get(1);
+					userId = (Integer)args.get(2);
+					tm.getAsyncTwitterInstance().checkUserListMembership(screenName, listId, userId);
+				}
 				break;
 			case LIST_SUBSCRIBERS:
 				firePropertyChange("POPUP", new Object(), new String[]
@@ -534,27 +538,126 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 						});
 				break;
 			case FAVORITES:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "FAVORITES: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
-						});
+				if(args == null)
+				{
+					tm.getAsyncTwitterInstance().getFavorites();
+				}
+				else if(args.size() == 1)
+				{
+					if(args.get(0) instanceof Integer) //page
+					{
+						int page = (Integer)args.get(0);
+						tm.getAsyncTwitterInstance().getFavorites(page);
+					}
+					else if(args.get(0) instanceof String) //screenName
+					{
+						screenName = (String)args.get(0);
+						tm.getAsyncTwitterInstance().getFavorites(screenName);
+					}
+				}
+				else if(args.size() == 2)//screenName and page
+				{
+					if(args.get(0) instanceof String && args.get(1) instanceof Integer)
+					{
+						screenName = (String)args.get(0);
+						int page = (Integer)args.get(1);
+						tm.getAsyncTwitterInstance().getFavorites(screenName, page);
+					}
+				}
 				break;
 			case CREATE_FAVORITE:
-				firePropertyChange("POPUP", new Object(), new String[]
+				if(args != null && args.size() == 1)
+				{
+					logger.info(args);
+					long id = -1;
+					if (args.get(0) instanceof Long)
+					{
+						id = (Long) args.get(0);
+					}
+					else if (args.get(0) instanceof Status)
+					{
+						id = ((Status) args.get(0)).getId();
+					}
+
+					if (id != -1)
+						tm.getAsyncTwitterInstance().createFavorite(id);
+				}//try selections
+				else if(eventMap.containsKey("selections"))
+				{
+					Object selections = eventMap.get("selections");
+					if(isStatus(selections))
+					{
+						Status st = (Status)selections;
+						tm.getAsyncTwitterInstance().createFavorite(st.getId());
+					}
+					else if(isStatusArray(selections))
+					{
+						Status[] st = (Status[])selections;
+						for(Status s : st)
 						{
-							"Twitz Message", "CREATE_FAVORITE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
-						});
+							tm.getAsyncTwitterInstance().createFavorite(s.getId());
+						}
+					}
+				}
 				break;
 			case DESTROY_FAVORITE:
-				firePropertyChange("POPUP", new Object(), new String[]
+				if(args != null && args.size() == 1)
+				{
+					logger.info(args);
+					long id = -1;
+					if (args.get(0) instanceof Long)
+					{
+						id = (Long) args.get(0);
+					}
+					else if (args.get(0) instanceof Status)
+					{
+						id = ((Status) args.get(0)).getId();
+					}
+
+					if (id != -1)
+						tm.getAsyncTwitterInstance().destroyFavorite(id);
+				}//try selections
+				else if(eventMap.containsKey("selections"))
+				{
+					Object selections = eventMap.get("selections");
+					if(isStatus(selections))
+					{
+						Status st = (Status)selections;
+						tm.getAsyncTwitterInstance().destroyFavorite(st.getId());
+					}
+					else if(isStatusArray(selections))
+					{
+						Status[] st = (Status[])selections;
+						for(Status s : st)
 						{
-							"Twitz Message", "DESTROY_FAVORITE: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
-						});
+							tm.getAsyncTwitterInstance().destroyFavorite(s.getId());
+						}
+					}
+				}
 				break;
 			case ENABLE_NOTIFICATION:
 				if(args != null && args.size() == 1)
 				{
-					screenName = (String)args.get(0);
+					if(args.get(0) instanceof String)
+					{
+						screenName = (String)args.get(0);
+					}
+					else if(args.get(0) instanceof Integer)
+					{
+						userId = (Integer)args.get(0);
+					}
+					if(screenName != null && !screenName.equals(""))
+					{
+						tm.getAsyncTwitterInstance().enableNotification(screenName);
+					}
+					else if(userId != -1)
+					{
+						tm.getAsyncTwitterInstance().enableNotification(userId);
+					}
+				}//try selections
+				else if(eventMap.containsKey("selections"))
+				{
+					screenName = getScreenNameFromMap(eventMap.get("selections"));
 					if(screenName != null && !screenName.equals(""))
 					{
 						tm.getAsyncTwitterInstance().enableNotification(screenName);
@@ -564,7 +667,26 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case DISABLE_NOTIFICATION:
 				if(args != null && args.size() == 1)
 				{
-					screenName = (String)args.get(0);
+					if(args.get(0) instanceof String)
+					{
+						screenName = (String)args.get(0);
+					}
+					else if(args.get(0) instanceof Integer)
+					{
+						userId = (Integer)args.get(0);
+					}
+					if(screenName != null && !screenName.equals(""))
+					{
+						tm.getAsyncTwitterInstance().disableNotification(screenName);
+					}
+					else if(userId != -1)
+					{
+						tm.getAsyncTwitterInstance().disableNotification(userId);
+					}
+				}//try selections
+				else if(eventMap.containsKey("selections"))
+				{
+					screenName = getScreenNameFromMap(eventMap.get("selections"));
 					if(screenName != null && !screenName.equals(""))
 					{
 						tm.getAsyncTwitterInstance().disableNotification(screenName);

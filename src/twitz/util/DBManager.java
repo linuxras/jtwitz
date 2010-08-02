@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +29,7 @@ import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.ISqlJetTransaction;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 import twitter4j.User;
+import twitter4j.http.AccessToken;
 import twitz.TwitzApp;
 import twitz.events.DefaultTwitzEventModel;
 import twitz.events.TwitzEvent;
@@ -54,6 +56,8 @@ public class DBManager {
 	public static final String SESSION_TABLE = "login_session";
 	public static final String SESSION_NAME = "session_name";
 	public static final String SESSION_ID = "session_id";
+	public static final String SESSION_TWITTER_OAUTH = "twitter_oauth";
+	public static final String SESSION_TWITTER_OAUTH_ID = "twitter_oauth_id";
 	public static final String SESSION_TWITTER_ID = "twitter_id";
 	public static final String SESSION_TWITTER_PASSWORD = "twitter_password";
 	public static final String SESSION_TWITTER_PICTURE_URL = "twitter_picture";
@@ -101,6 +105,14 @@ public class DBManager {
 	public static final String TYPE_ID = "configid";
 	public static final String TYPE_VALUE = "type";
 	public static final String TYPE_INDEX = "type_configid_index";
+
+	public static final String OAUTH_TABLE = "access_tokens";
+	public static final String OAUTH_ID = "token_id";
+	public static final String OAUTH_NAME = "token_name";
+	public static final String OAUTH_TOKEN = "token";
+	public static final String OAUTH_TOKEN_SECRET = "token_secret";
+	public static final String OAUTH_ID_INDEX = "oauth_id_index";
+	public static final String OAUTH_NAME_INDEX = "oauth_name_index";
 
 	public enum DBTask {
 		populateDefaultSettingsTable,
@@ -191,12 +203,16 @@ public class DBManager {
 		String userTableQuery = "CREATE TABLE "+ USER_TABLE + " (" + USER_ID + " INTEGER NOT NULL, " +
 				USER_NAME + " TEXT NOT NULL PRIMARY KEY, " + USER_FULLNAME + " TEXT NOT NULL, " +
 				USER_PICTURE +" TEXT NOT NULL)";
+		String oauthTableQuery = "CREATE TABLE " +OAUTH_TABLE + "("+ OAUTH_ID +" INTEGER NOT NULL, "
+				+ OAUTH_NAME +" TEXT NOT NULL, "+ OAUTH_TOKEN + " TEXT NOT NULL, "
+				+ OAUTH_TOKEN_SECRET +" TEXT NOT NULL)";
 		String sessionTableQuery = "CREATE TABLE " + SESSION_TABLE + " (" +SESSION_ID +" INTEGER PRIMARY KEY, " + SESSION_NAME + " TEXT NOT NULL, "
-				+ SESSION_TWITTER_ID + " TEXT NOT NULL, " + SESSION_TWITTER_PASSWORD + " TEXT NOT NULL, "
+				+ SESSION_TWITTER_OAUTH + " INTEGER NOT NULL, " + SESSION_TWITTER_OAUTH_ID + " INTEGER, "
+				+ SESSION_TWITTER_ID + " TEXT, " + SESSION_TWITTER_PASSWORD + " TEXT, "
 				+ SESSION_TWITTER_PICTURE_URL + " TEXT, " + SESSION_TWITTER_USE_PROXY + " INTEGER NOT NULL DEFAULT 0,  "
-				+ SESSION_TWITTER_PROXY_PORT + " INTEGER DEFAULT 8080, "
-				+ SESSION_TWITTER_PROXY_HOST + " TEXT, " + SESSION_TWITTER_PROXY_USER + " TEXT, "
-				+ SESSION_TWITTER_PROXY_PASSWORD + " TEXT, " + SESSION_MINIMIZE_ON_STARTUP + " INTEGER NOT NULL DEFAULT 0, "
+				+ SESSION_TWITTER_PROXY_PORT + " INTEGER DEFAULT 8080, " + SESSION_TWITTER_PROXY_HOST + " TEXT, "
+				+ SESSION_TWITTER_PROXY_USER + " TEXT, " + SESSION_TWITTER_PROXY_PASSWORD + " TEXT, "
+				+ SESSION_MINIMIZE_ON_STARTUP + " INTEGER NOT NULL DEFAULT 0, "
 				+ SESSION_TWITZ_UNDECORATED + " INTEGER NOT NULL DEFAULT 0, " + SESSION_TWITZ_SKIN + " TEXT NOT NULL DEFAULT 'MistAqua', "
 				+ SESSION_TWITZ_MINIMODE + " INTEGER NOT NULL DEFAULT 0, " + SESSION_TWITZ_LAST_HEIGHT + " INTEGER DEFAULT 640, "
 				+ SESSION_TAB_POSITION + " TEXT NOT NULL DEFAULT 'north', " + SESSION_TAB_FRIENDS + " INTEGER NOT NULL DEFAULT 1, "
@@ -223,6 +239,8 @@ public class DBManager {
 		String sessionIdIndex = "CREATE INDEX " + SESSION_ID_INDEX + " ON "+ SESSION_TABLE +"("+ SESSION_ID +")";
 		String sessionDefaultsIndex = "CREATE INDEX " + SESSION_DEFAULT_INDEX + " ON "+ SESSION_TABLE +"("+ SESSION_DEFAULT +")";
 		String sessionAutoIndex = "CREATE INDEX " + SESSION_AUTOLOAD_INDEX + " ON "+ SESSION_TABLE +"("+ SESSION_AUTOLOAD +")";
+		String oauthIdIndex = "CREATE INDEX " + OAUTH_ID_INDEX + " ON " + OAUTH_TABLE + "("+ OAUTH_ID +")";
+		String oauthNameIndex = "CREATE INDEX " + OAUTH_NAME_INDEX + " ON " + OAUTH_TABLE + "("+ OAUTH_NAME +")";
 
 //		if(logdebug)
 //		{
@@ -231,6 +249,7 @@ public class DBManager {
 			logger.log(Level.INFO, configTypeQuery);
 			logger.log(Level.INFO, configDescQuery);
 			logger.log(Level.INFO, sessionTableQuery);
+			logger.log(Level.INFO, oauthTableQuery);
 //		}
 
 		try
@@ -241,6 +260,9 @@ public class DBManager {
 			db.createTable(userTableQuery);
 			db.createIndex(userNameIndex);
 			db.createIndex(userIdIndex);
+			db.createTable(oauthTableQuery);
+			db.createIndex(oauthIdIndex);
+			db.createIndex(oauthNameIndex);
 			db.createTable(sessionTableQuery);
 			db.createIndex(sessionIndex);
 			db.createIndex(sessionIdIndex);
@@ -314,6 +336,7 @@ public class DBManager {
 						type.insert(4, "String");
 						type.insert(5, "Theme");
 						type.insert(6, "Internal");
+						type.insert(7, "Component");
 
 						desc.insert(1, resource.getString("config_"+SESSION_TWITTER_ID));
 						desc.insert(2, resource.getString("config_"+SESSION_TWITTER_PASSWORD));
@@ -332,6 +355,8 @@ public class DBManager {
 						desc.insert(15, resource.getString("config_"+SESSION_TAB_FOLLOWERS));
 						desc.insert(16, resource.getString("config_"+SESSION_TAB_SEARCH));
 						desc.insert(17, resource.getString("config_internal"));
+						desc.insert(18, resource.getString("config_"+SESSION_TWITTER_OAUTH));
+						desc.insert(19, resource.getString("config_"+SESSION_TWITTER_OAUTH_ID));
 						
 						config.insert(1, SESSION_TWITTER_ID, 1, 4);
 						config.insert(2, SESSION_TWITTER_PASSWORD, 2, 1);
@@ -370,9 +395,11 @@ public class DBManager {
 						config.insert(19, SESSION_TAB_SEARCH, 16, 3);
 						config.insert(20, SESSION_DEFAULT, 17, 6);
 						config.insert(21, SESSION_AUTOLOAD, 17, 6);
+						config.insert(22, SESSION_TWITTER_OAUTH, 18, 3);
+						config.insert(23, SESSION_TWITTER_OAUTH_ID, 19, 7);
 						//sid = session.insert(name, 1, 1);
 						logger.log(Level.INFO, "Firstrun name: {0}", name);
-						session.insert(1, name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 1, 0);
+						session.insert(1, name, 0, 0, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 1, 0);
 						firstrun = false;
 					}
 					else
@@ -387,7 +414,7 @@ public class DBManager {
 						long next = scl.getInteger(SESSION_ID)+1;
 						if(sc.eof())
 						{
-							session.insert(next, name, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 0, 0);
+							session.insert(next, name, 0, 0, "changeme", "changeme", "", 0, 8080, "", "", "", 0, 0, "MistAqua", 0, 640, "north", 1, 0, 0, 0, 1, 0, 0);
 						}
 						else
 						{
@@ -475,6 +502,26 @@ public class DBManager {
 					rv.setProperty(SESSION_TWITTER_PASSWORD+".cfgtype", tc.getString(TYPE_VALUE));
 				if(!dc.eof())
 					rv.setProperty(SESSION_TWITTER_PASSWORD+".cfgdesc", dc.getString(DESC_VALUE));
+
+				boolean twitter_use_oauth = (sc.getInteger(SESSION_TWITTER_OAUTH) == 1);
+				cc = config.lookup(CONFIG_NAME_INDEX, SESSION_TWITTER_OAUTH);
+				tc = type.lookup(TYPE_INDEX, cc.getInteger(CONFIG_TYPE));
+				dc = desc.lookup(DESC_INDEX, cc.getInteger(CONFIG_DESC));
+				rv.setProperty(SESSION_TWITTER_OAUTH, twitter_use_oauth+"");
+				if(!tc.eof())
+					rv.setProperty(SESSION_TWITTER_OAUTH+".cfgtype", tc.getString(TYPE_VALUE));
+				if(!dc.eof())
+					rv.setProperty(SESSION_TWITTER_OAUTH+".cfgdesc", dc.getString(DESC_VALUE));
+				
+				long twitter_oauth_id = sc.getInteger(SESSION_TWITTER_OAUTH_ID);
+				cc = config.lookup(CONFIG_NAME_INDEX, SESSION_TWITTER_OAUTH_ID);
+				tc = type.lookup(TYPE_INDEX, cc.getInteger(CONFIG_TYPE));
+				dc = desc.lookup(DESC_INDEX, cc.getInteger(CONFIG_DESC));
+				rv.setProperty(SESSION_TWITTER_OAUTH_ID, twitter_oauth_id+"");
+				if(!tc.eof())
+					rv.setProperty(SESSION_TWITTER_OAUTH_ID+".cfgtype", tc.getString(TYPE_VALUE));
+				if(!dc.eof())
+					rv.setProperty(SESSION_TWITTER_OAUTH_ID+".cfgdesc", dc.getString(DESC_VALUE));
 
 				String twitter_picture = sc.getString(SESSION_TWITTER_PICTURE_URL);
 				cc = config.lookup(CONFIG_NAME_INDEX, SESSION_TWITTER_PICTURE_URL);
@@ -892,6 +939,85 @@ public class DBManager {
 			catch(NumberFormatException e){}
 		}
 		return rv;
+	}
+
+	public synchronized AccessToken getAccessToken(long id) throws SqlJetException
+	{
+		AccessToken token = null;
+		try
+		{
+			db.open();
+			if(db.isOpen())
+			{
+				db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
+				if(db.isInTransaction())
+				{
+					ISqlJetTable tt = db.getTable(OAUTH_TABLE);
+					ISqlJetCursor tc = tt.lookup(OAUTH_ID_INDEX, id);
+					if(!tc.eof())
+					{
+						token = new AccessToken(tc.getString(OAUTH_TOKEN), tc.getString(OAUTH_TOKEN_SECRET));
+					}
+				}
+			}
+		}
+		finally
+		{
+			db.commit();
+			db.close();
+		}
+		return token;
+	}
+
+	public synchronized List<AccessToken> getAvailableTokens() throws SqlJetException
+	{
+		List<AccessToken> rv = new java.util.concurrent.CopyOnWriteArrayList<AccessToken>();
+		try
+		{
+			db.open();
+			if(db.isOpen())
+			{
+				db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
+				if(db.isInTransaction())
+				{
+					ISqlJetTable tt = db.getTable(OAUTH_TABLE);
+					ISqlJetCursor tc = tt.order(OAUTH_NAME_INDEX);
+					do
+					{
+						rv.add(new AccessToken(tc.getString(OAUTH_TOKEN), tc.getString(OAUTH_TOKEN_SECRET)));
+					}
+					while(!tc.eof());
+				}
+			}
+		}
+		finally
+		{
+			db.commit();
+			db.close();
+		}
+		return rv;
+	}
+
+	public synchronized void storeAccessToken(AccessToken token) throws SqlJetException
+	{
+		try
+		{
+			db.open();
+			if(db.isOpen())
+			{
+				db.beginTransaction(SqlJetTransactionMode.EXCLUSIVE);
+				if(db.isInTransaction())
+				{
+					ISqlJetTable tc = db.getTable(OAUTH_TABLE);
+					tc.insert(token.getUserId(), token.getScreenName(), token.getToken(), token.getTokenSecret());
+				}
+			}
+		}
+		finally
+		{
+			db.commit();
+			db.close();
+		}
 	}
 
 	public synchronized User lookupUser(String username) throws SqlJetException

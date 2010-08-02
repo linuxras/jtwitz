@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
 <Form version="1.5" maxVersion="1.7" type="org.netbeans.modules.form.forminfo.JDialogFormInfo">
   <Properties>
@@ -84,17 +84,8 @@
           <SubComponents>
             <Component class="javax.swing.JList" name="countriesList">
               <Properties>
-                <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                  <StringArray count="8">
-                    <StringItem index="0" value="United States"/>
-                    <StringItem index="1" value="Germany"/>
-                    <StringItem index="2" value="Italy"/>
-                    <StringItem index="3" value="United Kingdom"/>
-                    <StringItem index="4" value="Mexico"/>
-                    <StringItem index="5" value="Brazil"/>
-                    <StringItem index="6" value="Canada"/>
-                    <StringItem index="7" value="Ireland"/>
-                  </StringArray>
+                <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="new twitz.ui.models.LocationListModel()" type="code"/>
                 </Property>
                 <Property name="selectionMode" type="int" value="0"/>
                 <Property name="cellRenderer" type="javax.swing.ListCellRenderer" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
@@ -160,24 +151,8 @@
           <SubComponents>
             <Component class="javax.swing.JList" name="citiesList">
               <Properties>
-                <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.editors2.ListModelEditor">
-                  <StringArray count="15">
-                    <StringItem index="0" value="Atlanta"/>
-                    <StringItem index="1" value="Baltimore"/>
-                    <StringItem index="2" value="Boston"/>
-                    <StringItem index="3" value="Chicago"/>
-                    <StringItem index="4" value="Dallas-Ft. Worth"/>
-                    <StringItem index="5" value="Houston"/>
-                    <StringItem index="6" value="London"/>
-                    <StringItem index="7" value="Los Angeles"/>
-                    <StringItem index="8" value="New York City"/>
-                    <StringItem index="9" value="Philadelphia"/>
-                    <StringItem index="10" value="San Antonio"/>
-                    <StringItem index="11" value="San Francisco"/>
-                    <StringItem index="12" value="Seattle"/>
-                    <StringItem index="13" value="Sao Paulo"/>
-                    <StringItem index="14" value="Washinton D.C."/>
-                  </StringArray>
+                <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="new twitz.ui.models.LocationListModel()" type="code"/>
                 </Property>
                 <Property name="selectionMode" type="int" value="0"/>
                 <Property name="cellRenderer" type="javax.swing.ListCellRenderer" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
@@ -211,8 +186,20 @@
             <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
               <action class="twitz.ui.TrendsListPane" id="closeBox" methodName="closeBox"/>
             </Property>
+            <Property name="icon" type="javax.swing.Icon" resourceKey="btnDone.icon"/>
             <Property name="text" type="java.lang.String" resourceKey="btnDone.text"/>
             <Property name="name" type="java.lang.String" value="btnDone" noResource="true"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="btnWorld">
+          <Properties>
+            <Property name="action" type="javax.swing.Action" editor="org.netbeans.modules.swingapp.ActionEditor">
+              <action class="twitz.ui.dialogs.LocationListDialog" id="doWorld" methodName="doWorld"/>
+            </Property>
+            <Property name="icon" type="javax.swing.Icon" resourceKey="btnWorld.icon"/>
+            <Property name="text" type="java.lang.String" resourceKey="btnWorld.text"/>
+            <Property name="toolTipText" type="java.lang.String" resourceKey="btnWorld.toolTipText"/>
+            <Property name="name" type="java.lang.String" value="btnWorld" noResource="true"/>
           </Properties>
         </Component>
       </SubComponents>

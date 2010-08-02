@@ -18,7 +18,10 @@
             </test-roots>
         </data>
         <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
+            <word>OAuth</word>
+            <word>png</word>
             <word>Retweeted</word>
+            <word>twitz</word>
         </spellchecker-wordlist>
         <swingapp xmlns="http://www.netbeans.org/ns/form-swingapp/1">
             <application-class name="twitz.TwitzApp"/>

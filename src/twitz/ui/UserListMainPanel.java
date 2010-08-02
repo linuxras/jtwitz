@@ -86,7 +86,7 @@ public class UserListMainPanel extends javax.swing.JLayeredPane implements Twitz
 		String old = this.sessionName;
 		this.sessionName = name;
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
@@ -230,7 +230,7 @@ public class UserListMainPanel extends javax.swing.JLayeredPane implements Twitz
 		map.put("async", true);
 		map.put("caller", this);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
+		args.add(view.getAuthenticatedUser().getId());//screenName
 		args.add(nextPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
@@ -243,7 +243,7 @@ public class UserListMainPanel extends javax.swing.JLayeredPane implements Twitz
 		map.put("async", true);
 		map.put("caller", this);
 		ArrayList args = new ArrayList();
-		args.add(config.getString("twitter_id"));//screenName
+		args.add(view.getAuthenticatedUser().getId());//screenName
 		args.add(prevPage);
 		map.put("arguments", args);
 		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
@@ -441,7 +441,7 @@ public class UserListMainPanel extends javax.swing.JLayeredPane implements Twitz
 			map.put("async", true);
 			map.put("caller", this);
 			ArrayList args = new ArrayList();
-			args.add(config.getString("twitter_id"));//screenName
+			args.add(view.getAuthenticatedUser().getId());//screenName
 			args.add(-1L);
 			map.put("arguments", args);
 			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));

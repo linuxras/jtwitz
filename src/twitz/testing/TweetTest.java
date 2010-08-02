@@ -75,4 +75,9 @@ public class TweetTest implements Tweet{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
+	public String getLocation()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
 }

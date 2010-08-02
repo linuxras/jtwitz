@@ -358,7 +358,7 @@ public class BlockedPanel extends javax.swing.JLayeredPane implements MouseListe
 //		User[] selections = getContactsList().getSelectedValues();
 //		map.put("selections", selections);
 //		ArrayList args = new ArrayList();
-//		args.add(config.getString("twitter_id"));
+//		args.add(view.getAuthenticatedUser().getId());
 //		args.add(nextPage);
 //		map.put("arguments", args);
 //		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
@@ -371,7 +371,7 @@ public class BlockedPanel extends javax.swing.JLayeredPane implements MouseListe
 //`		map.put("caller", this);
 //`		map.put("async", true);
 //`		ArrayList args = new ArrayList();
-//`		args.add(config.getString("twitter_id"));
+//`		args.add(view.getAuthenticatedUser().getId());
 //`		args.add(prevPage);
 //`		map.put("arguments", args);
 //`		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.FRIENDS_STATUSES, new java.util.Date().getTime(), map));
@@ -473,7 +473,7 @@ public class BlockedPanel extends javax.swing.JLayeredPane implements MouseListe
 		String old = this.sessionName;
 		this.sessionName = name;
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
-		view = TwitzSessionManager.getInstance().getTwitMainViewForSession(sessionName);
+		view = TwitzSessionManager.getInstance().getTwitzMainViewForSession(sessionName);
 		//firePropertyChange(SESSION_PROPERTY, old, name);
 	}
 
