@@ -62,8 +62,8 @@ public class TwitterManager extends DefaultTwitzEventModel {
 		config = TwitzSessionManager.getInstance().getSettingsManagerForSession(sessionName);
 		resource = twitz.TwitzApp.getContext().getResourceMap(twitz.twitter.TwitterManager.class);
 		this.login();
-		baseConfig = buildConfiguration();
-		defaultTwitter = new TwitterFactory(baseConfig).getInstance();
+//		baseConfig = buildConfiguration();
+//		defaultTwitter = new TwitterFactory(baseConfig).getInstance();
 //		this.twitter = new TwitterFactory(baseConfig).getInstance(config.getString("twitter_id"), config.getString("twitter_password"));
 //		this.atwitter = new AsyncTwitterFactory(baseConfig, view).getInstance(config.getString("twitter_id"),config.getString("twitter_password"));
 	}

@@ -2382,7 +2382,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 						break;
 					case 1:
 						//show the full stack trace here
-						MessageDialog msg = new MessageDialog(getMainFrame(), false);
+						MessageDialog msg = new MessageDialog(getMainFrame(), true);
 						msg.setLocationRelativeTo(getMainFrame());
 						java.io.StringWriter w = new java.io.StringWriter();
 						java.io.PrintWriter p = new java.io.PrintWriter(w);
