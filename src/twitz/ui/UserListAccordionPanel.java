@@ -63,6 +63,7 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 	private javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(UserListAccordionPanel.class, this);
 	
 	private Map<String, UserList> userlists = new LinkedHashMap<String, UserList>();
+	private Map<String, UserList> subscribedUserlists = new LinkedHashMap<String, UserList>();
 	private DefaultTwitzEventModel dtem = new DefaultTwitzEventModel();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private TwitzSessionManager session = TwitzSessionManager.getInstance();
@@ -77,9 +78,11 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 	private boolean firstrun = true;
 	private int visibleList = 0;
 	private UserListBox currentPanel = null;
+	private final boolean isSubscriptionList;
 	
-	public UserListAccordionPanel()
+	public UserListAccordionPanel(boolean isSubscriptionList)
 	{
+		this.isSubscriptionList = isSubscriptionList;
 		this.setLayout(new BorderLayout());
 		
 		initDefaults();
@@ -116,44 +119,37 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 		// Get an iterator to walk through out panels
 		Iterator<String> iter = this.panels.keySet().iterator();
 
-		// Render the top panels: remove all components, reset the GridLayout to
-		// hold to correct number of panels, add the panels, and "validate" it to
-		// cause it to re-layout its components
+		// Render the top panels
 		this.top.removeAll();
 		GridLayout topLayout = (GridLayout) this.top.getLayout();
 		topLayout.setRows(topPanels);
-		UserListBox listPanel = null;
+		UserListBox listBox = null;
 		for (int i = 0; i < topPanels; i++) {
 			String barName = (String) iter.next();
-			listPanel = (UserListBox) this.panels.get(barName);
-			this.top.add(listPanel.getToolBar());
+			listBox = (UserListBox) this.panels.get(barName);
+			this.top.add(listBox.getToolBar());
 		}
 		this.top.validate();
 
-		// Render the center component: remove the current component (if there
-		// is one) and then put the visible component in the center of this
-		// panel
+		// Render the center component
 		if (this.currentPanel != null) {
 			this.display.remove(this.currentPanel);
 		}
-		this.currentPanel = listPanel;//.getComponent();
+		this.currentPanel = listBox;//.getComponent();
 		this.display.add(currentPanel, BorderLayout.CENTER);
 
-		// Render the bottom panels: remove all components, reset the GridLayout
-		// to
-		// hold to correct number of panels, add the panels, and "validate" it to
-		// cause it to re-layout its components
+		// Render the bottom panels
 		this.bottom.removeAll();
 		GridLayout bottomLayout = (GridLayout) this.bottom.getLayout();
 		bottomLayout.setRows(bottomPanels);
 		for (int i = 0; i < bottomPanels; i++) {
 			String barName = (String) iter.next();
-			listPanel = (UserListBox) this.panels.get(barName);
-			this.bottom.add(listPanel.getToolBar());
+			listBox = (UserListBox) this.panels.get(barName);
+			this.bottom.add(listBox.getToolBar());
 		}
 		this.bottom.validate();
 
-		// Validate all of our components: cause this container to re-layout its
+		// Validate all of our components and cause this container to re-layout its
 		// subcomponents
 		validate();
 	}
@@ -239,20 +235,22 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 		btnReload.setMargin(new java.awt.Insets(2, 2, 2, 2));
 		toolbar.add(btnReload);
 
-		btnAddList.setAction(actionMap.get("addNewList"));
-		btnAddList.setText(resourceMap.getString("btnAddList.text"));
-		btnAddList.setIcon(resourceMap.getIcon("btnAddList.icon"));
-		btnAddList.setToolTipText(resourceMap.getString("btnAddList.toolTipText"));
-		btnAddList.setMargin(new java.awt.Insets(2, 2, 2, 2));
-		toolbar.add(btnAddList);
+		if (!isSubscriptionList)
+		{
+			btnAddList.setAction(actionMap.get("addNewList"));
+			btnAddList.setText(resourceMap.getString("btnAddList.text"));
+			btnAddList.setIcon(resourceMap.getIcon("btnAddList.icon"));
+			btnAddList.setToolTipText(resourceMap.getString("btnAddList.toolTipText"));
+			btnAddList.setMargin(new java.awt.Insets(2, 2, 2, 2));
+			toolbar.add(btnAddList);
 
-		btnDeleteList.setAction(actionMap.get("deleteList"));
-		btnDeleteList.setText(resourceMap.getString("btnDeleteList.text"));
-		btnDeleteList.setIcon(resourceMap.getIcon("btnDeleteList.icon"));
-		btnDeleteList.setToolTipText(resourceMap.getString("btnDeleteList.toolTipText"));
-		btnDeleteList.setMargin(new java.awt.Insets(2, 2, 2, 2));
-		toolbar.add(btnDeleteList);
-
+			btnDeleteList.setAction(actionMap.get("deleteList"));
+			btnDeleteList.setText(resourceMap.getString("btnDeleteList.text"));
+			btnDeleteList.setIcon(resourceMap.getIcon("btnDeleteList.icon"));
+			btnDeleteList.setToolTipText(resourceMap.getString("btnDeleteList.toolTipText"));
+			btnDeleteList.setMargin(new java.awt.Insets(2, 2, 2, 2));
+			toolbar.add(btnDeleteList);
+		}
 		separatorRight.setMaximumSize(new java.awt.Dimension(1000, 10));
 		separatorRight.setName("separatorRight"); // NOI18N
 		toolbar.add(separatorRight);
@@ -280,6 +278,11 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 	public String getSessionName()
 	{
 		return this.sessionName;
+	}
+
+	public boolean isSubscriptionList()
+	{
+		return this.isSubscriptionList;
 	}
 
 	public boolean removeUserList(String listname) {//{{{
@@ -394,6 +397,7 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 			SwingWorker<List<UserList>, UserList> worker = new SwingWorker<List<UserList>, UserList>()
 			{
 				int total = -1, count = 1;
+				UserListAccordionPanel ulist = view.getUserListPanel();
 				@Override
 				public List<UserList> doInBackground()
 				{
@@ -422,7 +426,25 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 					for(UserList u : part)
 					{
 						firePropertyChange("message", null, String.format("Processing %d of %d UserLists. Please wait...", count, total));
-						addUserList(u);
+						if(isSubscriptionList)
+						{
+							//If in subscription mode dont add list that you own as they are
+							//already represented in User List tab. They may be returned here since
+							//you are also subscribed to your own lists :)
+							if(ulist != null)
+							{
+								if(!ulist.hasUserList(u))
+									addUserList(u);
+							}
+							else
+							{
+								addUserList(u);
+							}
+						}
+						else
+						{
+							addUserList(u);
+						}
 						count++;
 					}
 				}
@@ -454,17 +476,37 @@ public class UserListAccordionPanel extends JLayeredPane implements ActionListen
 		logger.debug("update() run force = "+force);
 		if (firstrun && view.isConnected() || force)
 		{
-			//Load userlists view
-			Map map = Collections.synchronizedMap(new TreeMap());
-			map.put("async", true);
-			map.put("caller", this);
-			ArrayList args = new ArrayList();
-			args.add(view.getAuthenticatedUser().getScreenName());//screenName
-			args.add(currentPage);
-			map.put("arguments", args);
-			fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
-			firstrun = false;
+			if (!isSubscriptionList)
+			{
+				//Load userlists view
+				Map map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				ArrayList args = new ArrayList();
+				args.add(view.getAuthenticatedUser().getScreenName());//screenName
+				args.add(currentPage);
+				map.put("arguments", args);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LISTS, new java.util.Date().getTime(), map));
+				firstrun = false;
+			}
+			else
+			{
+				Map map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", this);
+				ArrayList args = new ArrayList();
+				args.add(view.getAuthenticatedUser().getScreenName());//screenName
+				args.add(currentPage);
+				map.put("arguments", args);
+				fireTwitzEvent(new TwitzEvent(this, TwitzEventType.USER_LIST_SUBSCRIPTIONS, new java.util.Date().getTime(), map));
+				firstrun = false;
+			}
 		}
+	}
+
+	public boolean hasUserList(UserList list)
+	{
+		return userlists.containsValue(list);
 	}
 
 	public int getVisibleList()

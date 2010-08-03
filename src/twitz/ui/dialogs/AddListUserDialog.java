@@ -54,7 +54,8 @@ public class AddListUserDialog extends javax.swing.JDialog {
 		USER_ADD,
 		USER_DELETE,
 		USER_CHECK,
-		LIST_DELETE
+		LIST_DELETE,
+		LIST_SELECT
 	};
 
 	private Mode mode;
@@ -366,6 +367,13 @@ public class AddListUserDialog extends javax.swing.JDialog {
 				titleLabel.setText(resourceMap.getString("titleLabel.list_delete.text"));
 				btnAdd.setText(resourceMap.getString("btnAdd.delete.text"));
 				btnAdd.setIcon(resourceMap.getImageIcon("btnAdd.delete.icon"));
+				userPane.setVisible(false);
+				mode = value;
+			break;
+			case LIST_SELECT:
+				titleLabel.setText(resourceMap.getString("titleLabel.select.text"));
+				btnAdd.setText(resourceMap.getString("btnAdd.select.text"));
+				btnAdd.setIcon(resourceMap.getImageIcon("btnAdd.select.icon"));
 				userPane.setVisible(false);
 				mode = value;
 			break;

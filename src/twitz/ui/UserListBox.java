@@ -6,6 +6,7 @@
 package twitz.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -26,6 +27,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
+import org.jdesktop.swingx.JXLabel;
 import twitter4j.PagableResponseList;
 import twitter4j.Paging;
 import twitter4j.User;
@@ -55,11 +57,12 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
     private javax.swing.JButton btnPrev;
     private javax.swing.JButton btnUserAdd;
     private javax.swing.JButton btnUserDelete;
+	private javax.swing.JButton btnUpdate;
     private twitz.ui.ContactsList contactsList1;
     private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
     private javax.swing.JToolBar.Separator jSeparator3;
-    private javax.swing.JLabel listName;
+    private JXLabel listName;
     private javax.swing.JScrollPane listPane;
     private javax.swing.JToolBar pagingToolBar;
     private javax.swing.JToolBar toolbar;
@@ -113,10 +116,11 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
         jSeparator1 = new javax.swing.JToolBar.Separator();
         btnCollapse = new javax.swing.JButton();
         toolbar = new javax.swing.JToolBar();
-        listName = new javax.swing.JLabel();
+        listName = new JXLabel();
         jSeparator2 = new javax.swing.JToolBar.Separator();
         btnUserAdd = new javax.swing.JButton();
         btnUserDelete = new javax.swing.JButton();
+		btnUpdate = new javax.swing.JButton();
         listPane = new javax.swing.JScrollPane();
         contactsList1 = new twitz.ui.ContactsList();
         pagingToolBar = new javax.swing.JToolBar();
@@ -144,33 +148,51 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
         toolbar.setName("toolbar"); // NOI18N
         toolbar.setPreferredSize(new java.awt.Dimension(100, 22));
 
+
+		if (!container.isSubscriptionList())
+		{
+			btnUpdate.setAction(actionMap.get("updateListSettings")); // NOI18N
+			btnUpdate.setIcon(resourceMap.getIcon("btnUpdate.icon")); // NOI18N
+			btnUpdate.setText(resourceMap.getString("btnUpdate.text")); // NOI18N
+			btnUpdate.setToolTipText(resourceMap.getString("btnUpdate.toolTipText")); // NOI18N
+			btnUpdate.setFocusable(false);
+			btnUpdate.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+			btnUpdate.setIconTextGap(0);
+			btnUpdate.setName("btnUpdate"); // NOI18N
+			toolbar.add(btnUpdate);
+
+			btnUserAdd.setAction(actionMap.get("addListUser")); // NOI18N
+			btnUserAdd.setIcon(resourceMap.getIcon("btnUserAdd.icon")); // NOI18N
+			btnUserAdd.setText(resourceMap.getString("btnUserAdd.text")); // NOI18N
+			btnUserAdd.setToolTipText(resourceMap.getString("btnUserAdd.toolTipText")); // NOI18N
+			btnUserAdd.setFocusable(false);
+			btnUserAdd.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+			btnUserAdd.setIconTextGap(0);
+			btnUserAdd.setName("btnUserAdd"); // NOI18N
+			toolbar.add(btnUserAdd);
+
+			btnUserDelete.setAction(actionMap.get("deleteListUser")); // NOI18N
+			btnUserDelete.setIcon(resourceMap.getIcon("btnUserDelete.icon")); // NOI18N
+			btnUserDelete.setToolTipText(resourceMap.getString("btnUserDelete.toolTipText")); // NOI18N
+			btnUserDelete.setFocusable(false);
+			btnUserDelete.setHideActionText(true);
+			btnUserDelete.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+			btnUserDelete.setIconTextGap(0);
+			btnUserDelete.setName("btnUserDelete"); // NOI18N
+			toolbar.add(btnUserDelete);
+
+			jSeparator2.setName("jSeparator2"); // NOI18N
+	        toolbar.add(jSeparator2);
+		}
+
         listName.setText(resourceMap.getString("listName.text")); // NOI18N
         listName.setToolTipText(listName.getText());
         listName.setName("listName"); // NOI18N
+		//listName.setPreferredSize(new java.awt.Dimension(100, 20));
+		listName.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		listName.setLineWrap(false);
+
         toolbar.add(listName);
-
-        jSeparator2.setName("jSeparator2"); // NOI18N
-        toolbar.add(jSeparator2);
-
-        btnUserAdd.setAction(actionMap.get("addListUser")); // NOI18N
-        btnUserAdd.setIcon(resourceMap.getIcon("btnUserAdd.icon")); // NOI18N
-        btnUserAdd.setText(resourceMap.getString("btnUserAdd.text")); // NOI18N
-        btnUserAdd.setToolTipText(resourceMap.getString("btnUserAdd.toolTipText")); // NOI18N
-        btnUserAdd.setFocusable(false);
-        btnUserAdd.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd.setIconTextGap(0);
-        btnUserAdd.setName("btnUserAdd"); // NOI18N
-        toolbar.add(btnUserAdd);
-
-        btnUserDelete.setAction(actionMap.get("deleteListUser")); // NOI18N
-        btnUserDelete.setIcon(resourceMap.getIcon("btnUserDelete.icon")); // NOI18N
-        btnUserDelete.setToolTipText(resourceMap.getString("btnUserDelete.toolTipText")); // NOI18N
-        btnUserDelete.setFocusable(false);
-        btnUserDelete.setHideActionText(true);
-        btnUserDelete.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserDelete.setIconTextGap(0);
-        btnUserDelete.setName("btnUserDelete"); // NOI18N
-        toolbar.add(btnUserDelete);
 
         //add(toolbar, java.awt.BorderLayout.NORTH);
 
@@ -287,19 +309,6 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 				return dim;
 			}
 		});//}}}
-//		MouseListener toolbarListener = new MouseAdapter() {//{{{
-//			@Override
-//			public void mouseClicked(MouseEvent evt) {
-////				requestFocusInWindow();
-//				if(evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() == 2) {
-//					toggleCollapsed();
-//				}
-//				if(!isFocusOwner())
-//					requestFocusInWindow();
-//			}
-//		};//}}}
-		//toolbar.addMouseListener(toolbarListener);
-		//listName.addMouseListener(toolbarListener);
 		if(container != null)
 		{
 			toolbar.addMouseListener(container);
@@ -316,8 +325,9 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 		selectedBorder = BorderFactory.createLoweredBevelBorder();
 		setBorder(selectedBorder);
         //contactsList1.setFocusable(false);
-		jSeparator2.setPreferredSize(new Dimension(1000,20));
-		listName.setMaximumSize(new Dimension(40,listName.getPreferredSize().height));
+		jSeparator2.setPreferredSize(new Dimension(10,20));
+//		if(!container.isSubscriptionList())
+//			listName.setMaximumSize(new Dimension(40,listName.getPreferredSize().height));
 		listName.setFont(new Font("Arial", Font.BOLD, 10));
 
 		twitz.TwitzMainView.fixJScrollPaneBarsSize(listPane);
@@ -376,6 +386,17 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 			firePropertyChange("deleteListUser", map, null);
 		}
 	}//}}}
+
+	@Action
+	public void updateListSettings()
+	{
+		Map map = Collections.synchronizedMap(new TreeMap());
+		map.put("userList", list);
+		map.put("async", true);
+		map.put("caller", this);
+		fireTwitzEvent(new TwitzEvent(this, TwitzEventType.UPDATE_USER_LIST, new java.util.Date().getTime(), map));
+		firePropertyChange("updateUserList", map, null);
+	}
 
 	@Action
 	public void getNext()//{{{
@@ -475,14 +496,14 @@ public class UserListBox extends javax.swing.JLayeredPane implements MouseListen
 	}
 
 	public void setTitle(String title) {//{{{
-		if (title.length() > 9)
-		{
-			listName.setText(title.substring(0, 9));
-		}
-		else
-		{
+//		if (title.length() > 9 && !container.isSubscriptionList())
+//		{
+//			listName.setText(title.substring(0, 9));
+//		}
+//		else
+//		{
 			listName.setText(title);
-		}
+//		}
 		listName.setToolTipText(title);
 		listName.setName(title);
 		toolbar.setName(title);

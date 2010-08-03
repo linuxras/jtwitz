@@ -22,11 +22,19 @@ public class CreateUserListDialog extends javax.swing.JDialog {
 
 	javax.swing.ActionMap actionMap = twitz.TwitzApp.getContext().getActionMap(CreateUserListDialog.class, this);
 	org.jdesktop.application.ResourceMap resourceMap = twitz.TwitzApp.getContext().getResourceMap(CreateUserListDialog.class);
+	private Mode mode;
 
+	public enum Mode {
+		ADD,
+		UPDATE
+	};
+	
     /** Creates new form CreateUserListDialog */
     public CreateUserListDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+		//default to add mode
+		setMode(Mode.ADD);
     }
 
     /** This method is called from within the constructor to
@@ -193,19 +201,42 @@ public class CreateUserListDialog extends javax.swing.JDialog {
 	@Action
 	public void addUserList()
 	{
-		if (!txtName.getText().equals("") && !txtDesc.getText().equals(""))
+		if (!txtName.getText().isEmpty() && !txtDesc.getText().isEmpty())
 		{
 			list = new ArrayList();
 			list.add(txtName.getText());
 			list.add(chkPublic.isSelected());
 			list.add(txtDesc.getText());
+			this.dispose();
 		}
-		this.dispose();
 	}
 
 	public ArrayList getArgs()
 	{
 		return this.list;
+	}
+
+	public void setArgs(String name, boolean isPublic, String description)
+	{
+		txtName.setText(name);
+		chkPublic.setSelected(isPublic);
+		txtDesc.setText(description);
+	}
+
+	public final void setMode(Mode m)
+	{
+		this.mode = m;
+		switch(m)
+		{
+			case ADD:
+				jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
+				btnOk.setText(resourceMap.getString("btnOk.text")); // NOI18N
+				break;
+			case UPDATE:
+				jLabel1.setText(resourceMap.getString("jLabel1.update.text", txtName.getText())); // NOI18N
+				btnOk.setText(resourceMap.getString("btnOk.update.text")); // NOI18N
+				break;
+		}
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -545,13 +545,16 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		friends = new FriendsPanel();
 		friends.setSessionName(sessionName);
 		//logger.debug("friends----------------------------------------------");
-		userListMainPanel1 = new twitz.ui.UserListAccordionPanel();//UserListMainPanel();
+		userListMainPanel1 = new twitz.ui.UserListAccordionPanel(false);//UserListMainPanel();
 		userListMainPanel1.setName("userListMainPanel1"); // NOI18N
 		userListMainPanel1.setSessionName(sessionName);
+		subscriptionPanel = new twitz.ui.UserListAccordionPanel(true);
+		subscriptionPanel.setName("subscriptionPanel."+sessionName); //NOI18N
+		subscriptionPanel.setSessionName(sessionName);
 		//logger.debug("userlistmainpanel=============================================");
 		friendsStatusPanel = new StatusPanel(sessionName);
 		friendsStatusPanel.setSessionName(sessionName);
-		this.friendsPanel.setRightComponent(friendsStatusPanel);
+		friendsPanel.setRightComponent(friendsStatusPanel);
 		friendsPanel.setOneTouchExpandable(true);
 		friendsPanel.setDividerSize(6);
 
@@ -571,6 +574,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		//Add friends list tothe friendsPane tabbed panel
 		friendsPane.insertTab(resourceMap.getString("friends.TabConstraints.tabTitle"), resourceMap.getIcon("friends.TabConstraints.tabIcon"), friends, resourceMap.getString("friends.TabConstraints.tabToolTip"),0); // NOI18N
         friendsPane.addTab(resourceMap.getString("userListMainPanel1.TabConstraints.tabTitle"), resourceMap.getIcon("userListMainPanel1.TabConstraints.tabIcon"), userListMainPanel1, resourceMap.getString("userListMainPanel1.TabConstraints.tabToolTip")); // NOI18N
+		friendsPane.addTab(resourceMap.getString("subscriptionPanel.TabConstraints.tabTitle"), resourceMap.getIcon("subscriptionPanel.TabConstraints.tabIcon"), subscriptionPanel, resourceMap.getString("subscriptionPanel.TabConstraints.tabToolTip")); // NOI18N
         //friendsPanel.setLeftComponent(friendsPane);
 		//friendsPane.addTab(resourceMap.getString("following.TabConstraints.tabTitle"), resourceMap.getIcon("following.TabConstraints.tabIcon"), following, resourceMap.getString("following.TabConstraints.tabToolTip")); // NOI18N
 		friendsPane.addTab(resourceMap.getString("followers.TabConstraints.tabTitle"), resourceMap.getIcon("followers.TabConstraints.tabIcon"), followers, resourceMap.getString("followers.TabConstraints.tabToolTip")); // NOI18N
@@ -795,6 +799,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		searchPanel.addTwitzListener(this);
 		trendPanel.addTwitzListener(this);
 		userListMainPanel1.addTwitzListener(this);
+		subscriptionPanel.addTwitzListener(this);
 		timelinePanel.addTwitzListener(this);
 		tweetBox.addTwitzListener(this);
 		friendsStatusPanel.addTwitzListener(this);
@@ -1003,49 +1008,9 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		{
 			logger.error(ex.getLocalizedMessage());
 		}
+	
 	}
-
-	public void updateTabState(boolean force)
-	{
-		Component c = tabPane.getSelectedComponent();
-		if(logdebug)
-			logger.debug("Current tab name: " + c.getName());
-		if (c.equals(searchPanel))
-		{
-			tweetBox.setVisible(false);
-		}
-		else
-		{
-			tweetBox.setVisible(true);
-		}
-		if (c.equals(recentPane))
-		{
-			timelinePanel.update(force);
-			trendPanel.update(force);
-		}
-		else if (c.equals(friendsPanel))
-		{
-			Component f = friendsPane.getSelectedComponent();
-			if (f.equals(friends))
-			{
-				friends.update(force);
-			}
-			else if (f.equals(userListMainPanel1))
-			{
-				userListMainPanel1.update(force);
-			}
-			else if (f.equals(followers))
-			{
-				followers.update(force);
-			}
-			else if (f.equals(blocked))
-			{
-				blocked.update(force);
-			}
-		}
-		
-	}
-
+	
 	//Private methods
 	/**
 	 * I use the netbeans gui builder to layout the main forms for this application
@@ -1379,6 +1344,19 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		UserListBox pnl5 = userListMainPanel1.addUserList(ult5);
 		pnl5.addUser(puser);
 
+		UserListBox spnl = subscriptionPanel.addUserList(ult);
+		spnl.addUser(ouser);
+		UserListBox spnl1 = subscriptionPanel.addUserList(ult1);
+		spnl1.addUser(puser);
+		UserListBox spnl2 = subscriptionPanel.addUserList(ult2);
+		spnl2.addUser(puser);
+		UserListBox spnl3 = subscriptionPanel.addUserList(ult3);
+		spnl3.addUser(puser);
+		UserListBox spnl4 = subscriptionPanel.addUserList(ult4);
+		spnl4.addUser(puser);
+		UserListBox spnl5 = subscriptionPanel.addUserList(ult5);
+		spnl5.addUser(puser);
+
 		friends.addUser(ouser);
 		blocked.addUser(ouser);
 		followers.addUser(puser);
@@ -1528,6 +1506,51 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 	//END private methods
 
 	//Public methods
+	public void updateTabState(boolean force)
+	{
+		Component c = tabPane.getSelectedComponent();
+		if(logdebug)
+			logger.debug("Current tab name: " + c.getName());
+		if (c.equals(searchPanel))
+		{
+			tweetBox.setVisible(false);
+		}
+		else
+		{
+			tweetBox.setVisible(true);
+		}
+		if (c.equals(recentPane))
+		{
+			timelinePanel.update(force);
+			trendPanel.update(force);
+		}
+		else if (c.equals(friendsPanel))
+		{
+			Component f = friendsPane.getSelectedComponent();
+			if (f.equals(friends))
+			{
+				friends.update(force);
+			}
+			else if (f.equals(userListMainPanel1))
+			{
+				userListMainPanel1.update(force);
+			}
+			else if (f.equals(subscriptionPanel))
+			{
+				subscriptionPanel.update(force);
+			}
+			else if (f.equals(followers))
+			{
+				followers.update(force);
+			}
+			else if (f.equals(blocked))
+			{
+				blocked.update(force);
+			}
+		}
+
+	}
+	
 	public User getAuthenticatedUser()
 	{
 		return this.authenticatedUser;
@@ -2173,6 +2196,19 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		item.setFocusable(false);
 		sub.add(item);
 
+		item = new JMenuItem(getResourceMap().getString("UPDATE_USER_LIST"));
+		if(aMap != null) {
+			item.setAction(aMap.get("menuAction"));
+			//item.addActionListener(actions);
+		}
+		item.setActionCommand("UPDATE_USER_LIST");
+		//item.addActionListener(actions);
+		item.setIcon(getResourceMap().getIcon("icon.group_gear"));
+		item.setText(getResourceMap().getString("UPDATE_USER_LIST"));
+		item.setEnabled(selected);
+		item.setFocusable(false);
+		sub.add(item);
+
 		item = new JMenuItem(getResourceMap().getString("DELETE_USER_LIST"));
 		if(aMap != null) {
 			item.setAction(aMap.get("menuAction"));
@@ -2459,6 +2495,16 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		return this.timelinePanel;
 	}
 
+	public UserListAccordionPanel getSubscriptionPanel()
+	{
+		return this.subscriptionPanel;
+	}
+
+	public UserListAccordionPanel getUserListPanel()
+	{
+		return this.userListMainPanel1;
+	}
+
 	/**
 	 * Switch the tab at index. There will be no Exception thrown if tab does not exist
 	 * @param index The index to switch to, this is a 0 based index
@@ -2616,6 +2662,51 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 					m.put("arguments", args);
 				}
 			break;
+			case UPDATE_USER_LIST:
+				if(eventMap != null)
+				{
+					UserList select = null;
+					if (!eventMap.containsKey("userList"))
+					{
+						if (alud == null)
+						{
+							alud = new AddListUserDialog(getMainFrame(), true, this.sessionName);
+
+						}
+						alud.reset();
+						alud.setUserListMap(userListMainPanel1.getUserLists());
+
+						alud.setMode(AddListUserDialog.Mode.LIST_SELECT);
+						alud.setLocationRelativeTo(this);
+						alud.setVisible(true);
+						if (alud.getSelectedUserList() == null)
+						{
+							return;
+						}
+						select = alud.getSelectedUserList();
+					}
+					else
+					{
+						select = (UserList)eventMap.get("userList");
+					}
+					if(select == null)
+						return;
+					CreateUserListDialog culd = new CreateUserListDialog(getMainFrame(), true);
+					culd.setArgs(select.getName(), select.isPublic(), select.getDescription());
+					culd.setMode(CreateUserListDialog.Mode.UPDATE);
+					culd.setLocationRelativeTo(this);
+					culd.setVisible(true);
+					//updateUserList(int listId, java.lang.String newListName, boolean isPublicList, java.lang.String newDescription)
+					if(culd.getArgs() == null)
+					{
+						return;
+					}
+					ArrayList list = culd.getArgs();
+					list.add(0, select.getId()); //Add the listid to the argument list
+					Map map = t.getEventMap();
+					map.put("arguments", list);
+				}
+				break;
 			case CREATE_USER_LIST:
 				CreateUserListDialog culd = new CreateUserListDialog(getMainFrame(), true);
 				culd.setLocationRelativeTo(this);
@@ -3045,7 +3136,8 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	public void gotUserListSubscriptions(PagableResponseList userLists)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotUserListSubscriptions() Not supported yet","2"});
+		subscriptionPanel.addUserList(userLists);
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", "gotUserListSubscriptions() Not supported yet","2"});
 	}
 
 	public void gotUserListMembers(PagableResponseList users) //{{{
@@ -3110,17 +3202,37 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	public void subscribedUserList(UserList userList)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
+		subscriptionPanel.addUserList(userList);
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void unsubscribedUserList(UserList userList)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
+		subscriptionPanel.removeUserList(userList.getName());
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void checkedUserListSubscription(User user)
 	{
-		firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
+		Object obj = que.peek();
+		if(obj instanceof UserList)
+		{
+			UserList list = (UserList)que.poll();
+			firePropertyChange("POPUP", new Object(),
+					new String[]{
+						resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
+						resourceMap.getString("LIST_MEMBER.TEXT", user.getScreenName(), list.getName()),
+						"2"
+			});
+		}
+		else
+			firePropertyChange("POPUP", new Object(),
+					new String[]{
+						resourceMap.getString("USER_NOT_USERLIST_MEMBER.TITLE.TEXT"),
+						resourceMap.getString("LIST_MEMBER.TEXT", user.getScreenName()),
+						"2"
+			});
+		//firePropertyChange("POPUP", new Object(), new String[]{"Twitz Message", resourceMap.getString("NOT_SUPPORTED.TEXT"),"2"});
 	}
 
 	public void gotDirectMessages(ResponseList messages)
@@ -3498,6 +3610,7 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 
 	//private UserListMainPanel userListMainPanel1;
 	private UserListAccordionPanel userListMainPanel1;
+	private UserListAccordionPanel subscriptionPanel;
 	private ContactsList blockedList;
 	private FriendsPanel friends;
 	private FollowersPanel followers;

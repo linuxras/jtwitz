@@ -16,13 +16,17 @@ import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.util.EventObject;
 import javax.swing.AbstractCellEditor;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.event.CellEditorListener;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileView;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
+import org.jdesktop.application.ResourceMap;
 import twitz.ui.dialogs.TwitzOAuthDialog;
 import twitz.util.DBManager;
 import twitz.util.TwitzSessionManager;
@@ -182,6 +186,8 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		JFileChooser chooser = new JFileChooser();
         chooser.addChoosableFileFilter(new ImageFileFilter());
         chooser.setAcceptAllFileFilterUsed(false);
+		chooser.setFileView(new ImageView());
+		chooser.setAccessory(new ImagePreviewBox(chooser));
 		int sv = chooser.showSaveDialog(panel);
         File sFile;
 		if(sv == JFileChooser.APPROVE_OPTION)
@@ -389,19 +395,15 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
             {
                 return true;
             }
-            String extension = new ImageFilterUtils().getFileExtension(f);
-            if(extension != null)
+            String ext = ImageFilterUtils.getFileExtension(f);
+            if(ext != null)
             {
-                if(extension.endsWith(ImageFilterUtils.jpg) ||
-                        extension.equals(ImageFilterUtils.jpeg) ||
-                        extension.equals(ImageFilterUtils.png) ||
-						extension.equals(ImageFilterUtils.gif))
+                if(ext.endsWith(ImageFilterUtils.jpg) ||
+                        ext.equals(ImageFilterUtils.jpeg) ||
+                        ext.equals(ImageFilterUtils.png) ||
+						ext.equals(ImageFilterUtils.gif))
                 {
                     return true;
-                }
-                else
-                {
-                    return false;
                 }
             }
             return false;
@@ -414,6 +416,84 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
         }
     }
 
+	class ImageView extends FileView
+	{
+		ResourceMap res = twitz.TwitzApp.getContext().getResourceMap(twitz.TwitzMainView.class);
+
+		public ImageView()
+		{
+			super();
+		}
+
+		@Override
+		public String getName(File f)
+		{
+			return null;
+		}
+
+		@Override
+		public String getDescription(File f)
+		{
+			return null;
+		}
+
+		@Override
+		public Boolean isTraversable(File f)
+		{
+			return null;
+		}
+
+		@Override
+		public String getTypeDescription(File f)
+		{
+			String extension = ImageFilterUtils.getFileExtension(f);
+			String type = null;
+
+			if (extension != null)
+			{
+				if (extension.equals(ImageFilterUtils.jpeg) || extension.equals(ImageFilterUtils.jpg))
+				{
+					type = "JPEG Image";
+				}
+				else if (extension.equals(ImageFilterUtils.gif))
+				{
+					type = "GIF Image";
+				}
+				else if (extension.equals(ImageFilterUtils.png))
+				{
+					type = "PNG Image";
+				}
+			}
+			return type;
+		}
+
+		@Override
+		public Icon getIcon(File f)
+		{
+			String extension = ImageFilterUtils.getFileExtension(f);
+			Icon icon = null;
+
+			if (extension != null)
+			{
+				if (extension.equals(ImageFilterUtils.jpeg)
+						|| extension.equals(ImageFilterUtils.jpg))
+				{
+					icon = res.getIcon("icon.jpg");
+				}
+				else if (extension.equals(ImageFilterUtils.gif))
+				{
+					icon = res.getIcon("icon.gif");
+				}
+				else if (extension.equals(ImageFilterUtils.png))
+				{
+					icon = res.getIcon("icon.png");
+				}
+			}
+			return icon;
+		}
+
+	}
+
 	static class ImageFilterUtils
 	{
 
@@ -422,7 +502,7 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 		public static final String png = "png";
 		public static final String gif = "gif";
 
-		public String getFileExtension(File f)
+		public static String getFileExtension(File f)
 		{
 			String ext = null;
 			String str = f.getName();
@@ -433,6 +513,93 @@ public class BrowseCellEditor extends AbstractCellEditor implements TableCellEdi
 				ext = str.substring(ind + 1).toLowerCase();
 			}
 			return ext;
+		}
+	}
+
+	class ImagePreviewBox extends javax.swing.JComponent implements java.beans.PropertyChangeListener
+	{
+		File imageFile = null;
+		javax.swing.ImageIcon thumbImage = null;
+
+		public ImagePreviewBox(JFileChooser chooser)
+		{
+			setPreferredSize(new java.awt.Dimension(100, 50));
+			chooser.addPropertyChangeListener(this);
+		}
+
+		public void doImageLoad()
+		{
+			if (imageFile == null)
+			{
+				thumbImage = null;
+				return;
+			}
+			ImageIcon preScaleIcon = new ImageIcon(imageFile.getPath());
+			if (preScaleIcon != null)
+			{
+				if (preScaleIcon.getIconWidth() > 90)
+				{
+					thumbImage = new ImageIcon(preScaleIcon.getImage().	getScaledInstance(90, -1, java.awt.Image.SCALE_DEFAULT));
+				}
+				else
+				{
+					thumbImage = preScaleIcon;
+				}
+			}
+		}
+
+		public void propertyChange(java.beans.PropertyChangeEvent e)
+		{
+			boolean update = false;
+			String pname = e.getPropertyName();
+
+			//reset on directory detection
+			if (JFileChooser.DIRECTORY_CHANGED_PROPERTY.equals(pname))
+			{
+				imageFile = null;
+				update = true;
+			}
+			else if (JFileChooser.SELECTED_FILE_CHANGED_PROPERTY.equals(pname))
+			{
+				imageFile = (File) e.getNewValue();
+				update = true;
+			}
+
+			//Do the work of updating the thumbnail or clearing the view
+			if (update)
+			{
+				thumbImage = null;
+				if (isShowing())
+				{
+					doImageLoad();
+					repaint();
+				}
+			}
+		}
+
+		@Override
+		protected void paintComponent(java.awt.Graphics g)
+		{
+			if (thumbImage == null)
+			{
+				doImageLoad();
+			}
+			if (thumbImage != null)
+			{
+				int x = (getWidth() / 2) - (thumbImage.getIconWidth() / 2);
+				int y = (getHeight() / 2) - (thumbImage.getIconHeight() / 2);
+
+				if (y < 0)
+				{
+					y = 0;
+				}
+
+				if (x < 5)
+				{
+					x = 5;
+				}
+				thumbImage.paintIcon(this, g, x, y);
+			}
 		}
 	}
 }

@@ -294,10 +294,15 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 				}
 				break;
 			case UPDATE_USER_LIST:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "UPDATE_USER_LIST: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
-						});
+				//updateUserList(int listId, java.lang.String newListName, boolean isPublicList, java.lang.String newDescription)
+				if(args != null && args.size() == 4)
+				{
+					listId = (Integer)args.get(0);
+					screenName = (String)args.get(1);
+					boolean pub = (Boolean)args.get(2);
+					String desc = (String)args.get(3);
+					tm.getAsyncTwitterInstance().updateUserList(listId, screenName, pub, desc);
+				}
 				break;
 			case USER_LISTS:
 				if(args != null && !args.isEmpty())
@@ -335,10 +340,12 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 						});
 				break;
 			case USER_LIST_SUBSCRIPTIONS:
-				firePropertyChange("POPUP", new Object(), new String[]
-						{
-							"Twitz Message", "USER_LIST_SUBSCRIPTIONS: "+resourceMap.getString("NOT_SUPPORTED.TEXT"), "2"
-						});
+				if(args != null && args.size() == 2)
+				{
+					screenName = (String)args.get(0);
+					cursor = (Long)args.get(1);
+					tm.getAsyncTwitterInstance().getUserListSubscriptions(screenName, cursor);
+				}
 				break;
 			case LIST_MEMBERS:
 				if(args != null && args.size() == 3)
