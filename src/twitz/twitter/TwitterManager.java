@@ -52,8 +52,8 @@ public class TwitterManager extends DefaultTwitzEventModel {
 	private String sessionName;
 	public static final String SESSION_PROPERTY = "sessionName";
 	private PropertyChangeSupport pcs = new EDTPropertyChangeSupport(this);
-	private String consumerKey = "";
-	private String consumerSecret = ""; //I have to get these from twitter.com
+	private String consumerKey = "bnd8tlXVW9P44syFDxHA";
+	private String consumerSecret = "6d598Oxm8JvMTvUfvzMvDb0kM3Hy9APxzBULu7bQr8"; //I have to get these from twitter.com
 
 	@SuppressWarnings("static-access")
 	public TwitterManager(String session) {

@@ -18,7 +18,9 @@ import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import javax.swing.ListSelectionModel;
@@ -316,7 +318,8 @@ public class TwitzOAuthDialog extends javax.swing.JDialog {
 
 	private void loadTable()
 	{
-		List<AccessToken> list = null;
+		logger.info("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+		List<Map<String, Object>> list = null;
 		try
 		{
 			list = DBM.getAvailableTokens();
@@ -325,18 +328,23 @@ public class TwitzOAuthDialog extends javax.swing.JDialog {
 		{
 			logger.error(ex.getLocalizedMessage());
 		}
+		logger.info("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 		if(list != null && !list.isEmpty())
 		{
 			int row = -1, count = 0;
 			AccessTokenModel model = new AccessTokenModel();
 			Vector<Vector> vtokens = new Vector<Vector>();
-			for(AccessToken token : list)
+			logger.info(list);
+			for(Map<String, Object> map : list)
 			{
+				AccessToken token = (AccessToken)map.get("token");
+				String name= (String)map.get("name");
+				int id = (Integer)map.get("id");
 				Vector t = new Vector();
-				t.addElement(token.getUserId());
-				t.addElement(token.getScreenName());
+				t.addElement(id);
+				t.addElement(name);
 				vtokens.addElement(t);
-				if(token.getUserId() == selectedId)
+				if(id == selectedId)
 					row = count;
 				count++;
 			}
@@ -398,18 +406,15 @@ public class TwitzOAuthDialog extends javax.swing.JDialog {
 					{
 						DBM.storeAccessToken(createdToken);
 						setSelectedId(createdToken.getUserId());
-						setMode(Mode.SELECT);
+						//setMode(Mode.SELECT);
 						createdToken = null;
+						this.dispose();
 					}
 					catch (SqlJetException ex)
 					{
 						logger.error(ex.getLocalizedMessage());
 						view.displayError(ex, "Database Error", "Error while attempting to store generated access token", null, false);
 					}
-//				AccessTokenModel model = (AccessTokenModel)this.accessTokenTable.getModel();
-//				model.addRow(new Object[]{createdToken.getUserId(), createdToken.getScreenName()});
-//				int row = (accessTokenTable.getRowCount() - 1);
-//				accessTokenTable.getSelectionModel().setSelectionInterval(row, row);
 				}
 			}
 			else

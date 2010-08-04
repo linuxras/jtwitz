@@ -32,6 +32,7 @@ import twitz.events.TwitzEvent;
 import twitz.events.TwitzEventModel;
 import twitz.events.TwitzEventType;
 import twitz.events.TwitzListener;
+import twitz.ui.TweetBox;
 import twitz.util.SettingsManager;
 import twitz.util.TwitzSessionManager;
 
@@ -249,6 +250,9 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 	{
 		if(logdebug)
 			logger.debug("Sending reply to Status");
+		TweetBox tb = view.getTweetBox();
+		tb.setReplyToStatus(status);
+		tb.getTweetField().requestFocusInWindow();
 		closeBox();
 	}
 
@@ -290,7 +294,7 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 	{
 		btnDelete.setEnabled(s.getUser().getId() == view.getAuthenticatedUser().getId());
 		btnRetweet.setEnabled(s.getUser().getId() == view.getAuthenticatedUser().getId());
-		btnReplyTo.setEnabled(s.getUser().getId() != view.getAuthenticatedUser().getId());
+		//btnReplyTo.setEnabled(s.getUser().getId() != view.getAuthenticatedUser().getId());
 		lblRetweet.setEnabled(s.isRetweet());
 		lblFav.setEnabled(s.isFavorited());
 	}//}}}

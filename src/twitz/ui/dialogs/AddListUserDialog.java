@@ -313,6 +313,7 @@ public class AddListUserDialog extends javax.swing.JDialog {
 			//ImageIcon icon = new ImageIcon(twitz.TwitzApp.verifyImage(user.getProfileImageURL()));
 			userLabel.setIcon(icon);
 			userLabel.setText(user.getScreenName());
+			userLabel.setVisible(true);
 			setSelectedMode(false);
 		}
 	}

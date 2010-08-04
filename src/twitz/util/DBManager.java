@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -969,25 +970,40 @@ public class DBManager {
 		return token;
 	}
 
-	public synchronized List<AccessToken> getAvailableTokens() throws SqlJetException
+	public synchronized List<Map<String, Object>> getAvailableTokens() throws SqlJetException
 	{
-		List<AccessToken> rv = new java.util.concurrent.CopyOnWriteArrayList<AccessToken>();
+		List<Map<String, Object>> rv = new java.util.concurrent.CopyOnWriteArrayList<Map<String, Object>>();
 		try
 		{
 			db.open();
 			if(db.isOpen())
 			{
+				//logger.log(Level.INFO, "Inside db.isOpen() ---------------------------------");
 				db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
 				if(db.isInTransaction())
 				{
+					//logger.log(Level.INFO, "Inside db.isInTransaction() ---------------------------------");
 					ISqlJetTable tt = db.getTable(OAUTH_TABLE);
 					ISqlJetCursor tc = tt.order(OAUTH_NAME_INDEX);
-					do
+					//logger.log(Level.INFO, "Row Count = {0} ---------------------------------", tc.getRowCount());
+					if (!tc.eof())
 					{
-						rv.add(new AccessToken(tc.getString(OAUTH_TOKEN), tc.getString(OAUTH_TOKEN_SECRET)));
+						do
+						{
+							//logger.log(Level.INFO, "Inside do ---------------------------------");
+							AccessToken token = new AccessToken(tc.getString(OAUTH_TOKEN), tc.getString(OAUTH_TOKEN_SECRET));
+							int id = (int)tc.getInteger(OAUTH_ID);
+							String name = tc.getString(OAUTH_NAME);
+							Map<String, Object> data = new java.util.concurrent.ConcurrentHashMap<String, Object>();
+							data.put("id", id);
+							data.put("name", name);
+							data.put("token", token);
+							rv.add(data);
+						}
+						while (tc.next());
 					}
-					while(!tc.eof());
 				}
+				//logger.log(Level.INFO, "After do ---------------------------------");
 			}
 		}
 		finally
@@ -995,6 +1011,7 @@ public class DBManager {
 			db.commit();
 			db.close();
 		}
+		//logger.log(Level.INFO, "About to return ---------------------------------");
 		return rv;
 	}
 

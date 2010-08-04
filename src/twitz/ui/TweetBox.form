@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
 <Form version="1.5" maxVersion="1.7" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <Properties>
@@ -25,15 +25,15 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
+              <Component id="lblChars" min="-2" pref="36" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="lblChars" min="-2" pref="39" max="-2" attributes="0"/>
+              <Component id="replyLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="txtTweet" pref="183" max="32767" attributes="0"/>
+              <Component id="txtTweet" pref="205" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="btnTweet" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="btnMini" min="-2" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -41,13 +41,16 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="1" attributes="0">
-                  <Component id="btnTweet" alignment="1" min="-2" max="-2" attributes="0"/>
-                  <Component id="btnMini" alignment="1" min="-2" max="-2" attributes="0"/>
-                  <Component id="txtTweet" alignment="1" min="-2" max="-2" attributes="1"/>
-                  <Component id="lblChars" alignment="3" pref="26" max="32767" attributes="1"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="btnMini" alignment="0" min="-2" max="-2" attributes="0"/>
+                  <Group type="103" alignment="0" groupAlignment="3" attributes="0">
+                      <Component id="lblChars" alignment="3" pref="26" max="32767" attributes="1"/>
+                      <Component id="replyLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="txtTweet" alignment="3" min="-2" max="-2" attributes="1"/>
+                      <Component id="btnTweet" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
               </Group>
-              <EmptySpace min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -90,6 +93,18 @@
       <Events>
         <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="txtTweetKeyTyped"/>
         <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="txtTweetKeyReleased"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="replyLabel">
+      <Properties>
+        <Property name="font" type="java.awt.Font" resourceKey="replyLabel.font"/>
+        <Property name="foreground" type="java.awt.Color" resourceKey="replyLabel.foreground"/>
+        <Property name="text" type="java.lang.String" resourceKey="replyLabel.text"/>
+        <Property name="toolTipText" type="java.lang.String" resourceKey="replyLabel.toolTipText"/>
+        <Property name="name" type="java.lang.String" value="replyLabel" noResource="true"/>
+      </Properties>
+      <Events>
+        <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="replyLabelMouseClicked"/>
       </Events>
     </Component>
   </SubComponents>

@@ -160,10 +160,18 @@ public class TwitzEventHandler extends SwingWorker<String, Object> {
 			case UPDATE_STATUS:
 				if(args != null && args.size() == 1)
 				{
-					String tweet = (String)args.get(0);
-					if(logdebug)
-						logger.debug("Updating status");
-					tm.getAsyncTwitterInstance().updateStatus(tweet);
+					if(args.get(0) instanceof String)
+					{
+						String tweet = (String)args.get(0);
+						if(logdebug)
+							logger.debug("Updating status");
+						tm.getAsyncTwitterInstance().updateStatus(tweet);
+					}
+					else if(args.get(0) instanceof StatusUpdate)
+					{
+						StatusUpdate tweet = (StatusUpdate)args.get(0);
+						tm.getAsyncTwitterInstance().updateStatus(tweet);
+					}
 				}
 				break;
 			case DESTROY_STATUS:

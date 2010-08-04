@@ -1561,6 +1561,11 @@ public class TwitzMainView extends javax.swing.JInternalFrame implements ActionL
 		return tweetBox.getTweetField(); //this.txtTweet;
 	}
 
+	public TweetBox getTweetBox()
+	{
+		return this.tweetBox;
+	}
+
 	public boolean initTwitter() //{{{
 	{
 		//Initialize twitter
