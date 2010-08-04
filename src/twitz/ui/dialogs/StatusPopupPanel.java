@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JDialog;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import org.apache.log4j.Logger;
 import org.jdesktop.application.Action;
 import twitter4j.Status;
@@ -234,14 +235,19 @@ public class StatusPopupPanel extends JDialog implements TwitzEventModel {
 	{
 		if(logdebug)
 			logger.debug("Sending delete status request");
-		Map map = Collections.synchronizedMap(new TreeMap());
-		map.put("async", true);
-		map.put("caller", caller);
-		ArrayList args = new ArrayList();
-		args.add(getStatus().getId());
-		map.put("arguments", args);
-		TwitzEvent te = new TwitzEvent(this, TwitzEventType.DESTROY_STATUS, new Date().getTime(), map);
-		fireTwitzEvent(te);
+		int ans = JOptionPane.showConfirmDialog(view, "Are sure you want to delete status?", "Delete Status", JOptionPane.YES_NO_OPTION);
+
+		if (ans == JOptionPane.OK_OPTION)
+		{
+			Map map = Collections.synchronizedMap(new TreeMap());
+			map.put("async", true);
+			map.put("caller", caller);
+			ArrayList args = new ArrayList();
+			args.add(getStatus().getId());
+			map.put("arguments", args);
+			TwitzEvent te = new TwitzEvent(this, TwitzEventType.DESTROY_STATUS, new Date().getTime(), map);
+			fireTwitzEvent(te);
+		}
 		closeBox();
 	}//}}}
 

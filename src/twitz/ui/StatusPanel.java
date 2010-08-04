@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -450,14 +451,18 @@ public class StatusPanel extends javax.swing.JLayeredPane implements TwitzEventM
 		}
 		else if("Delete_Status".equals(evt.getPropertyName()))
 		{
-			Map map = Collections.synchronizedMap(new TreeMap());
-			map.put("async", true);
-			map.put("caller", inTimeline ? view.getTimeLine() : this);
-			ArrayList args = new ArrayList();
-			args.add(lstat.getId());
-			map.put("arguments", args);
-			TwitzEvent te = new TwitzEvent(this, TwitzEventType.DESTROY_STATUS, new Date().getTime(), map);
-			fireTwitzEvent(te);
+			int ans = JOptionPane.showConfirmDialog(view, "Are sure you want to delete status?", "Delete Status", JOptionPane.YES_NO_OPTION);
+			if (ans == JOptionPane.OK_OPTION)
+			{
+				Map map = Collections.synchronizedMap(new TreeMap());
+				map.put("async", true);
+				map.put("caller", inTimeline ? view.getTimeLine() : this);
+				ArrayList args = new ArrayList();
+				args.add(lstat.getId());
+				map.put("arguments", args);
+				TwitzEvent te = new TwitzEvent(this, TwitzEventType.DESTROY_STATUS, new Date().getTime(), map);
+				fireTwitzEvent(te);
+			}
 		}
 	}//}}}
 
